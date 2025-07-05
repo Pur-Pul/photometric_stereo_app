@@ -1,0 +1,30 @@
+{
+  "name": "photometric_stereo_app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pur-Pul/photometric_stereo_app.git"
+  },
+  "author": "Pur-Pul",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pur-Pul/photometric_stereo_app/issues"
+  },
+  "homepage": "https://github.com/Pur-Pul/photometric_stereo_app#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.1"
+  }
+}
