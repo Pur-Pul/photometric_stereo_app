@@ -2,20 +2,19 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser, performLogout } from './reducers/loginReducer'
 import { initializeUsers } from './reducers/userReducer'
+import { initializeImages } from './reducers/imageReducer'
 import Notification from './components/Notification'
 import LoginForm from './components/Login'
 import UserList from './components/UserList'
 import User from './components/User'
+import ImageUploadForm from './components/ImageUpload'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 
 const App = () => {
-	const user = useSelector((state) => {
-		return state.login
-	})
 	const dispatch = useDispatch()
-	useEffect(() => {
-		dispatch(initializeUsers())
-	}, [dispatch])
+	useEffect(() => { dispatch(initializeUsers()) }, [dispatch])
+	useEffect(() => { dispatch(initializeImages()) }, [dispatch])
+	
 
 	useEffect(() => {
 		const loggedUserJSON = window.localStorage.getItem('loggedUser')
@@ -30,6 +29,8 @@ const App = () => {
 		dispatch(performLogout())
 	}
 
+	const user = useSelector((state) => state.login)
+	const images = useSelector((state) => state.images)
 	const padding = { paddingRight: 5, paddingLeft: 5 }
 	const bar = { backgroundColor: 'lightGrey' }
 
@@ -48,7 +49,7 @@ const App = () => {
 						<button onClick={logoutHandler}>logout</button>
 					</p>
 					<Routes>
-						<Route path="/" element={<div>Hello World</div>} />
+						<Route path="/" element={<ImageUploadForm />} />
 						<Route path="/users" element={<UserList />} />
 						<Route path="/users/:id" element={<User />} />
 					</Routes>
