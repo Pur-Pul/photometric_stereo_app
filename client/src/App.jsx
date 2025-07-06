@@ -12,9 +12,9 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 
 const App = () => {
 	const dispatch = useDispatch()
+	const user = useSelector((state) => state.login)
 	useEffect(() => { dispatch(initializeUsers()) }, [dispatch])
-	useEffect(() => { dispatch(initializeImages()) }, [dispatch])
-	
+	useEffect(() => { if (user) {dispatch(initializeImages())} }, [dispatch, user])
 
 	useEffect(() => {
 		const loggedUserJSON = window.localStorage.getItem('loggedUser')
@@ -29,7 +29,6 @@ const App = () => {
 		dispatch(performLogout())
 	}
 
-	const user = useSelector((state) => state.login)
 	const images = useSelector((state) => state.images)
 	const padding = { paddingRight: 5, paddingLeft: 5 }
 	const bar = { backgroundColor: 'lightGrey' }

@@ -42,7 +42,10 @@ export const initializeImages = () => {
 
 export const createImage = (image) => {
 	return async (dispatch) => {
-		const new_image = await imageService.post(image)
+		const data = new FormData();
+		data.set('file', image)
+		const new_image = await imageService.post(data)
+
 		console.log(new_image)
 		dispatch(appendImage(new_image))
 	}

@@ -1,6 +1,8 @@
 const logger = require('./logger')
 const User = require('../models/user')
+const path = require('path')
 const jwt = require('jsonwebtoken')
+const multer = require("multer");
 
 const requestLogger = (request, response, next) => {
 	logger.info('Method:', request.method)
@@ -51,10 +53,13 @@ const userExtractor = async (request, response, next) => {
 	next()
 }
 
+const imageUpload = multer({dest: path.join(__dirname, "../temp")})
+
 module.exports = {
 	requestLogger,
 	unknownEndpoint,
 	errorHandler,
 	tokenExtractor,
 	userExtractor,
+	imageUpload
 }
