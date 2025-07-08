@@ -4,6 +4,12 @@ const fs = require('fs')
 const Image = require('../models/image')
 const middleware = require('../utils/middleware')
 
+const clear_temp = (next) => {
+	fs.unlink(temp_path, (exception) => {
+		if (exception) { next(exception) }
+	})
+}
+
 imagesRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
 	if (user) {
@@ -22,6 +28,7 @@ imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => 
 	response.json(image)
 })
 
+/*
 imagesRouter.post('/', middleware.imageUpload.single("file"), middleware.userExtractor, async (request, response, next) => {
 	try {
 		console.log(request.file)
@@ -42,14 +49,19 @@ imagesRouter.post('/', middleware.imageUpload.single("file"), middleware.userExt
 				response.status(201).json(saved_image)
 			})
 		} else {
-			fs.unlink(temp_path, (exception) => {
-				if (exception) { next(exception) }
-				response.status(403).end("Only .png files are allowed!")
-			})
+			clear_temp(next)
+			response.status(403).end("Only .png files are allowed!")
 		}
 	} catch(exception) {
 		next(exception)
 	}
+})
+*/
+imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {
+	middleware.imagesUpload(request, response, (exception) => {
+		if (exception) { next(exception) }
+		else { response.status(200).end('Images uploaded.') }
+	})
 })
 
 imagesRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {

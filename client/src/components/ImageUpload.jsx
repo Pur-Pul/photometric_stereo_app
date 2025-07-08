@@ -1,7 +1,7 @@
 import { useState } from "react"
 import SourceImage from "./SourceImage"
 import { useDispatch } from "react-redux"
-import { createImage } from "../reducers/imageReducer"
+import { createImages } from "../reducers/imageReducer"
 
 const ImageUploadForm = () => {
     const dispatch = useDispatch()
@@ -18,30 +18,11 @@ const ImageUploadForm = () => {
     }
     const submitImages = (event) => {
         event.preventDefault()
-        
-        dispatch(createImage(files[0].src))
-            .then(() => {
-				dispatch(
-					notificationSet(
-						{
-							text: `a new image was uploaded`,
-							type: 'message',
-						},
-						5
-					)
-				)
-			})
+        dispatch(createImages(files.map(file => file.src)))
+            .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'message' }, 5)) })
 			.catch((exception) => {
 				console.log(exception)
-				dispatch(
-					notificationSet(
-						{
-							text: exception.response.data.error,
-							type: 'error',
-						},
-						5
-					)
-				)
+				dispatch(notificationSet({ text: exception.response.data.error, type: 'error' }, 5))
 			})
     }
     return (

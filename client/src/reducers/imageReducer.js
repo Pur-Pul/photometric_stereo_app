@@ -5,8 +5,8 @@ const imageSlice = createSlice({
 	name: 'image',
 	initialState: [],
 	reducers: {
-		appendImage(state, action) {
-			state.push(action.payload)
+		appendImages(state, action) {
+			state.push(...action.payload)
 		},
 		setImages(state, action) {
 			return action.payload
@@ -29,7 +29,7 @@ const imageSlice = createSlice({
 	},
 })
 
-export const { appendImage, setImages, deleteImage, updateImage, sortImages } =
+export const { appendImages, setImages, deleteImage, updateImage, sortImages } =
 	imageSlice.actions
 
 export const initializeImages = () => {
@@ -40,14 +40,13 @@ export const initializeImages = () => {
 	}
 }
 
-export const createImage = (image) => {
+export const createImages = (images) => {
 	return async (dispatch) => {
-		const data = new FormData();
-		data.set('file', image)
-		const new_image = await imageService.post(data)
+		const data = new FormData()
+		images.forEach(image => {data.append('files', image)})
 
-		console.log(new_image)
-		dispatch(appendImage(new_image))
+		const new_images = await imageService.post(data)
+		dispatch(appendImages(new_images))
 	}
 }
 

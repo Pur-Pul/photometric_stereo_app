@@ -26,6 +26,10 @@ const errorHandler = (error, request, response, next) => {
 		return response.status(400).json({ error: error.message })
 	} else if (error.name === 'JsonWebTokenError') {
 		return response.status(401).json({ error: 'token invalid' })
+	} else if (error instanceof multer.MulterError) {
+		return response.status(500).json({ error: `Image uploading error: ${error.message}`})
+	} else if (error) {
+		return response.status(500).json({ error: `Unkown error: ${error.message}`})
 	}
 
 	next(error)
@@ -55,11 +59,30 @@ const userExtractor = async (request, response, next) => {
 
 const imageUpload = multer({dest: path.join(__dirname, "../temp")})
 
+const imagesUpload = multer({
+	storage: multer.diskStorage({
+		destination: (request, file, callback) => {
+			callback(null, path.join(__dirname, '../uploads/'))
+		},
+		filename: (request, file, callback) => {
+			callback(null, file.fieldname + '-' + Date.now() + file.originalname.match(/\..*$/)[0])
+		}
+	}),
+	limits: { fileSize: 15 * 1024 * 1024 },
+	fileFilter: (request, file, callback) => {
+		if (["image/png", "image/jpg", "image/jpeg"].includes(file.mimetype)) { callback(null, true) }
+		else {
+			callback(null, false)
+			return callback(new Error("Invalid image format."))
+		}
+	}
+}).array('files', 10)
+
 module.exports = {
 	requestLogger,
 	unknownEndpoint,
 	errorHandler,
 	tokenExtractor,
 	userExtractor,
-	imageUpload
+	imagesUpload
 }

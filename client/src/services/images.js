@@ -17,10 +17,10 @@ const get = async (id) => {
 	return response.data
 }
 
-const post = async (image) => {
+const post = async (data) => {
+	console.log(data.getAll('files'))
 	let config = getConfig()
-	console.log(image.type)
-	const response = await axios.post(baseUrl, image, { headers: {...config.headers, 'Content-Type': 'multipart/form-data'}})
+	const response = await axios.post(baseUrl, data, { headers: {...config.headers, 'Content-Type': 'multipart/form-data'}})
 	return response.data
 }
 
