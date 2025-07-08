@@ -46,6 +46,7 @@ export const createImages = (images) => {
 		images.forEach((image, index) => {
 			data.append('files', image, index.toString() + '.' + image.name.split('.').pop())
 		})
+		//data.append('format', images[0].name.split('.').pop())
 
 		const new_images = await imageService.post(data)
 		dispatch(appendImages(new_images))

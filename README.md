@@ -1,0 +1,1 @@
+photometric stereo script taken from [https://github.com/visiont3lab/photometric_stereo](https://github.com/visiont3lab/photometric_stereo)

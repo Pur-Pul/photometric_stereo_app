@@ -2,7 +2,8 @@ const logger = require('./logger')
 const User = require('../models/user')
 const path = require('path')
 const jwt = require('jsonwebtoken')
-const multer = require("multer");
+const multer = require('multer')
+const { spawn, exec } = require('child_process')
 
 const requestLogger = (request, response, next) => {
 	request.timestamp = Date.now()
@@ -58,19 +59,20 @@ const userExtractor = async (request, response, next) => {
 
 	next()
 }
-
-const imagesUpload = multer({
+const imageUpload = multer({
 	storage: multer.diskStorage({
 		destination: (request, file, callback) => {
 			callback(null, path.join(__dirname, '../uploads/'))
 		},
 		filename: (request, file, callback) => {
-			callback(null, request.user.id + '-' + request.timestamp + '-' + file.originalname)
+			callback(null, request.user.id + '-' + request.timestamp + '.' + file.originalname)
 		}
 	}),
 	limits: { fileSize: 15 * 1024 * 1024 },
 	fileFilter: (request, file, callback) => {
-		if (["image/png", "image/jpg", "image/jpeg"].includes(file.mimetype)) { callback(null, true) }
+		if (["image/png", "image/jpg", "image/jpeg"].includes(file.mimetype)) { 
+			callback(null, true)
+		}
 		else {
 			callback(null, false)
 			return callback(new Error("Invalid image format."))
@@ -78,11 +80,42 @@ const imagesUpload = multer({
 	}
 }).array('files', 10)
 
+
+const generateNormalMap = async (request, response, next) => {
+	const image_name = request.user.id + '-' + request.timestamp
+	const upload_folder = path.join(__dirname, `../uploads`)
+	exec(`ls -dq ${upload_folder}/*${image_name}*`, (error, stdout, stderr) => {
+		if (error) { next(error) }
+		const files = stdout.split('\n')
+		console.log(`Files: ${files}`)
+	})
+	/*
+	const process = spawn("python", ['../scripts/normal_map.py', images, name, format])
+	const result = await new Promise((resolve, reject) => {
+		let output
+
+		process.stdout.on('data', (data) => {
+			output = JSON.parse(data)
+		})
+
+		process.stderr.on('data', (data) => {
+			reject(`An error occured in normal_map.py: ${data}`)
+		})
+
+		process.on('exit', (code) => {
+			resolve(output)
+		})
+	})
+	return result
+	*/
+}
+
 module.exports = {
 	requestLogger,
 	unknownEndpoint,
 	errorHandler,
 	tokenExtractor,
 	userExtractor,
-	imagesUpload
+	imageUpload,
+	generateNormalMap
 }

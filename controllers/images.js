@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const Image = require('../models/image')
 const middleware = require('../utils/middleware')
+const { exec } = require('child_process')
 
 const clear_temp = (next) => {
 	fs.unlink(temp_path, (exception) => {
@@ -29,12 +30,14 @@ imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => 
 })
 
 imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {
-	middleware.imagesUpload(request, response, (exception) => {
+	middleware.imageUpload(request, response, (exception) => {
 		if (exception) { next(exception) }
 		else {
+			middleware.generateNormalMap(request, response, next)
 			response.status(200).end('Images uploaded.')
 		}
 	})
+	
 })
 
 imagesRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {
