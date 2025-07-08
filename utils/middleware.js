@@ -5,9 +5,11 @@ const jwt = require('jsonwebtoken')
 const multer = require("multer");
 
 const requestLogger = (request, response, next) => {
+	request.timestamp = Date.now()
 	logger.info('Method:', request.method)
 	logger.info('Path:  ', request.path)
 	logger.info('Body:  ', request.body)
+	logger.info('Timestamp:	', request.timestamp)
 	logger.info('---')
 	next()
 }
@@ -57,15 +59,13 @@ const userExtractor = async (request, response, next) => {
 	next()
 }
 
-const imageUpload = multer({dest: path.join(__dirname, "../temp")})
-
 const imagesUpload = multer({
 	storage: multer.diskStorage({
 		destination: (request, file, callback) => {
 			callback(null, path.join(__dirname, '../uploads/'))
 		},
 		filename: (request, file, callback) => {
-			callback(null, file.fieldname + '-' + Date.now() + file.originalname.match(/\..*$/)[0])
+			callback(null, request.user.id + '-' + request.timestamp + '-' + file.originalname)
 		}
 	}),
 	limits: { fileSize: 15 * 1024 * 1024 },

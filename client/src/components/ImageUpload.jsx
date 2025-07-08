@@ -8,7 +8,7 @@ const ImageUploadForm = () => {
     const [files, setFiles] = useState([])    
     const handleChange = (event) => {
         console.log(event.target.files)
-        setFiles(Array.from(event.target.files).map((file) => {
+        setFiles(Array.from(event.target.files).map((file, index) => {
             return { 
                 image : URL.createObjectURL(file),
                 src: file,

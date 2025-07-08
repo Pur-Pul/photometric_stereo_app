@@ -28,39 +28,12 @@ imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => 
 	response.json(image)
 })
 
-/*
-imagesRouter.post('/', middleware.imageUpload.single("file"), middleware.userExtractor, async (request, response, next) => {
-	try {
-		console.log(request.file)
-		const temp_path = request.file.path
-		const target_path = path.join(__dirname, "../uploads/image.png");
-		const creator = request.user
-
-		if (path.extname(request.file.originalname).toLowerCase() === ".png") {
-			fs.rename(temp_path, target_path, async (exception) => {
-				if (exception) { next(exception) }
-				let image = new Image({ creator: creator.id, file: target_path})
-				let saved_image = await image.save()
-				saved_image = await saved_image.populate('creator')
-
-				creator.images = creator.images.concat(saved_image._id)
-				await creator.save()
-
-				response.status(201).json(saved_image)
-			})
-		} else {
-			clear_temp(next)
-			response.status(403).end("Only .png files are allowed!")
-		}
-	} catch(exception) {
-		next(exception)
-	}
-})
-*/
 imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {
 	middleware.imagesUpload(request, response, (exception) => {
 		if (exception) { next(exception) }
-		else { response.status(200).end('Images uploaded.') }
+		else {
+			response.status(200).end('Images uploaded.')
+		}
 	})
 })
 
