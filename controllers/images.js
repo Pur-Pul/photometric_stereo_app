@@ -1,15 +1,9 @@
 const imagesRouter = require('express').Router()
-const path = require('path')
-const fs = require('fs')
 const Image = require('../models/image')
 const middleware = require('../utils/middleware')
-const { exec } = require('child_process')
-
-const clear_temp = (next) => {
-	fs.unlink(temp_path, (exception) => {
-		if (exception) { next(exception) }
-	})
-}
+const yaml = require('js-yaml')
+const fs = require('fs')
+const path = require('path')
 
 imagesRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
@@ -32,7 +26,28 @@ imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => 
 imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {
 	middleware.imageUpload(request, response, (exception) => {
 		if (exception) { next(exception) }
+		
 		else {
+			let lights = []
+			request.body.lights.forEach(light => {
+				lights = lights.concat(light.split(',').map(Number))
+			})
+			let data = yaml.dump({
+					rows: request.body.lights.length,
+					cols: 3,
+					dt: 'f',
+					data : lights
+				}, { flowLevel: 1})
+			data = '%YAML:1.0\n' + 'Lights: !!opencv-matrix\n' + data.replace(/^/gm, '   ')
+			
+			const light_matrix_file = path.join(__dirname, '../uploads/', `${request.user.id}-${request.timestamp}_LightMatrix.yml`)
+
+			fs.writeFile(light_matrix_file, data, (err) => {
+				if (err) {
+					console.log(err);
+				}
+			});
+			
 			middleware.generateNormalMap(request, response, next)
 			response.status(200).end('Images uploaded.')
 		}

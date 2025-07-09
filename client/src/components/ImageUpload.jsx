@@ -18,7 +18,7 @@ const ImageUploadForm = () => {
     }
     const submitImages = (event) => {
         event.preventDefault()
-        dispatch(createImages(files.map(file => file.src)))
+        dispatch(createImages(files))
             .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'message' }, 5)) })
 			.catch((exception) => {
 				console.log(exception)

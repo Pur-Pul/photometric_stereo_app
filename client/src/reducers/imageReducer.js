@@ -44,7 +44,8 @@ export const createImages = (images) => {
 	return async (dispatch) => {
 		const data = new FormData()
 		images.forEach((image, index) => {
-			data.append('files', image, index.toString() + '.' + image.name.split('.').pop())
+			data.append('files', image.src, index.toString() + '.' + image.src.name.split('.').pop())
+			data.append('lights', image.light)
 		})
 		//data.append('format', images[0].name.split('.').pop())
 

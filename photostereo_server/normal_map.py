@@ -7,7 +7,9 @@ import glob, os
 
 def generate_normal_map(name, format):
     root_fold = f'{os.path.join(os.getcwd(), 'uploads')}/'
-    filelist = glob.glob(f'{root_fold}*{name}*.*.{format}')
+    out_fold = f'{os.path.join(os.getcwd(), 'output')}/'
+    print(f'{root_fold}*{name}*.*.{format}')
+    filelist = glob.glob(f'{root_fold}*{name}*.*{format}')
     IMAGES = len(filelist)
     for file in filelist:
         print(file)
@@ -24,7 +26,7 @@ def generate_normal_map(name, format):
             print(err)
 
     myps = photometry(IMAGES, False)
-
+    print(image_array)
     # LOADING LIGHTS FROM FILE
     fs = cv.FileStorage(root_fold + f'{name}_LightMatrix.yml', cv.FILE_STORAGE_READ)
     fn = fs.getNode("Lights")
@@ -39,7 +41,7 @@ def generate_normal_map(name, format):
     #albedo = myps.getalbedo()
     #albedo = cv.normalize(albedo, None, 0, 255, cv.NORM_MINMAX, cv.CV_8UC1)
 
-    cv.imwrite('normal_map.png',normal_map)
+    cv.imwrite(f'{out_fold}{name}_normal_map.png',normal_map)
     #cv.imwrite('albedo.png',albedo)
     #cv.imwrite('gauss.png',gauss)
     #cv.imwrite('med.png',med)

@@ -19,6 +19,7 @@ const get = async (id) => {
 
 const post = async (data) => {
 	console.log(data.getAll('files'))
+	console.log(data.getAll('lights'))
 	let config = getConfig()
 	const response = await axios.post(baseUrl, data, { headers: {...config.headers, 'Content-Type': 'multipart/form-data'}})
 	return response.data
