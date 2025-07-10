@@ -48,6 +48,7 @@ export const createImages = (images, mask) => {
 			data.append('lights', image.light)
 		})
 		data.append('files', mask, mask.name)
+		data.set('format', images[0].src.name.split('.').pop())
 
 		const new_images = await imageService.post(data)
 		dispatch(appendImages(new_images))

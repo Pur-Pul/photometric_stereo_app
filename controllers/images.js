@@ -4,6 +4,8 @@ const middleware = require('../utils/middleware')
 const yaml = require('js-yaml')
 const fs = require('fs')
 const path = require('path')
+const axios = require('axios')
+const { PHOTOSTEREO_URI } = require('../utils/config')
 
 imagesRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
@@ -24,10 +26,11 @@ imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => 
 })
 
 imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {
-	middleware.imageUpload(request, response, (exception) => {
+	middleware.imageUpload(request, response, async (exception) => {
 		if (exception) { next(exception) }
-		
 		else {
+			const file_name = `${request.user.id}-${request.timestamp}`
+
 			let lights = []
 			request.body.lights.forEach(light => {
 				lights = lights.concat(light.split(',').map(Number))
@@ -40,7 +43,7 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 				}, { flowLevel: 1})
 			data = '%YAML:1.0\n' + 'Lights: !!opencv-matrix\n' + data.replace(/^/gm, '   ')
 			
-			const light_matrix_file = path.join(__dirname, '../uploads/', `${request.user.id}-${request.timestamp}_LightMatrix.yml`)
+			const light_matrix_file = path.join(__dirname, '../uploads/', `${file_name}_LightMatrix.yml`)
 
 			fs.writeFile(light_matrix_file, data, (err) => {
 				if (err) {
@@ -48,8 +51,12 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 				}
 			});
 			
-			middleware.generateNormalMap(request, response, next)
-			response.status(200).end('Images uploaded.')
+			try {
+				await axios.post(`${PHOTOSTEREO_URI}normal_map/${file_name}`, { format: request.body.format })
+				response.status(200).end('Images uploaded.')
+			} catch (exception) {
+				next(exception)
+			}
 		}
 	})
 	

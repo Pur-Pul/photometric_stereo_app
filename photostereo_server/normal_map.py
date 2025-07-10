@@ -1,7 +1,7 @@
 from photostereo import photometry
 import cv2 as cv
 import numpy as np
-import time, sys, glob, os, re
+import time, sys, os, re
 
 def generate_normal_map(name, format):
     root_fold = f'{os.path.join(os.getcwd(), 'uploads')}/'
@@ -52,6 +52,10 @@ def generate_normal_map(name, format):
 
     toc = time.process_time()
     print("Process duration: " + str(toc - tic))
-    sys.stdout.flush()
+    
     cv.waitKey(0)
     cv.destroyAllWindows()
+
+if __name__ == "__main__":
+    generate_normal_map(sys.argv[1], sys.argv[2])
+    sys.stdout.flush()
