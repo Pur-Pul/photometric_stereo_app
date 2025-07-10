@@ -40,13 +40,14 @@ export const initializeImages = () => {
 	}
 }
 
-export const createImages = (images) => {
+export const createImages = (images, mask) => {
 	return async (dispatch) => {
 		const data = new FormData()
 		images.forEach((image, index) => {
 			data.append('files', image.src, index.toString() + '.' + image.src.name.split('.').pop())
 			data.append('lights', image.light)
 		})
+		data.append('files', mask, mask.name)
 
 		const new_images = await imageService.post(data)
 		dispatch(appendImages(new_images))

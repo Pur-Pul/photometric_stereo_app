@@ -1,15 +1,19 @@
 from photostereo import photometry
 import cv2 as cv
-import time
 import numpy as np
-import sys
-import glob, os
+import time, sys, glob, os, re
 
 def generate_normal_map(name, format):
     root_fold = f'{os.path.join(os.getcwd(), 'uploads')}/'
     out_fold = f'{os.path.join(os.getcwd(), 'output')}/'
-    print(f'{root_fold}*{name}*.*.{format}')
-    filelist = glob.glob(f'{root_fold}*{name}*.*{format}')
+    #print(f'{root_fold}*{name}*.*.{format}')
+    filelist = []
+    print(root_fold)
+    for file in os.listdir(root_fold):
+        if re.match(fr"{name}\.[0-9]+{format}", file):
+            filelist.append(file)
+
+    #glob.glob(f'{root_fold}*{name}*.[0-9]*{format}')
     IMAGES = len(filelist)
     for file in filelist:
         print(file)
@@ -35,7 +39,7 @@ def generate_normal_map(name, format):
     #print(myps.settsfromlm())
 
     tic = time.process_time()
-    mask = cv.imread(root_fold + f'{name}_mask' + format, cv.IMREAD_GRAYSCALE)
+    mask = cv.imread(root_fold + f'{name}.mask' + format, cv.IMREAD_GRAYSCALE)
     normal_map = myps.runphotometry(image_array, np.asarray(mask, dtype=np.uint8))
     normal_map = cv.normalize(normal_map, None, 0, 255, cv.NORM_MINMAX, cv.CV_8UC3)
     #albedo = myps.getalbedo()

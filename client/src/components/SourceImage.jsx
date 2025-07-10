@@ -1,9 +1,10 @@
-const SourceImage = ({ files, index, handleChange }) => {
+const SourceImage = ({ files, index, handleChange, style}) => {
     const img = {
         width: '100%',
         minWidth: '100%',
         height: '100%',
-        objectFit: 'cover'
+        objectFit: 'cover',
+        border: '1px solid rgba(0,0,0,1)'
     }
 
     const handleLoad = (event) => {

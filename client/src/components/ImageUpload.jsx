@@ -4,10 +4,12 @@ import { useDispatch } from "react-redux"
 import { createImages } from "../reducers/imageReducer"
 import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
 import { useSelector } from 'react-redux'
+import Mask from "./Mask"
 
 const ImageUploadForm = () => {
     const dispatch = useDispatch()
     const [files, setFiles] = useState([])
+    const [mask, setMask] = useState(null)
     const notification = useSelector((state) => { return state.notification })
 
     useEffect(() => {
@@ -37,14 +39,15 @@ const ImageUploadForm = () => {
 
     const submitImages = (event) => {
         event.preventDefault()
-        dispatch(createImages(files))
+        console.log(mask)
+        dispatch(createImages(files, mask))
             .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'message' }, 5)) })
 			.catch((exception) => {
 				console.log(exception)
 				dispatch(notificationSet({ text: exception.response.data.error, type: 'error' }, 5))
 			})
     }
-    console.log(files)
+
     return (
         <div>
             <h2>Select images:</h2>
@@ -58,6 +61,7 @@ const ImageUploadForm = () => {
             <ul>
                 { files.map((file, index) => <li key={index}><SourceImage files={files} index={index} handleChange={handleChange}/></li>) }
             </ul>
+            <Mask images={files} setMask={setMask}/>
         </div>
     )
 }
