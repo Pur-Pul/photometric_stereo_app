@@ -5,5 +5,73 @@ services:
     environment:
     - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
     - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASS}
+    volumes:
+      - mongo_data:/data/db
+    command: mongod --quiet --logpath /dev/null
+  photostereo:
+    image: photostereo-service
+    build:
+      context: photostereo_server
+      args:
+        PORT: ${PHOTOSTEREO_PORT}
+      dockerfile: Dockerfile
+    volumes:
+      - ./uploads:/usr/src/app/uploads
+      - ./output:/usr/src/app/output
     ports:
-    - 27017:27017
+      - 5000:${PHOTOSTEREO_PORT}
+    container_name: photostereo-service  
+  back:
+    image: photostereo-back
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/usr/src/app
+      - node_modules_back:/usr/src/app/node_modules
+      - ./uploads:/usr/src/app/uploads
+      - ./output:/usr/src/app/output
+    container_name: photostereo-back
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@mongo:27017/
+      - PHOTOSTEREO_URI=http://photostereo:${PHOTOSTEREO_PORT}/normal_map
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+      - photostereo
+  front:
+    image: photostereo-front
+    build:
+      context: frontend
+      args:
+        BACKEND_URL: http://localhost:${PORT}/api
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/usr/src/app
+      - node_modules_front:/usr/src/app/node_modules
+    container_name: photostereo-front
+    env_file:
+      - .env
+    depends_on:
+      - back
+  
+  nginx:
+    image: nginx:1.25
+    volumes:
+      - ./nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+    ports:
+      - ${PORT}:80
+    container_name: reverse-proxy
+    env_file:
+      - .env
+    command: /bin/bash -c "envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    depends_on:
+      - front
+      - back
+      - photostereo
+
+volumes:
+  node_modules_back:
+  node_modules_front:
+  mongo_data:

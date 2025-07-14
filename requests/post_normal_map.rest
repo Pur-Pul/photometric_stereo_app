@@ -1,4 +1,4 @@
-POST http://localhost:5000/normal_map/686cdb15c15a3a2e6d5537a9-1752135703075
+POST http://localhost:8080/normal_map/686cdb15c15a3a2e6d5537a9-1752135703075
 content-type: application/json
 
 {

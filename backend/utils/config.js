@@ -1,9 +1,9 @@
 require('dotenv').config()
 
-const PORT = process.env.PORT
-const PHOTOSTEREO_URI = `http://localhost:${process.env.PHOTOSTEREO_PORT}/`
+const PORT = process.env.BACK_PORT
+const PHOTOSTEREO_URI = process.env.PHOTOSTEREO_URI
 const MONGODB_URI = process.env.MONGODB_URI
-
+console.log(PHOTOSTEREO_URI)
 module.exports = {
 	PORT,
 	MONGODB_URI,

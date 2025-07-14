@@ -29,30 +29,30 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 	middleware.imageUpload(request, response, async (exception) => {
 		if (exception) { next(exception) }
 		else {
-			const file_name = `${request.user.id}-${request.timestamp}`
-
-			let lights = []
-			request.body.lights.forEach(light => {
-				lights = lights.concat(light.split(',').map(Number))
-			})
-			let data = yaml.dump({
-					rows: request.body.lights.length,
-					cols: 3,
-					dt: 'f',
-					data : lights
-				}, { flowLevel: 1})
-			data = '%YAML:1.0\n' + 'Lights: !!opencv-matrix\n' + data.replace(/^/gm, '   ')
-			
-			const light_matrix_file = path.join(__dirname, '../uploads/', `${file_name}_LightMatrix.yml`)
-
-			fs.writeFile(light_matrix_file, data, (err) => {
-				if (err) {
-					console.log(err);
-				}
-			});
-			
 			try {
-				await axios.post(`${PHOTOSTEREO_URI}normal_map/${file_name}`, { format: request.body.format })
+				const file_name = `${request.user.id}-${request.timestamp}`
+
+				let lights = []
+				request.body.lights.forEach(light => {
+					lights = lights.concat(light.split(',').map(Number))
+				})
+				let data = yaml.dump({
+						rows: request.body.lights.length,
+						cols: 3,
+						dt: 'f',
+						data : lights
+					}, { flowLevel: 1})
+				data = '%YAML:1.0\n' + 'Lights: !!opencv-matrix\n' + data.replace(/^/gm, '   ')
+				
+				const light_matrix_file = path.join(__dirname, '../uploads/', `${file_name}_LightMatrix.yml`)
+
+				fs.writeFile(light_matrix_file, data, (err) => {
+					if (err) {
+						console.log(err);
+					}
+				});
+				console.log(`${PHOTOSTEREO_URI}/${file_name}`)
+				await axios.post(`${PHOTOSTEREO_URI}/${file_name}`, { format: request.body.format })
 				response.status(200).end('Images uploaded.')
 			} catch (exception) {
 				next(exception)

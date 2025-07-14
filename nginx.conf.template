@@ -1,0 +1,17 @@
+events {}
+
+http {
+  server {
+    listen 80;
+
+    location / {
+        proxy_pass http://front:${FRONT_PORT};
+    }
+
+    location /api/ {
+        proxy_pass http://back:${BACK_PORT};
+    }
+
+    client_max_body_size 150M;
+  }
+}

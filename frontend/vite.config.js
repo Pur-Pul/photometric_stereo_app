@@ -5,17 +5,17 @@ import 'dotenv/config'
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [react()],
-	root: 'client',
+	root: '.',
 	server: {
 		proxy: {
 			'/api': {
-				target: `http://localhost:${process.env.PORT}`,
+				target: `${process.env.BACKEND_URL}`,
 				changeOrigin: true,
 			},
 		},
 	},
 	build: {
-		outDir: '../dist',
+		outDir: './dist',
 		emptyOutDir: true,
 	},
 })

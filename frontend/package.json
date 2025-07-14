@@ -1,0 +1,34 @@
+{
+  "name": "photometric_stereo_app_frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pur-Pul/photometric_stereo_app.git"
+  },
+  "author": "Pur-Pul",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pur-Pul/photometric_stereo_app/issues"
+  },
+  "homepage": "https://github.com/Pur-Pul/photometric_stereo_app#readme",
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2",
+    "axios": "^1.10.0",
+    "dotenv": "^17.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^7.6.3",
+    "redux": "^5.0.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.6.0",
+    "vite": "^7.0.2"
+  }
+}
