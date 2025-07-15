@@ -23,20 +23,16 @@ const imageSlice = createSlice({
 			)
 			state[image_index] = action.payload
 		},
-		sortImages(state, action) {
-			state.sort((image1, image2) => image2.likes - image1.likes)
-		},
 	},
 })
 
-export const { appendImages, setImages, deleteImage, updateImage, sortImages } =
+export const { appendImages, setImages, deleteImage, updateImage } =
 	imageSlice.actions
 
 export const initializeImages = () => {
 	return async (dispatch) => {
 		let images = await imageService.getAll()
 		dispatch(setImages(images))
-		dispatch(sortImages())
 	}
 }
 
@@ -59,15 +55,6 @@ export const performRemove = (id) => {
 	return async (dispatch) => {
 		await imageService.remove(id)
 		dispatch(deleteImage(id))
-	}
-}
-
-export const performLike = (id) => {
-	return async (dispatch) => {
-		let image = await imageService.get(id)
-		const response = await imageService.update({ likes: image.likes + 1 }, id)
-		dispatch(updateImage(response))
-		dispatch(sortImages())
 	}
 }
 

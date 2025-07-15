@@ -6,6 +6,7 @@ const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
 const { PHOTOSTEREO_URI } = require('../utils/config')
+const user = require('../models/user')
 
 imagesRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
@@ -53,7 +54,15 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 				});
 				console.log(`${PHOTOSTEREO_URI}/${file_name}`)
 				await axios.post(`${PHOTOSTEREO_URI}/${file_name}`, { format: request.body.format })
-				response.status(200).end('Images uploaded.')
+
+				const image = new Image({
+					file: file_name,
+					creator: request.user.id
+				})
+				const saved_image = await (await image.save()).populate('creator')
+				user.images = user.images.concat(saved_image._id)
+				await user.save()
+				response.status(201).json(saved_image)
 			} catch (exception) {
 				next(exception)
 			}

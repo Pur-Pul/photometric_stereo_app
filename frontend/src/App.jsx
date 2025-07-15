@@ -8,6 +8,8 @@ import LoginForm from './components/Login'
 import UserList from './components/UserList'
 import User from './components/User'
 import ImageUploadForm from './components/ImageUpload'
+import NormalMapList from './components/NormalMapList'
+import NormalMap from './components/NormalMap'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 
 const App = () => {
@@ -29,7 +31,7 @@ const App = () => {
 		dispatch(performLogout())
 	}
 
-	const images = useSelector((state) => state.images)
+	
 	const padding = { paddingRight: 5, paddingLeft: 5 }
 	const bar = { backgroundColor: 'lightGrey' }
 
@@ -51,6 +53,8 @@ const App = () => {
 						<Route path="/" element={<ImageUploadForm />} />
 						<Route path="/users" element={<UserList />} />
 						<Route path="/users/:id" element={<User />} />
+						<Route path="/normal_map" element={<NormalMapList />} />
+						<Route path="/normal_map/:id" element={<NormalMap />} />
 					</Routes>
 				</div>
 			)}
