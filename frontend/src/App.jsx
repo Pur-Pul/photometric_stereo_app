@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { loginUser, performLogout } from './reducers/loginReducer'
+import { loginUser } from './reducers/loginReducer'
 import { initializeUsers } from './reducers/userReducer'
 import { initializeImages } from './reducers/imageReducer'
 import Notification from './components/Notification'
@@ -10,13 +10,16 @@ import User from './components/User'
 import ImageUploadForm from './components/ImageUpload'
 import NormalMapList from './components/NormalMapList'
 import NormalMap from './components/NormalMap'
+import NavBar from './components/NavBar'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 
 const App = () => {
 	const dispatch = useDispatch()
 	const user = useSelector((state) => state.login)
+	
 	useEffect(() => { dispatch(initializeUsers()) }, [dispatch])
 	useEffect(() => { if (user) {dispatch(initializeImages())} }, [dispatch, user])
+
 
 	useEffect(() => {
 		const loggedUserJSON = window.localStorage.getItem('loggedUser')
@@ -26,29 +29,19 @@ const App = () => {
 		}
 	}, [dispatch])
 
-	const logoutHandler = (event) => {
-		event.preventDefault()
-		dispatch(performLogout())
-	}
 
-	
-	const padding = { paddingRight: 5, paddingLeft: 5 }
-	const bar = { backgroundColor: 'lightGrey' }
 
 	return (
 		<Router>
-			<Notification />
 			{user === null ? (
-				<LoginForm />
+				<div>
+					<Notification />
+					<LoginForm />
+				</div>
 			) : (
 				<div>
-					<p style={bar}>
-						<Link style={padding} to="/users">
-							Users
-						</Link>
-						<span style={padding}>{user.name} logged-in</span>
-						<button onClick={logoutHandler}>logout</button>
-					</p>
+					<NavBar user={user}/>
+					<Notification />
 					<Routes>
 						<Route path="/" element={<ImageUploadForm />} />
 						<Route path="/users" element={<UserList />} />

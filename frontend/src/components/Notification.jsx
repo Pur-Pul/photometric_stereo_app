@@ -1,9 +1,18 @@
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
+import { notificationRemove } from '../reducers/notificationReducer'
+
 
 const Notification = () => {
-	const notification = useSelector((state) => {
-		return state.notification
-	})
+	const dispatch = useDispatch()
+	const location = useLocation()
+	useEffect(() => { 
+		if (notification.type === 'warning') {
+			dispatch(notificationRemove())
+		} }, [location]
+	)	
+	const notification = useSelector(state => state.notification)
 	if (notification.type === 'none') {
 		return null
 	}

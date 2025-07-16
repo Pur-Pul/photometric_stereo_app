@@ -23,7 +23,10 @@ imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response
     if (user.id != image.creator.id) {
         return response.status(403).json({ error: 'incorrect user' })
     }
-	response.sendFile(path.join(__dirname, '../output/', `${image.file}_normal_map${image.format}`))
+	const file_path = path.join(__dirname, '../output/', `${image.file}_normal_map${image.format}`)
+	if (image.status="done" && fs.existsSync(file_path)) {
+		response.sendFile(file_path)
+	}
 })
 
 imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => {
@@ -69,7 +72,7 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 
 				const image = new Image({
 					file: file_name,
-					format,
+					format : "",
 					status: "pending",
 					creator: request.user.id
 				})
@@ -88,26 +91,19 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 imagesRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {
 	const id = request.params.id
     const user = request.user
-	
-	const image = await Image.findById(id)
-
-    if (image.creator.toString() === user.id.toString()) {
-        await Image.findByIdAndDelete(id)
-        const image_index = user.images.findIndex((image) => image.toString === id.toString())
-        user.images.splice(image_index, 1)
-        await user.save()
-        response.status(204).end()
-    } else {
-        return response.status(403).json({ error: 'incorrect user' })
-    }
-	
-})
-
-imagesRouter.put('/:file_name', async (request, response, next) => {
 	try {
-		const new_image = request.body
-		const result = await Image.findOneAndUpdate({ file:request.params.file_name }, new_image, { new: true, runValidators: true, context: 'query' })
-		response.status(201).json(result)
+		const image = await Image.findById(id)
+		if (image.creator.toString() === user.id.toString()) {
+			const file_path = path.join(__dirname, '../output/', `${image.file}_normal_map${image.format}`)
+			if (fs.existsSync(file_path)) { fs.unlinkSync(file_path) }
+			await Image.findByIdAndDelete(id)
+			const image_index = user.images.findIndex((image) => image.toString === id.toString())
+			user.images.splice(image_index, 1)
+			await user.save()
+			response.status(204).end()
+		} else {
+			return response.status(403).json({ error: 'incorrect user' })
+		}
 	} catch(exception) {
 		next(exception)
 	}

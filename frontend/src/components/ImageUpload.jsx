@@ -5,16 +5,18 @@ import { createImages } from "../reducers/imageReducer"
 import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
 import { useSelector } from 'react-redux'
 import Mask from "./Mask"
+import { useLocation } from "react-router-dom"
 
 const ImageUploadForm = () => {
+    const location = useLocation()
     const dispatch = useDispatch()
     const [files, setFiles] = useState([])
     const [mask, setMask] = useState(null)
     const notification = useSelector((state) => { return state.notification })
 
     useEffect(() => {
-        dispatch(notificationSet({ text: 'No images selected', type: 'error' }))
-    }, [])
+        dispatch(notificationSet({ text: 'No images selected', type: 'warning' }))
+    }, [location])
 
     const handleFileSelect = (event) => {
         setFiles(Array.from(event.target.files).map((file, index) => {
@@ -34,7 +36,7 @@ const ImageUploadForm = () => {
             status = file.width == files[0].width && file.height == files[0].height ? status : 'The images must have equal dimensions.'
             status = file.src.type == files[0].src.type ? status : 'The images must be of the same format.'
         })
-        status !== '' ? dispatch(notificationSet({ text: status, type: 'error' })) : dispatch(notificationRemove())
+        status !== '' ? dispatch(notificationSet({ text: status, type: 'warning' })) : dispatch(notificationRemove())
     }, [files])
 
     const submitImages = (event) => {
@@ -51,7 +53,7 @@ const ImageUploadForm = () => {
     return (
         <div>
             <h2>Select images:</h2>
-            <form onSubmit={notification.type !== 'error' ? submitImages : (e) => {
+            <form onSubmit={notification.type !== 'warning' ? submitImages : (e) => {
                 e.preventDefault()
                 false
             }}>
