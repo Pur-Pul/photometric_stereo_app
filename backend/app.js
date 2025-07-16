@@ -8,6 +8,7 @@ var upload = multer();
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
 const imagesRouter = require('./controllers/images')
+const internalRouter = require('./controllers/internal')
 
 const middleware = require('./utils/middleware')
 const logger = require('./utils/logger')
@@ -32,6 +33,7 @@ app.use(middleware.tokenExtractor)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
 app.use('/api/images', imagesRouter)
+app.use('/internal', internalRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)

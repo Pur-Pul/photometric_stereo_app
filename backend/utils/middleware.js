@@ -79,42 +79,11 @@ const imageUpload = multer({
 	}
 }).array('files', 10)
 
-
-const generateNormalMap = async (request, response, next) => {
-	const image_name = request.user.id + '-' + request.timestamp
-	const upload_folder = path.join(__dirname, `../uploads`)
-	exec(`ls -dq ${upload_folder}/*${image_name}*`, (error, stdout, stderr) => {
-		if (error) { next(error) }
-		const files = stdout.split('\n')
-		console.log(`Files: ${files}`)
-	})
-	/*
-	const process = spawn("python", ['../scripts/normal_map.py', images, name, format])
-	const result = await new Promise((resolve, reject) => {
-		let output
-
-		process.stdout.on('data', (data) => {
-			output = JSON.parse(data)
-		})
-
-		process.stderr.on('data', (data) => {
-			reject(`An error occured in normal_map.py: ${data}`)
-		})
-
-		process.on('exit', (code) => {
-			resolve(output)
-		})
-	})
-	return result
-	*/
-}
-
 module.exports = {
 	requestLogger,
 	unknownEndpoint,
 	errorHandler,
 	tokenExtractor,
 	userExtractor,
-	imageUpload,
-	generateNormalMap
+	imageUpload
 }

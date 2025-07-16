@@ -9,20 +9,21 @@ services:
       - mongo_data:/data/db
     command: mongod --quiet --logpath /dev/null
   photostereo:
-    image: photostereo-service
     build:
       context: photostereo_server
       args:
         PORT: ${PHOTOSTEREO_PORT}
-      dockerfile: Dockerfile
+      dockerfile: dev.Dockerfile
     volumes:
+      - ./photostereo_server:/usr/src/app
       - ./uploads:/usr/src/app/uploads
       - ./output:/usr/src/app/output
     ports:
       - 5000:${PHOTOSTEREO_PORT}
-    container_name: photostereo-service  
+    container_name: photostereo-service
+    environment:
+      - BACKEND_URI=http://back:${BACK_PORT}/internal
   back:
-    image: photostereo-back-dev
     build:
       context: backend
       dockerfile: dev.Dockerfile
@@ -41,7 +42,6 @@ services:
       - mongo
       - photostereo
   front:
-    image: photostereo-front-dev
     build:
       context: frontend
       args:

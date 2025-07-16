@@ -17,6 +17,11 @@ const get = async (id) => {
 	return response.data
 }
 
+const getFile = async (id) => {
+	const response = await axios.get(`${baseUrl}/file/${id}`, { ...getConfig(), responseType: 'blob' })
+	return response.data
+}
+
 const post = async (data) => {
 	let config = getConfig()
 	const response = await axios.post(baseUrl, data, { headers: {...config.headers, 'Content-Type': 'multipart/form-data'}})
@@ -37,4 +42,4 @@ const setToken = (new_token) => {
 	token = `Bearer ${new_token}`
 }
 
-export default { get, getAll, post, update, remove, setToken }
+export default { get, getFile, getAll, post, update, remove, setToken }

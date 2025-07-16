@@ -16,6 +16,16 @@ imagesRouter.get('/', middleware.userExtractor, async (request, response) => {
 	}
 })
 
+imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response) => {
+	const id = request.params.id
+    const user = request.user
+	const image = await Image.findById(id).populate('creator')
+    if (user.id != image.creator.id) {
+        return response.status(403).json({ error: 'incorrect user' })
+    }
+	response.sendFile(path.join(__dirname, '../output/', `${image.file}_normal_map${image.format}`))
+})
+
 imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => {
 	const id = request.params.id
     const user = request.user
@@ -23,6 +33,7 @@ imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => 
     if (user.id != image.creator.id) {
         return response.status(403).json({ error: 'incorrect user' })
     }
+
 	response.json(image)
 })
 
@@ -32,6 +43,7 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 		else {
 			try {
 				const file_name = `${request.user.id}-${request.timestamp}`
+				const format = request.body.format
 
 				let lights = []
 				request.body.lights.forEach(light => {
@@ -53,15 +65,17 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 					}
 				});
 				console.log(`${PHOTOSTEREO_URI}/${file_name}`)
-				await axios.post(`${PHOTOSTEREO_URI}/${file_name}`, { format: request.body.format })
+				await axios.post(`${PHOTOSTEREO_URI}/${file_name}`, { format })
 
 				const image = new Image({
 					file: file_name,
+					format,
+					status: "pending",
 					creator: request.user.id
 				})
 				const saved_image = await (await image.save()).populate('creator')
-				user.images = user.images.concat(saved_image._id)
-				await user.save()
+				request.user.images = request.user.images.concat(saved_image._id)
+				await request.user.save()
 				response.status(201).json(saved_image)
 			} catch (exception) {
 				next(exception)
@@ -89,17 +103,10 @@ imagesRouter.delete('/:id', middleware.userExtractor, async (request, response, 
 	
 })
 
-imagesRouter.put('/:id', middleware.userExtractor, async (request, response, next) => {
-	const id = request.params.id
-    const user = request.user
-    const old_image = await Image.findById(id).populate('creator')
-    if (old_image.creator.id != user.id) {
-        return response.status(403).json({ error: 'incorrect user' })
-    }
-    
-	const new_image = request.body
+imagesRouter.put('/:file_name', async (request, response, next) => {
 	try {
-		const result = await Image.findByIdAndUpdate(id, new_image, { new: true, runValidators: true, context: 'query' }).populate('creator')
+		const new_image = request.body
+		const result = await Image.findOneAndUpdate({ file:request.params.file_name }, new_image, { new: true, runValidators: true, context: 'query' })
 		response.status(201).json(result)
 	} catch(exception) {
 		next(exception)
