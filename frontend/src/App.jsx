@@ -11,11 +11,12 @@ import ImageUploadForm from './components/ImageUpload'
 import NormalMapList from './components/NormalMapList'
 import NormalMap from './components/NormalMap'
 import NavBar from './components/NavBar'
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
 
 const App = () => {
 	const dispatch = useDispatch()
 	const user = useSelector((state) => state.login)
+	const location = useLocation()
 	
 	useEffect(() => { dispatch(initializeUsers()) }, [dispatch])
 	useEffect(() => { if (user) {dispatch(initializeImages())} }, [dispatch, user])
@@ -24,15 +25,19 @@ const App = () => {
 		if (loggedUserJSON) {
 			const user = JSON.parse(loggedUserJSON)
 			dispatch(loginUser(user))
-			dispatch(performReLog())
+			
 		}
 		
 	}, [dispatch])
 
-
+	useEffect(() => {
+		if (user) {
+			dispatch(performReLog())
+		}
+	}, [user, location])
 
 	return (
-		<Router>
+		<div>
 			{user === null ? (
 				<div>
 					<Notification />
@@ -51,7 +56,7 @@ const App = () => {
 					</Routes>
 				</div>
 			)}
-		</Router>
+		</div>
 	)
 }
 

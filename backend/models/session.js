@@ -1,12 +1,16 @@
 const mongoose = require('mongoose')
-const sessionSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        require: true
-    },
-    token: { type: String, require: true }
-})
+const sessionSchema = new mongoose.Schema(
+    {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            require: true
+        },
+        token: { type: String, require: true }
+    }, {
+        timestamps: true
+    }
+)
 
 sessionSchema.set('toJSON', {
     transform: (document, returnedObject) => {

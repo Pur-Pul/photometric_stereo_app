@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import loginService from '../services/login'
 import imageService from '../services/images'
+import { notificationSet } from './notificationReducer'
 
 const loginSlice = createSlice({
 	name: 'login',
@@ -44,6 +45,7 @@ export const performReLog = (user) => {
 			.catch((err) => {
 				if (err.status == 401) {
 					dispatch(performLogout())
+					dispatch(notificationSet({ text: 'Session expired', type: 'error'}, 5))
 				}
 			})
 		

@@ -4,6 +4,8 @@ const loginRouter = require('express').Router()
 const User = require('../models/user')
 const Session = require('../models/session')
 const middleware = require('../utils/middleware')
+const { EXPIRE_DELAY } = require('../utils/config')
+const { expireSession } = require('../utils/expiration_manager')
 
 loginRouter.post('/', async (request, response, next) => {
 	try {
@@ -23,6 +25,9 @@ loginRouter.post('/', async (request, response, next) => {
 		const token = jwt.sign(userForToken, process.env.SECRET)
 		const session = new Session({ userId: user.id, token })
 		await session.save()
+
+		expireSession(session.id)
+
 		response
 			.status(200)
 			.send({ token, username: user.username, name: user.name, id: user.id })
