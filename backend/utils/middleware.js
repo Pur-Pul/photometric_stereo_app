@@ -1,9 +1,9 @@
 const logger = require('./logger')
 const User = require('../models/user')
+const Session = require('../models/session')
 const path = require('path')
 const jwt = require('jsonwebtoken')
 const multer = require('multer')
-const { spawn, exec } = require('child_process')
 
 const requestLogger = (request, response, next) => {
 	request.timestamp = Date.now()
@@ -47,13 +47,23 @@ const tokenExtractor = (request, response, next) => {
 
 const userExtractor = async (request, response, next) => {
 	try {
+		if (!request.token) {
+			return response.status(401).json({ error: 'token missing' })
+		}
 		const decodedToken = jwt.verify(request.token, process.env.SECRET)
 		if (!decodedToken.id) {
 			return response.status(401).json({ error: 'token invalid' })
 		}
-		request.user = await User.findById(decodedToken.id)
+		const session = await Session.findOne({ token: request.token })
+		const user = await User.findById(decodedToken.id)
+		if (session && user.id) {
+			request.user = user
+			console.log(user)
+		} else {
+			return response.status(401).json({ error: 'token expired' })
+		}
 	} catch (exception) {
-		errorHandler(exception, request, response, next)
+		next(exception)
 	}
 
 	next()

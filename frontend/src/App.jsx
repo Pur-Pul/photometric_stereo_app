@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { loginUser } from './reducers/loginReducer'
+import { loginUser, performReLog } from './reducers/loginReducer'
 import { initializeUsers } from './reducers/userReducer'
 import { initializeImages } from './reducers/imageReducer'
 import Notification from './components/Notification'
@@ -19,14 +19,14 @@ const App = () => {
 	
 	useEffect(() => { dispatch(initializeUsers()) }, [dispatch])
 	useEffect(() => { if (user) {dispatch(initializeImages())} }, [dispatch, user])
-
-
 	useEffect(() => {
 		const loggedUserJSON = window.localStorage.getItem('loggedUser')
 		if (loggedUserJSON) {
 			const user = JSON.parse(loggedUserJSON)
 			dispatch(loginUser(user))
+			dispatch(performReLog())
 		}
+		
 	}, [dispatch])
 
 
