@@ -6,6 +6,7 @@ import { notificationSet, notificationRemove } from "../reducers/notificationRed
 import { useSelector } from 'react-redux'
 import Mask from "./Mask"
 import { useLocation } from "react-router-dom"
+import Button from '@mui/material/Button'
 
 const ImageUploadForm = () => {
     const location = useLocation()
@@ -57,12 +58,21 @@ const ImageUploadForm = () => {
                 e.preventDefault()
                 false
             }}>
-                <input type="file" onChange={handleFileSelect} onClick={(e) => {dispatch(notificationSet({ text: 'No images selected', type: 'error' }))}} multiple/>
-                <input type="submit" />
+                <Button component='label' variant="outlined">
+                    Upload files
+                    <input
+                        style={{ display: 'none' }}
+                        type="file"
+                        onChange={handleFileSelect}
+                        onClick={(e) => {dispatch(notificationSet({ text: 'No images selected', type: 'error' }))}}
+                        multiple
+                    />
+                </Button>
+                <Button type="submit" variant="outlined">Submit</Button>
             </form>
-            <ul>
-                { files.map((file, index) => <li key={index}><SourceImage files={files} index={index} handleChange={handleChange}/></li>) }
-            </ul>
+            <div>
+                { files.map((file, index) => <SourceImage key={index} files={files} index={index} handleChange={handleChange}/>) }
+            </div>
             <Mask images={files} setMask={setMask}/>
         </div>
     )

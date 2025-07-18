@@ -20,7 +20,7 @@ const SourceImage = ({ files, index, handleChange, style}) => {
     return (
         <div>
             <img style={img} src={files[index].image} alt="Uploaded preview" onLoad={handleLoad}/>
-            <LightDirSelector />
+            <LightDirSelector files={files} index={index} handleChange={handleChange}/>
             <p>Light direction: x={files[index].light[0]} y={files[index].light[1]} z={files[index].light[2]}</p>
             <p>Width: {files[index].width} Height: {files[index].height}</p>
         </div>

@@ -18,6 +18,9 @@
   },
   "homepage": "https://github.com/Pur-Pul/photometric_stereo_app#readme",
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.2.0",
     "@reduxjs/toolkit": "^2.8.2",
     "axios": "^1.10.0",
     "dotenv": "^17.0.1",
