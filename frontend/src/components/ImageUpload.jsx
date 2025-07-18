@@ -42,6 +42,7 @@ const ImageUploadForm = () => {
 
     const submitImages = (event) => {
         event.preventDefault()
+        console.log(notification)
         console.log(mask)
         dispatch(createImages(files, mask))
             .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'message' }, 5)) })
@@ -64,7 +65,7 @@ const ImageUploadForm = () => {
                         style={{ display: 'none' }}
                         type="file"
                         onChange={handleFileSelect}
-                        onClick={(e) => {dispatch(notificationSet({ text: 'No images selected', type: 'error' }))}}
+                        onClick={(e) => {dispatch(notificationSet({ text: 'No images selected', type: 'warning' }))}}
                         multiple
                     />
                 </Button>

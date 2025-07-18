@@ -22,7 +22,7 @@ const LightDirSelector = ({ index, files, handleChange}) => {
     return (
         <div>
             <Button variant="outlined" onClick={() => { setOpen(true) }}>Edit light direction</Button>
-            <Dialog open={ open } onClose={() => { setOpen(false) }}>
+            <Dialog open={ open } onClose={() => { setOpen(false) }} closeAfterTransition={false}>
                 <DialogTitle>Select light direction</DialogTitle>
                 <form onSubmit={handleSubmit}>
                     <input type="number" step={0.05} max={1} min={-1} onChange={(event) => {setLightX(event.target.value)}} value={lightX}/>
