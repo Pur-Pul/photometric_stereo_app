@@ -4,15 +4,16 @@ import numpy as np
 import time, sys, os, re, requests
 
 def clear_upload(name):
-    root_fold = f'{os.path.join(os.getcwd(), 'uploads')}/'
+    root_fold = f'{os.path.join(os.getcwd(), '../uploads')}/'
     for file in os.listdir(root_fold):
         if re.match(fr"{name}.*", file):
-            print(file)
-            #os.remove(file)
+            file_path = os.path.join(root_fold, file)
+            print(f'Deleting file {file_path}')
+            os.remove(file_path)
 
 def generate_normal_map(name, format):
-    root_fold = f'{os.path.join(os.getcwd(), 'uploads')}/'
-    out_fold = f'{os.path.join(os.getcwd(), 'output')}/'
+    root_fold = f'{os.path.join(os.getcwd(), '../uploads')}/'
+    out_fold = f'{os.path.join(os.getcwd(), '../output')}/'
     filelist = []
     print(root_fold)
     for file in os.listdir(root_fold):
@@ -34,7 +35,6 @@ def generate_normal_map(name, format):
             print(err)
 
     myps = photometry(IMAGES, False)
-    print(image_array)
     # LOADING LIGHTS FROM FILE
     fs = cv.FileStorage(root_fold + f'{name}_LightMatrix.yml', cv.FILE_STORAGE_READ)
     fn = fs.getNode("Lights")
@@ -72,5 +72,6 @@ if __name__ == "__main__":
             "format": ".png",
             "status": f"Unkown error: {e}"
         })
+        print(res.json())
     clear_upload(name)
     sys.stdout.flush()

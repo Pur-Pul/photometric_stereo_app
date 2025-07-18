@@ -72,7 +72,7 @@ const userExtractor = async (request, response, next) => {
 const imageUpload = multer({
 	storage: multer.diskStorage({
 		destination: (request, file, callback) => {
-			callback(null, path.join(__dirname, '../uploads/'))
+			callback(null, path.join(process.cwd(), '../uploads/'))
 		},
 		filename: (request, file, callback) => {
 			callback(null, request.user.id + '-' + request.timestamp + '.' + file.originalname)

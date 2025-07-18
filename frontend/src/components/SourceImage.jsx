@@ -1,3 +1,5 @@
+import LightDirSelector from "./LightDirSelector"
+
 const SourceImage = ({ files, index, handleChange, style}) => {
     const img = {
         width: '100%',
@@ -18,6 +20,7 @@ const SourceImage = ({ files, index, handleChange, style}) => {
     return (
         <div>
             <img style={img} src={files[index].image} alt="Uploaded preview" onLoad={handleLoad}/>
+            <LightDirSelector />
             <p>Light direction: x={files[index].light[0]} y={files[index].light[1]} z={files[index].light[2]}</p>
             <p>Width: {files[index].width} Height: {files[index].height}</p>
         </div>

@@ -1,8 +1,10 @@
 from flask import Flask, request
 import subprocess, os
+from normal_map import clear_upload
 
 BACKEND_URI = os.getenv("BACKEND_URI")
 app = Flask(__name__)
+clear_upload('*')
 
 @app.post("/normal_map/<string:map_id>")
 def normal_map_post(map_id):

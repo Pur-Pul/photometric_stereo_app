@@ -15,8 +15,8 @@ services:
         PORT: ${PHOTOSTEREO_PORT}
       dockerfile: Dockerfile
     volumes:
-      - ./uploads:/usr/src/app/uploads
-      - ./output:/usr/src/app/output
+      - ./uploads:/usr/src/uploads
+      - ./output:/usr/src/output
     ports:
       - 5000:${PHOTOSTEREO_PORT}
     container_name: photostereo-service
@@ -29,8 +29,8 @@ services:
     volumes:
       - ./backend:/usr/src/app
       - node_modules_back:/usr/src/app/node_modules
-      - ./uploads:/usr/src/app/uploads
-      - ./output:/usr/src/app/output
+      - ./uploads:/usr/src/uploads
+      - ./output:/usr/src/output
     container_name: photostereo-back
     environment:
       - MONGODB_URI=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASS}@mongo:27017/

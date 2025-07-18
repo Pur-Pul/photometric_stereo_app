@@ -23,7 +23,7 @@ imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response
     if (user.id != image.creator.id) {
         return response.status(403).json({ error: 'incorrect user' })
     }
-	const file_path = path.join(__dirname, '../output/', `${image.file}_normal_map${image.format}`)
+	const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
 	if (image.status="done" && fs.existsSync(file_path)) {
 		response.sendFile(file_path)
 	}
@@ -60,7 +60,7 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 					}, { flowLevel: 1})
 				data = '%YAML:1.0\n' + 'Lights: !!opencv-matrix\n' + data.replace(/^/gm, '   ')
 				
-				const light_matrix_file = path.join(__dirname, '../uploads/', `${file_name}_LightMatrix.yml`)
+				const light_matrix_file = path.join(process.cwd(), '../uploads/', `${file_name}_LightMatrix.yml`)
 
 				fs.writeFile(light_matrix_file, data, (err) => {
 					if (err) {
@@ -94,7 +94,7 @@ imagesRouter.delete('/:id', middleware.userExtractor, async (request, response, 
 	try {
 		const image = await Image.findById(id)
 		if (image.creator.toString() === user.id.toString()) {
-			const file_path = path.join(__dirname, '../output/', `${image.file}_normal_map${image.format}`)
+			const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
 			if (fs.existsSync(file_path)) { fs.unlinkSync(file_path) }
 			await Image.findByIdAndDelete(id)
 			const image_index = user.images.findIndex((image) => image.toString === id.toString())

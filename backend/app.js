@@ -4,7 +4,6 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 var multer = require('multer');
-var upload = multer();
 
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')

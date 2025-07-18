@@ -33,7 +33,7 @@ const expireImage = async (id) => {
 		const expiration_time = image.updatedAt - new Date() + EXPIRE_DELAY * 60 * 1000
 		if (expiration_time <= 0) {
 			const creator = await User.findById(image.creator)
-			const file_path = path.join(__dirname, '../output/', `${image.file}_normal_map${image.format}`)
+			const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
 			if (fs.existsSync(file_path)) { fs.unlinkSync(file_path) }
 
 			const image_index = creator.images.findIndex((image) => image.toString === id.toString())
