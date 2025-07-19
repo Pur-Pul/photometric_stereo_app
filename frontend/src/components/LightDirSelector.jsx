@@ -3,6 +3,7 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
+import LightPlot from './LightPlot'
 
 const LightDirSelector = ({ index, files, handleChange}) => {
     const [open, setOpen] = useState(false)
@@ -34,6 +35,7 @@ const LightDirSelector = ({ index, files, handleChange}) => {
                         <Button type="submit">Save</Button>
                     </DialogActions>
                 </form>
+                <LightPlot file={files[index]}/>
             </Dialog>
         </div>
     )
