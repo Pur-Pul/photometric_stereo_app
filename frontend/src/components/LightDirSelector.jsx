@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
@@ -20,22 +20,70 @@ const LightDirSelector = ({ index, files, handleChange}) => {
         handleChange(new_files)
     }
 
+    useEffect(() => {
+        setLightX(files[index].light[0])
+        setLightY(files[index].light[1])
+        setLightZ(files[index].light[2])
+    }, [files, index])
+
+    const handleLightChange = (event) => {
+        let tempLight = [lightX, lightY, lightZ]
+        switch(event.target.id) {
+            case "lightX":
+                tempLight[0] = Number(event.target.value)
+                break;
+            case "lightY":
+                tempLight[1] = Number(event.target.value)
+                break;
+            case "lightZ":
+                tempLight[2] = Number(event.target.value)
+                break;
+            default:
+                console.log(`invalid input component ${event.target.id}`)
+        }
+        const magnitude = Math.sqrt(tempLight.reduce((sum, component) => sum + Math.pow(component, 2), 0))
+        console.log(magnitude)
+        if (magnitude != 1) {
+            tempLight = tempLight.map(component => component/magnitude)
+        }
+        setLightX(tempLight[0])
+        setLightY(tempLight[1])
+        setLightZ(tempLight[2])
+        document.getElementById("lightX").value = tempLight[0]
+        document.getElementById("lightY").value = tempLight[1]
+        document.getElementById("lightZ").value = tempLight[2]
+    }
+
     return (
         <div>
             <Button variant="outlined" onClick={() => { setOpen(true) }}>Edit light direction</Button>
             <Dialog open={ open } onClose={() => { setOpen(false) }} closeAfterTransition={false}>
                 <DialogTitle>Select light direction</DialogTitle>
                 <form onSubmit={handleSubmit}>
-                    <input type="number" step={0.05} max={1} min={-1} onChange={(event) => {setLightX(event.target.value)}} value={lightX}/>
-                    <input type="number" step={0.05} max={1} min={-1} onChange={(event) => {setLightY(event.target.value)}} value={lightY}/>
-                    <input type="number" step={0.05} max={1} min={-1} onChange={(event) => {setLightZ(event.target.value)}} value={lightZ}/>
+                    <input id="lightX" type="number" step={0.05} max={1} min={-1} 
+                        onBlur={handleLightChange}
+                        defaultValue={lightX}
+                    />
+                    <input id="lightY" type="number" step={0.05} max={1} min={-1}
+                        onBlur={handleLightChange}
+                        defaultValue={lightY}
+                    />
+                    <input id="lightZ" type="number" step={0.05} max={1} min={-1}
+                        onBlur={handleLightChange}
+                        defaultValue={lightZ}
+                    />
                     
                     <DialogActions>
                         <Button onClick={ () => { setOpen(false) } }>Cancel</Button>
                         <Button type="submit">Save</Button>
                     </DialogActions>
                 </form>
-                <LightPlot file={files[index]}/>
+                <LightPlot 
+                    file = { files[index] }
+                    lightX = { lightX }
+                    lightY = { lightY }
+                    lightZ = { lightZ }
+                />
             </Dialog>
         </div>
     )
