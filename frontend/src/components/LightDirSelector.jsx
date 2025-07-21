@@ -31,28 +31,35 @@ const LightDirSelector = ({ index, files, handleChange}) => {
         switch(event.target.id) {
             case "lightX":
                 tempLight[0] = Number(event.target.value)
+                setLightX(tempLight[0])
                 break;
             case "lightY":
                 tempLight[1] = Number(event.target.value)
+                setLightY(tempLight[1])
                 break;
             case "lightZ":
                 tempLight[2] = Number(event.target.value)
+                setLightZ(tempLight[2])
                 break;
             default:
                 console.log(`invalid input component ${event.target.id}`)
         }
+    }
+
+    useEffect(()=> {
+        let tempLight = [lightX, lightY, lightZ]
         const magnitude = Math.sqrt(tempLight.reduce((sum, component) => sum + Math.pow(component, 2), 0))
-        console.log(magnitude)
         if (magnitude != 1) {
             tempLight = tempLight.map(component => component/magnitude)
+            setLightX(tempLight[0])
+            setLightY(tempLight[1])
+            setLightZ(tempLight[2])
         }
-        setLightX(tempLight[0])
-        setLightY(tempLight[1])
-        setLightZ(tempLight[2])
-        document.getElementById("lightX").value = tempLight[0]
-        document.getElementById("lightY").value = tempLight[1]
-        document.getElementById("lightZ").value = tempLight[2]
-    }
+        console.log(magnitude)
+        if (document.getElementById("lightX")) { document.getElementById("lightX").value = tempLight[0] }
+        if (document.getElementById("lightY")) { document.getElementById("lightY").value = tempLight[1] }
+        if (document.getElementById("lightZ")) { document.getElementById("lightZ").value = tempLight[2] }
+    }, [lightX, lightY, lightZ])
 
     return (
         <div>
@@ -83,6 +90,9 @@ const LightDirSelector = ({ index, files, handleChange}) => {
                     lightX = { lightX }
                     lightY = { lightY }
                     lightZ = { lightZ }
+                    setLightX = { setLightX }
+                    setLightY = { setLightY }
+                    setLightZ = { setLightZ }
                 />
             </Dialog>
         </div>

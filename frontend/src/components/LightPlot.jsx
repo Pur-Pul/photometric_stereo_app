@@ -30,11 +30,37 @@ class PersistPlot extends React.Component {
   }
 }
 
-const getPixels = (url, width, height) => {
+const generateLightLines = (lightDir, width, height) => {
+    const roots = [
+        [-width/3,  0,          0],
+        [-width/3,  0,  -height/3],
+        [0,         0,  -height/3],
+        [width/3,   0,  -height/3],
+        [width/3,   0,  0],
+        [width/3,   0,  height/3],
+        [0,         0,  height/3],
+        [-width/3,  0,  height/3],
+    ]
+    return roots.map((root) => {
+        const length = Math.max(width, height)
+        return {
+            type: 'scatter3d',
+            mode: 'lines',
+            x: [root[0]-length*lightDir[0], root[0]],
+            y: [root[1]-length*lightDir[2], root[1]],
+            z: [root[2]-length*lightDir[1], root[2]],
+            line: {
+                width: 6,
+                color: 'rgba(255, 255, 0, 0.5)'
+            }
+        }
+    })
+    
+}
+
+const getPixels = (url, width, height, canvas, context) => {
     var img = new Image()
     img.src = url
-    var canvas = document.createElement('canvas')
-    var context = canvas.getContext('2d')
     canvas.width=width
     canvas.height=height
     context.drawImage(img, 0, 0, width, height)
@@ -51,28 +77,32 @@ const getPixels = (url, width, height) => {
 const LightPlot = ({ file, lightX, lightY, lightZ }) => {
     const [lightPos, setLightPos] = useState([0,0,0])
     const [colors, setColors] = useState([])
+    const [radius, setRadius] = useState(0)
+
+    const size = 100
+
     const aspect_ratio = file.width/file.height
-    const plane = new Array(300).fill(null).map(() => new Array(aspect_ratio * 300).fill(0))
+    const plane = new Array(size).fill(null).map(() => new Array(aspect_ratio * size).fill(0))
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d', { willReadFrequently: true })
 
     useEffect(() => {
-        setColors(getPixels(file.image, aspect_ratio * 300, 300))
+        setColors(getPixels(file.image, aspect_ratio * size, size, canvas, context))
     }, [file])
 
     useEffect(() => {
-        const middle = [
-            0.5 * 300 * aspect_ratio,
-            0.5 * 300,
-            0
-        ]
-        const radius = Math.max(...middle)
-        setLightPos([middle[0] - lightX*radius, middle[1] - lightY*radius, middle[2] - lightZ*radius])
+        const radius = Math.max(0.5 * size * aspect_ratio, 0.5 * size)
+        setLightPos([-lightX*radius, -lightY*radius, -lightZ*radius])
+        setRadius(radius)
     }, [lightX, lightY, lightZ])
 
     var data = [
         {
             type: 'surface',
-            z: plane.map((row, y) => row.map((_, x) => plane.length-y)),
+            x: plane.map((row, y) => row.map((_, x) => x - row.length/2)),
             y: plane,
+            z: plane.map((row, y) => row.map((_, x) => plane.length/2-y)),
+            
             surfacecolor: colors,
             showscale: false,
             colorscale: 'Greys'
@@ -85,31 +115,34 @@ const LightPlot = ({ file, lightX, lightY, lightZ }) => {
             z: [lightPos[1]],
             marker: {
                 size: 12,
-                line: {
-                    color: 'rgba(217, 217, 217, 0.14)',
-                    width: 0.5
-                },
+                color: 'rgba(255, 200, 0, 1)',
                 opacity: 0.8
             },
             hovertemplate: `light direction<br>(${lightX}, ${lightY}, ${lightZ})<br>`
-        }
+        },
+        ...generateLightLines([lightX, lightY, lightZ], size * aspect_ratio, size)
     ]
 
     var layout = {
         title: { text: "Pick a light direction." },
         scene: {
             aspectmode:"manual",
-            aspectratio: { x:aspect_ratio, y:1, z:1 },
-            camera: { eye: { x: 0, y: 3, z: 0 } },
+            aspectratio: { x:1, y:1, z:1 },
+            camera: { eye: { x: 0, y: -3, z: 0 } },
             yaxis: {
                 title: { text: 'z' },
                 showticklabels: false
             },
             zaxis: {
                 title: { text: 'y' },
-                showticklabels: false
+                showticklabels: false,
+                autorange: false,
+                range: [-radius, radius]
             },
-            xaxis: { showticklabels: false },
+            xaxis: { showticklabels: false, 
+                autorange: false,
+                range: [-radius, radius]
+            },
             dragmode: "turntable"
         },
         autosize: false, 

@@ -14,7 +14,7 @@ const Mask = ({ images, setMask }) => {
     useEffect(() => {
         if (images.length > 0) {
             const canvas = canvasRef.current
-            const ctx = canvas.getContext('2d')
+            const ctx = canvas.getContext('2d', { willReadFrequently: true })
             ctx.canvas.width = images[0].width
             ctx.canvas.height = images[0].height
 
