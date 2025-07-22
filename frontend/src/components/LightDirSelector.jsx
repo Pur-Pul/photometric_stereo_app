@@ -4,62 +4,55 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import LightPlot from './LightPlot'
+import Vector3 from "../utils/Vector3"
 
-const LightDirSelector = ({ index, files, handleChange}) => {
+const LightDirSelector = ({ index, files, handleChange }) => {
     const [open, setOpen] = useState(false)
-    const [lightX, setLightX] = useState(0)
-    const [lightY, setLightY] = useState(0)
-    const [lightZ, setLightZ] = useState(0)
+    const [lightDir, setLightDir] = useState(new Vector3(0,0,0))
 
     const handleSubmit = (event) => {
         event.preventDefault()
         setOpen(false)
         
         const new_files = [...files]
-        new_files[index].light = [lightX, lightY, lightZ]
+        new_files[index].light = [lightDir.x, lightDir.y, lightDir.z]
         handleChange(new_files)
     }
 
     useEffect(() => {
-        setLightX(files[index].light[0])
-        setLightY(files[index].light[1])
-        setLightZ(files[index].light[2])
+        setLightDir(new Vector3(
+            files[index].light[0],
+            files[index].light[1],
+            files[index].light[2]
+        ))
     }, [files, index])
 
     const handleLightChange = (event) => {
-        let tempLight = [lightX, lightY, lightZ]
+        let tempLight = lightDir.clone()
         switch(event.target.id) {
             case "lightX":
-                tempLight[0] = Number(event.target.value)
-                setLightX(tempLight[0])
+                tempLight.x = Number(event.target.value)
                 break;
             case "lightY":
-                tempLight[1] = Number(event.target.value)
-                setLightY(tempLight[1])
+                tempLight.y = Number(event.target.value)
                 break;
             case "lightZ":
-                tempLight[2] = Number(event.target.value)
-                setLightZ(tempLight[2])
+                tempLight.z = Number(event.target.value)
                 break;
             default:
                 console.log(`invalid input component ${event.target.id}`)
         }
+        tempLight = tempLight.normalize()
+        setLightDir(tempLight)
+        
     }
 
     useEffect(()=> {
-        let tempLight = [lightX, lightY, lightZ]
-        const magnitude = Math.sqrt(tempLight.reduce((sum, component) => sum + Math.pow(component, 2), 0))
-        if (magnitude != 1) {
-            tempLight = tempLight.map(component => component/magnitude)
-            setLightX(tempLight[0])
-            setLightY(tempLight[1])
-            setLightZ(tempLight[2])
-        }
-        console.log(magnitude)
-        if (document.getElementById("lightX")) { document.getElementById("lightX").value = tempLight[0] }
-        if (document.getElementById("lightY")) { document.getElementById("lightY").value = tempLight[1] }
-        if (document.getElementById("lightZ")) { document.getElementById("lightZ").value = tempLight[2] }
-    }, [lightX, lightY, lightZ])
+        if (document.getElementById("lightX")) { document.getElementById("lightX").value = lightDir.x }
+        if (document.getElementById("lightY")) { document.getElementById("lightY").value = lightDir.y }
+        if (document.getElementById("lightZ")) { document.getElementById("lightZ").value = lightDir.z }
+        
+    }, [lightDir])
 
     return (
         <div>
@@ -67,17 +60,17 @@ const LightDirSelector = ({ index, files, handleChange}) => {
             <Dialog open={ open } onClose={() => { setOpen(false) }} closeAfterTransition={false}>
                 <DialogTitle>Select light direction</DialogTitle>
                 <form onSubmit={handleSubmit}>
-                    <input id="lightX" type="number" step={0.05} max={1} min={-1} 
+                    <input id="lightX" type="number" max={1} min={-1} step={'any'}
                         onBlur={handleLightChange}
-                        defaultValue={lightX}
+                        defaultValue={lightDir.x}
                     />
-                    <input id="lightY" type="number" step={0.05} max={1} min={-1}
+                    <input id="lightY" type="number" max={1} min={-1} step={'any'}
                         onBlur={handleLightChange}
-                        defaultValue={lightY}
+                        defaultValue={lightDir.y}
                     />
-                    <input id="lightZ" type="number" step={0.05} max={1} min={-1}
+                    <input id="lightZ" type="number" max={1} min={-1} step={'any'}
                         onBlur={handleLightChange}
-                        defaultValue={lightZ}
+                        defaultValue={lightDir.z}
                     />
                     
                     <DialogActions>
@@ -87,12 +80,8 @@ const LightDirSelector = ({ index, files, handleChange}) => {
                 </form>
                 <LightPlot 
                     file = { files[index] }
-                    lightX = { lightX }
-                    lightY = { lightY }
-                    lightZ = { lightZ }
-                    setLightX = { setLightX }
-                    setLightY = { setLightY }
-                    setLightZ = { setLightZ }
+                    lightDir = { lightDir }
+                    setLightDir = { setLightDir }
                 />
             </Dialog>
         </div>

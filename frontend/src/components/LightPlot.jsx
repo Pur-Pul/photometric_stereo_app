@@ -1,6 +1,8 @@
 import Plot from 'react-plotly.js'
 import { useEffect, useState } from 'react'
 import React from 'react';
+import Sphere from '../utils/Sphere'
+import Vector3 from '../utils/Vector3';
 
 class PersistPlot extends React.Component {
   constructor(props) {
@@ -17,14 +19,22 @@ class PersistPlot extends React.Component {
         config={this.state.config}
         onInitialized={(figure) => {this.setState(figure)}}
         onUpdate={(figure) => {this.setState(figure)}}
-        /*
+        
         onClick={(e) => {
-          if (this.props.setPoint) {
-            this.props.setPoint(new Vector3(e.points[0].x, e.points[0].y, e.points[0].z))
-            this.props.setSelection(-1)
-          }
+            if (this.props.setLightDir) {
+                const dir = new Vector3(
+                    e.points[0].x,
+                    e.points[0].z,
+                    e.points[0].y
+                ).normalize(-1)
+                if (dir.norm() != 0) {
+                    this.props.setLightDir(dir)
+                }
+                //this.props.setPoint(new Vector3(e.points[0].x, e.points[0].y, e.points[0].z))
+                //this.props.setSelection(-1)
+            }
         }}
-          */
+          
       />
     );
   }
@@ -32,27 +42,30 @@ class PersistPlot extends React.Component {
 
 const generateLightLines = (lightDir, width, height) => {
     const roots = [
-        [-width/3,  0,          0],
-        [-width/3,  0,  -height/3],
-        [0,         0,  -height/3],
-        [width/3,   0,  -height/3],
-        [width/3,   0,  0],
-        [width/3,   0,  height/3],
-        [0,         0,  height/3],
-        [-width/3,  0,  height/3],
+        new Vector3(-width/3,  0,          0),
+        new Vector3(-width/3,  0,  -height/3),
+        new Vector3(0,         0,  -height/3),
+        new Vector3(width/3,   0,  -height/3),
+        new Vector3(width/3,   0,  0),
+        new Vector3(width/3,   0,  height/3),
+        new Vector3(0,         0,  height/3),
+        new Vector3(-width/3,  0,  height/3),
     ]
     return roots.map((root) => {
         const length = Math.max(width, height)
+        const lightDirFlipped = new Vector3(lightDir.x, lightDir.z, lightDir.y)
+        const light_start = root.sub(lightDirFlipped.scalar(length))
         return {
             type: 'scatter3d',
             mode: 'lines',
-            x: [root[0]-length*lightDir[0], root[0]],
-            y: [root[1]-length*lightDir[2], root[1]],
-            z: [root[2]-length*lightDir[1], root[2]],
+            x: [light_start.x, root.x],
+            y: [light_start.y, root.y],
+            z: [light_start.z, root.z],
             line: {
                 width: 6,
                 color: 'rgba(255, 255, 0, 0.5)'
-            }
+            },
+            hoverinfo: 'none'
         }
     })
     
@@ -74,15 +87,16 @@ const getPixels = (url, width, height, canvas, context) => {
     return pixels
 }
 
-const LightPlot = ({ file, lightX, lightY, lightZ }) => {
-    const [lightPos, setLightPos] = useState([0,0,0])
+const LightPlot = ({ file, lightDir, setLightDir }) => {
+    const [lightPos, setLightPos] = useState(new Vector3(0,0,0))
     const [colors, setColors] = useState([])
-    const [radius, setRadius] = useState(0)
-
+    
     const size = 100
-
     const aspect_ratio = file.width/file.height
+    const radius = Math.max(0.5 * size * aspect_ratio, 0.5 * size)
+
     const plane = new Array(size).fill(null).map(() => new Array(aspect_ratio * size).fill(0))
+    const sphere = new Sphere(3, radius)
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d', { willReadFrequently: true })
 
@@ -91,12 +105,24 @@ const LightPlot = ({ file, lightX, lightY, lightZ }) => {
     }, [file])
 
     useEffect(() => {
-        const radius = Math.max(0.5 * size * aspect_ratio, 0.5 * size)
-        setLightPos([-lightX*radius, -lightY*radius, -lightZ*radius])
-        setRadius(radius)
-    }, [lightX, lightY, lightZ])
+        setLightPos(lightDir.scalar(-radius))
+    }, [lightDir])
 
     var data = [
+        {
+            type: "mesh3d",
+            x: sphere.sphere_vertices.map((vertex) => vertex.x),
+            y: sphere.sphere_vertices.map((vertex) => vertex.y),
+            z: sphere.sphere_vertices.map((vertex) => vertex.z),
+            i: sphere.sphere_i,
+            j: sphere.sphere_j,
+            k: sphere.sphere_k,
+            color: 'rgb(0,0,255)',
+            opacity: 0.2,
+            flatshading: true,
+            hoverinfo: 'none',
+            hoverongaps: true
+        },
         {
             type: 'surface',
             x: plane.map((row, y) => row.map((_, x) => x - row.length/2)),
@@ -105,22 +131,23 @@ const LightPlot = ({ file, lightX, lightY, lightZ }) => {
             
             surfacecolor: colors,
             showscale: false,
+            hoverinfo: 'none',
             colorscale: 'Greys'
         },
         {
             type: 'scatter3d',
             mode: 'markers',
-            x: [lightPos[0]],
-            y: [lightPos[2]],
-            z: [lightPos[1]],
+            x: [lightPos.x],
+            y: [lightPos.z],
+            z: [lightPos.y],
             marker: {
                 size: 12,
                 color: 'rgba(255, 200, 0, 1)',
                 opacity: 0.8
             },
-            hovertemplate: `light direction<br>(${lightX}, ${lightY}, ${lightZ})<br>`
+            hovertemplate: `light direction<br>(${lightDir.x.toFixed(2)}, ${lightDir.y.toFixed(2)}, ${lightDir.z.toFixed(2)})<br>`
         },
-        ...generateLightLines([lightX, lightY, lightZ], size * aspect_ratio, size)
+        ...generateLightLines(lightDir, size * aspect_ratio, size)
     ]
 
     var layout = {
@@ -131,29 +158,31 @@ const LightPlot = ({ file, lightX, lightY, lightZ }) => {
             camera: { eye: { x: 0, y: -3, z: 0 } },
             yaxis: {
                 title: { text: 'z' },
-                showticklabels: false
+                showticklabels: false,
+                range: [-radius, radius]
             },
             zaxis: {
                 title: { text: 'y' },
                 showticklabels: false,
-                autorange: false,
+                range: [-radius, radius]
+               
+            },
+            xaxis: {
+                showticklabels: false, 
                 range: [-radius, radius]
             },
-            xaxis: { showticklabels: false, 
-                autorange: false,
-                range: [-radius, radius]
-            },
-            dragmode: "turntable"
         },
+        showlegend: false,
         autosize: false, 
         width: 500,
         height: 500,
-        margin: { l: 65, r: 50, b: 65, t: 90 },
+        margin: { l: 35, r: 0, b: 25, t: 25 },
     }
     return (
         <PersistPlot 
-            data={data}
-            layout={layout}
+            data = { data }
+            layout = { layout }
+            setLightDir = { setLightDir }
         />
     )
 }
