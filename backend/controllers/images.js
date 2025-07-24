@@ -49,6 +49,7 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 				const format = request.body.format
 
 				let lights = []
+				console.log(request.body.lights)
 				request.body.lights.forEach(light => {
 					lights = lights.concat(light.split(',').map(Number))
 				})
@@ -59,7 +60,7 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 						data : lights
 					}, { flowLevel: 1})
 				data = '%YAML:1.0\n' + 'Lights: !!opencv-matrix\n' + data.replace(/^/gm, '   ')
-				
+				console.log(data)
 				const light_matrix_file = path.join(process.cwd(), '../uploads/', `${file_name}_LightMatrix.yml`)
 
 				fs.writeFile(light_matrix_file, data, (err) => {

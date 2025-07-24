@@ -9,7 +9,9 @@ import TextField from "@mui/material/TextField"
 import InputLabel from "@mui/material/InputLabel"
 import FormControl from "@mui/material/FormControl"
 
-const MaskEditor = ({ size, image, handleSave, handleDiscard }) => {
+const SIZE_LIMIT = 300
+
+const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
     const [drawing, setDrawing] = useState(false)
     const [windowSize, setWindowSize] = useState([0,0])
     const [alertOpen, setAlertOpen] = useState(false)
@@ -30,7 +32,7 @@ const MaskEditor = ({ size, image, handleSave, handleDiscard }) => {
 
         const canvasAspect = size[0]/size[1]
         const editorAspect = editorWidth/editorHeight
-        const scale = canvasAspect >= editorAspect ? size[0]/editorWidth : size[1]/editorHeight
+        
         const windowSize = canvasAspect >= editorAspect 
             ? [editorWidth, editorWidth / canvasAspect]
             : [editorHeight * canvasAspect, editorHeight]
@@ -38,12 +40,19 @@ const MaskEditor = ({ size, image, handleSave, handleDiscard }) => {
 
         const canvas = canvasRef.current
         const ctx = canvas.getContext('2d', { willReadFrequently: true })
-        canvas.width = size[0]
-        canvas.height = size[1]
+        if (Math.max(size[0], size[1]) > SIZE_LIMIT) {
+            canvas.width = canvasAspect >= 1 ? SIZE_LIMIT : canvasAspect * SIZE_LIMIT
+            canvas.height = canvasAspect >= 1 ? SIZE_LIMIT / canvasAspect : SIZE_LIMIT
+        } else {
+            canvas.width = size[0]
+            canvas.height = size[1]
+        }
+        const scale = canvasAspect >= editorAspect ? canvas.width/editorWidth : canvas.height/editorHeight
         canvas.style.width = `${windowSize[0]-2}px`
         canvas.style.height = `${windowSize[1]-2}px`
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        //ctx.fillStyle = '#ffffff'
+        //ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(maskCanvas, 0, 0, canvasRef.current.width, canvasRef.current.height)
         ctx.scale(scale, scale)
         ctxRef.current = ctx 
     }, [])
@@ -133,7 +142,7 @@ const MaskEditor = ({ size, image, handleSave, handleDiscard }) => {
                 
                 <FormControlLabel control={ <Checkbox defaultChecked value={ showOverlay } onChange={(e) => setShowOverlay(current => !current)}/> } label="Overlay image"/>
                 <Button onClick={ () => { setAlertOpen(true) }}>Cancel</Button>
-                <Button onClick={handleSave}>Save</Button>
+                <Button onClick={() => handleSave(canvasRef.current)}>Save</Button>
             </DialogActions>
             <Dialog open={ alertOpen } onClose={() => { setAlertOpen(false) }} closeAfterTransition={false}>
                 <DialogTitle>You are about to discard changes to the mask</DialogTitle>

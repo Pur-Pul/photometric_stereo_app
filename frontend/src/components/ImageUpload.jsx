@@ -42,7 +42,7 @@ const ImageUploadForm = () => {
 
     const submitImages = (event) => {
         event.preventDefault()
-        console.log(notification)
+        console.log(files)
         console.log(mask)
         dispatch(createImages(files, mask))
             .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'message' }, 5)) })

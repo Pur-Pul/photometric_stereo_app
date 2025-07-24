@@ -67,6 +67,7 @@ if __name__ == "__main__":
         })
         print(res.json())
     except Exception as e:
+        print(e)
         res = requests.put(url, json={
             "file": name,
             "format": ".png",
