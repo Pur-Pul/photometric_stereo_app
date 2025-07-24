@@ -5,6 +5,8 @@ import DialogActions from "@mui/material/DialogActions"
 import Button from "@mui/material/Button"
 import MaskEditor from "./MaskEditor"
 
+const SIZE_LIMIT = 300
+
 const Mask = ({ images, setMask }) => {
     const img = {
         width: '100%',
@@ -17,18 +19,21 @@ const Mask = ({ images, setMask }) => {
     const canvasRef = useRef(null)
     const ctxRef = useRef(null)
     const [open, setOpen] = useState(false)
-    const [alertOpen, setAlertOpen] = useState(false)
 
     useEffect(() => {
         if (images.length > 0) {
             const canvas = canvasRef.current
             const ctx = canvas.getContext('2d', { willReadFrequently: true })
-            canvas.width = images[0].width
-            canvas.height = images[0].height
+            const canvasAspect = images[0].width/images[0].height
+            if (Math.max(images[0].width, images[0].height) > SIZE_LIMIT) {
+                canvas.width = canvasAspect >= 1 ? SIZE_LIMIT : canvasAspect * SIZE_LIMIT
+                canvas.height = canvasAspect >= 1 ? SIZE_LIMIT / canvasAspect : SIZE_LIMIT
+            } else {
+                canvas.width = images[0].width
+                canvas.height = images[0].height
+            }
             ctx.fillStyle = '#ffffff'
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-            ctx.strokeStyle = '#000000'
-            ctx.lineWidth = 10
             ctxRef.current = ctx 
             canvas.toBlob((blob) => { setMask(new File([blob], `mask.${images[0].src.name.split('.').pop()}`, { type: images[0].src.type }, images[0].src.type)) })
         } else { 
@@ -41,37 +46,36 @@ const Mask = ({ images, setMask }) => {
         setOpen(false)
     }
 
+    const handleDiscard = () => {
+        setOpen(false)
+    }
+
     return (
         images.length > 0 
             ? <div>
                 <canvas style={img} ref={canvasRef} />
-                <Button onClick={ () => { setOpen(true) } }>Edit mask</Button>
-                <Dialog 
-                    id='maskEditor'
-                    open={ open }
-                    onClose={ () => { setAlertOpen(true) } }
-                    closeAfterTransition={false}
-                    fullWidth
-                    maxWidth = 'lg'
-                    slotProps={{ paper: { sx: { height: '80%' }}}}
-                    >
-                    <DialogTitle>Edit the mask</DialogTitle>
-                    <MaskEditor width={ images[0].width } height={ images[0].height } handleSave={ handleSave }/>
-                    
-                </Dialog>
-                <Dialog open={ alertOpen } onClose={() => { setAlertOpen(false) }} closeAfterTransition={false}>
-                    <DialogTitle>You are about to discard changes to the mask</DialogTitle>
-                    <form onSubmit={(event) => {
-                        event.preventDefault()
-                        setAlertOpen(false)
-                        setOpen(false)
-                    }}> 
-                        <DialogActions>
-                            <Button onClick={ () => { setAlertOpen(false) } }>Cancel</Button>
-                            <Button type="submit">Discard</Button>
-                        </DialogActions>
-                    </form>
-                </Dialog>
+                {   
+                    canvasRef.current 
+                        ? <div>
+                            <Button onClick={ () => { setOpen(true) } }>Edit mask</Button>
+                            <Dialog 
+                                id='maskEditor'
+                                open={ open }
+                                closeAfterTransition={false}
+                                fullWidth
+                                maxWidth = 'lg'
+                                slotProps={{ paper: { sx: { height: '80%' }}}}
+                                >
+                                <DialogTitle>Edit the mask</DialogTitle>
+                                <MaskEditor 
+                                    size = { [canvasRef.current.width, canvasRef.current.height] }
+                                    image= { images[0].image }
+                                    handleSave={ handleSave }
+                                    handleDiscard={handleDiscard}/>
+                            </Dialog>
+                        </div>
+                        : "loading"
+                }
             </div> 
             : null
     )
