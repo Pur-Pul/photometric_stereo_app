@@ -8,6 +8,7 @@ import DialogActions from "@mui/material/DialogActions"
 import TextField from "@mui/material/TextField"
 import InputLabel from "@mui/material/InputLabel"
 import FormControl from "@mui/material/FormControl"
+import ColorSelector from "./ColorSelector"
 
 const SIZE_LIMIT = 300
 
@@ -17,14 +18,17 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
     const [alertOpen, setAlertOpen] = useState(false)
     const [showOverlay, setShowOverlay] = useState(true)
     const [pencilSize, setPencilSize] = useState(10)
+    const [leftColor, setLeftColor] = useState('#000000')
+    const [rightColor, setRightColor] = useState('#ffffff')
     const canvasRef = useRef(null)
     const ctxRef = useRef(null)
     const [mouse, setMouse] = useState(-1)
 
     window.onmousedown = (event) => { mouse === -1 ? setMouse(event.button) : null}
-    window.onmouseup = (event) => { if(event.button === mouse) { setMouse(-1) }}
-
-    console.log(mouse)
+    window.onmouseup = (event) => { if(event.button === mouse) { 
+        setMouse(-1) 
+        setDrawing(false)
+    }}
 
     useEffect(() => {
         let { clientWidth:editorWidth, clientHeight:editorHeight } = document.getElementById('maskEditor').getElementsByClassName('MuiPaper-root')[0]
@@ -67,10 +71,9 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
     }
 
     const startDraw = (event) => {
-        //console.log(event.nativeEvent)
-        const {offsetX:x, offsetY:y} = event.nativeEvent
-        ctxRef.current.strokeStyle = event.button == 0 ? '#000000' : '#ffffff'
-        ctxRef.current.fillStyle = event.button == 0 ? '#000000' : '#ffffff'
+        const {offsetX:x, offsetY:y, button} = event.nativeEvent
+        ctxRef.current.strokeStyle = button == 0 ? leftColor : rightColor
+        ctxRef.current.fillStyle = button == 0 ? leftColor : rightColor
         ctxRef.current.lineWidth = pencilSize
         ctxRef.current.lineCap = 'round'
         ctxRef.current.beginPath()
@@ -88,17 +91,12 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
         setDrawing(false)
     }
 
+    const pauseDraw = () => {
+        if (drawing) { ctxRef.current.closePath() }
+    }
+
     const continueDraw = (event) => {
-        const {offsetX:x, offsetY:y} = event.nativeEvent
-        //console.log(event.nativeEvent)
-        if (mouse == -1) { return }
-        ctxRef.current.strokeStyle = mouse == 0 ? '#000000' : '#ffffff'
-        ctxRef.current.fillStyle = mouse == 0 ? '#000000' : '#ffffff'
-        ctxRef.current.lineWidth = pencilSize
-        ctxRef.current.lineCap = 'round'
         ctxRef.current.beginPath()
-        //ctxRef.current.moveTo(x,y)
-        setDrawing(true)
     }
 
 
@@ -119,16 +117,17 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
         <div style={{ margin: 'auto' }}>
             <img style={{ ...editor, ...overlay }} src={image} alt="Mask editor overlay"/>
             <canvas 
-                ref={canvasRef}
+                ref={ canvasRef }
                 onMouseDown={ startDraw }
                 onMouseUp={ endDraw }
                 onMouseMove={ draw }
-                onMouseLeave={ endDraw }
+                onMouseLeave={ pauseDraw }
                 onMouseEnter={ continueDraw }
                 onContextMenu={ (e) => e.preventDefault()}
                 style={editor}
                 />
             <DialogActions style={{ margin: 'auto' }}>
+                <ColorSelector leftColor={leftColor} rightColor={rightColor} setLeftColor={setLeftColor} setRightColor={setRightColor}/>
                 <FormControl>
                     <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
                     <TextField
@@ -141,8 +140,8 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
                 </FormControl>
                 
                 <FormControlLabel control={ <Checkbox defaultChecked value={ showOverlay } onChange={(e) => setShowOverlay(current => !current)}/> } label="Overlay image"/>
-                <Button onClick={ () => { setAlertOpen(true) }}>Cancel</Button>
-                <Button onClick={() => handleSave(canvasRef.current)}>Save</Button>
+                <Button onClick={ () => { setAlertOpen(true) }} color="error" variant="outlined">Cancel</Button>
+                <Button onClick={() => handleSave(canvasRef.current)} color="success" variant="outlined">Save</Button>
             </DialogActions>
             <Dialog open={ alertOpen } onClose={() => { setAlertOpen(false) }} closeAfterTransition={false}>
                 <DialogTitle>You are about to discard changes to the mask</DialogTitle>
@@ -152,8 +151,8 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
                     handleDiscard()
                 }}> 
                     <DialogActions>
-                        <Button onClick={ () => { setAlertOpen(false) } }>Cancel</Button>
-                        <Button type="submit">Discard</Button>
+                        <Button onClick={ () => { setAlertOpen(false) } } variant="outlined">Cancel</Button>
+                        <Button type="submit" color="error" variant="outlined">Discard</Button>
                     </DialogActions>
                 </form>
             </Dialog>

@@ -3,7 +3,7 @@ const { expireSessions, expireImages } = require('./utils/expiration_manager')
 const express = require('express')
 const app = express()
 const cors = require('cors')
-var multer = require('multer');
+
 
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')

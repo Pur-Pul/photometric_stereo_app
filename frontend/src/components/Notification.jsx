@@ -2,6 +2,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { notificationRemove } from '../reducers/notificationReducer'
+import { Alert } from '@mui/material'
 
 
 const Notification = () => {
@@ -16,8 +17,8 @@ const Notification = () => {
 	if (notification.type === 'none') {
 		return null
 	}
-
-	return <div className={notification.type}>{notification.text}</div>
+	return <Alert severity={notification.type}>{notification.text}</Alert>
+	//return <div className={notification.type}>{notification.text}</div>
 }
 
 export default Notification

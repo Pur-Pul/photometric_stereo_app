@@ -63,7 +63,7 @@ const Mask = ({ images, setMask }) => {
                 {   
                     canvasRef.current 
                         ? <div>
-                            <Button onClick={ () => { setOpen(true) } }>Edit mask</Button>
+                            <Button onClick={ () => { setOpen(true) } } variant="outlined">Edit mask</Button>
                             <Dialog 
                                 id='maskEditor'
                                 open={ open }

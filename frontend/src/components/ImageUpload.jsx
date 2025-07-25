@@ -16,8 +16,10 @@ const ImageUploadForm = () => {
     const notification = useSelector((state) => { return state.notification })
 
     useEffect(() => {
-        dispatch(notificationSet({ text: 'No images selected', type: 'warning' }))
-    }, [location])
+        if (files.length == 0 && notification.text !== 'No images selected') {
+            dispatch(notificationSet({ text: 'No images selected', type: 'warning' }))
+        }
+    }, [location, files])
 
     const handleFileSelect = (event) => {
         setFiles(Array.from(event.target.files).map((file, index) => {
@@ -45,7 +47,7 @@ const ImageUploadForm = () => {
         console.log(files)
         console.log(mask)
         dispatch(createImages(files, mask))
-            .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'message' }, 5)) })
+            .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'success' }, 5)) })
 			.catch((exception) => {
 				console.log(exception)
 				dispatch(notificationSet({ text: exception.response.data.error, type: 'error' }, 5))
@@ -65,11 +67,11 @@ const ImageUploadForm = () => {
                         style={{ display: 'none' }}
                         type="file"
                         onChange={handleFileSelect}
-                        onClick={(e) => {dispatch(notificationSet({ text: 'No images selected', type: 'warning' }))}}
+                        
                         multiple
                     />
                 </Button>
-                <Button type="submit" variant="outlined">Submit</Button>
+                <Button type="submit" color="success" variant="outlined">Submit</Button>
             </form>
             <div>
                 { files.map((file, index) => <SourceImage key={index} files={files} index={index} handleChange={handleChange}/>) }
