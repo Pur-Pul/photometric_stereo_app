@@ -23,8 +23,12 @@ const getFile = async (id) => {
 }
 
 const post = async (data) => {
-	let config = getConfig()
-	const response = await axios.post(baseUrl, data, { headers: {...config.headers, 'Content-Type': 'multipart/form-data'}})
+	const response = await axios.post(`${baseUrl}`, data, { headers: {...getConfig().headers, 'Content-Type': 'multipart/form-data'}})
+	return response.data
+}
+
+const postPhotostereo = async (data) => {
+	const response = await axios.post(`${baseUrl}/photostereo`, data, { headers: {...getConfig().headers, 'Content-Type': 'multipart/form-data'}})
 	return response.data
 }
 
@@ -42,4 +46,4 @@ const setToken = (new_token) => {
 	token = `Bearer ${new_token}`
 }
 
-export default { get, getFile, getAll, post, update, remove, setToken }
+export default { get, getFile, getAll, post, postPhotostereo, update, remove, setToken }

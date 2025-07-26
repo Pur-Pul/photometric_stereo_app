@@ -36,15 +36,26 @@ export const initializeImages = () => {
 	}
 }
 
-export const createImages = (images, mask) => {
+export const generateImage = (sourceImages, mask) => {
 	return async (dispatch) => {
 		const data = new FormData()
-		images.forEach((image, index) => {
+		sourceImages.forEach((image, index) => {
 			data.append('files', image.src, index.toString() + '.' + image.src.name.split('.').pop())
 			data.append('lights', image.light)
 		})
 		data.append('files', mask, mask.name)
-		data.set('format', images[0].src.name.split('.').pop())
+		data.set('format', sourceImages[0].src.name.split('.').pop())
+
+		const new_image = await imageService.postPhotostereo(data)
+		dispatch(appendImages([new_image]))
+	}
+}
+
+export const createImage = (image) => {
+	return async (dispatch) => {
+		const data = new FormData()
+		data.append('files', image.src, image.src.name)
+		data.set('format', image.src.name.split('.').pop())
 
 		const new_image = await imageService.post(data)
 		dispatch(appendImages([new_image]))

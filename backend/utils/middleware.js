@@ -22,19 +22,19 @@ const unknownEndpoint = (request, response) => {
 const errorHandler = (error, request, response, next) => {
 	logger.error(error.name, error.message)
 
-	if (error.name === 'CastError') {
-		return response.status(400).send({ error: 'malformatted id' })
-	} else if (error.name === 'ValidationError') {
-		return response.status(400).json({ error: error.message })
-	} else if (error.name === 'JsonWebTokenError') {
-		return response.status(401).json({ error: 'token invalid' })
-	} else if (error instanceof multer.MulterError) {
-		return response.status(500).json({ error: `Image uploading error: ${error.message}`})
-	} else if (error) {
-		return response.status(500).json({ error: `Unkown error: ${error.message}`})
+	if (!error) {next(error)}
+	switch(error.name) {
+		case 'CastError':
+			return response.status(400).send({ error: 'malformatted id' })
+		case 'ValidationError':
+			return response.status(400).json({ error: error.message })
+		case 'JsonWebTokenError':
+			return response.status(401).json({ error: 'token invalid' })
+		case 'MulterError':
+			return response.status(500).json({ error: `Image uploading error: ${error.message}` })
+		default:
+			return response.status(500).json({ error: `Unkown error: ${error.message}` })
 	}
-
-	next(error)
 }
 
 const tokenExtractor = (request, response, next) => {
@@ -75,7 +75,9 @@ const imageUpload = multer({
 			callback(null, path.join(process.cwd(), '../uploads/'))
 		},
 		filename: (request, file, callback) => {
-			callback(null, request.user.id + '-' + request.timestamp + '.' + file.originalname)
+			const new_name = request.user.id + '-' + request.timestamp + '.' + file.originalname
+			request.filenames = request.filenames ? [...request.filenames, new_name] : [new_name]
+			callback(null, new_name)
 		}
 	}),
 	limits: { fileSize: 15 * 1024 * 1024 },

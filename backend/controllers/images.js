@@ -7,6 +7,7 @@ const path = require('path')
 const axios = require('axios')
 const { PHOTOSTEREO_URI } = require('../utils/config')
 const user = require('../models/user')
+const { ValidationError } = require('../utils/errors')
 
 imagesRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
@@ -14,6 +15,17 @@ imagesRouter.get('/', middleware.userExtractor, async (request, response) => {
 		const images = await Image.find({ creator: user }).populate('creator')
 		response.json(images)
 	}
+})
+
+imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => {
+	const id = request.params.id
+    const user = request.user
+	const image = await Image.findById(id).populate('creator')
+    if (user.id != image.creator.id) {
+        return response.status(403).json({ error: 'incorrect user' })
+    }
+
+	response.json(image)
 })
 
 imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response) => {
@@ -29,18 +41,30 @@ imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response
 	}
 })
 
-imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => {
-	const id = request.params.id
-    const user = request.user
-	const image = await Image.findById(id).populate('creator')
-    if (user.id != image.creator.id) {
-        return response.status(403).json({ error: 'incorrect user' })
-    }
-
-	response.json(image)
+imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {
+	middleware.imageUpload(request, response, async (exception) => {
+		if (exception) { next(exception) }
+		else {
+			try {
+				if (request.filenames.length == 1) {
+					for (var i = 0; i < request.filenames.length; i++) {
+						const file = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
+						if (fs.existsSync(file)) { fs.unlinkSync(file) }
+					}
+					throw new ValidationError('Invalid number of files.')
+				} else {
+					const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
+					const newfile = path.join(process.cwd(), `../output/${request.filenames[i]}`)
+					fs.renameSync(oldfile, newfile)
+				}
+			} catch (exception) {
+				next(exception)
+			}
+		}
+	})
 })
 
-imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {
+imagesRouter.post('/photostereo/', middleware.userExtractor, async (request, response, next) => {
 	middleware.imageUpload(request, response, async (exception) => {
 		if (exception) { next(exception) }
 		else {
