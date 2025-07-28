@@ -10,7 +10,7 @@ services:
     command: mongod --quiet --logpath /dev/null
   photostereo:
     build:
-      context: photostereo_server
+      context: ./photostereo_server
       args:
         PORT: ${PHOTOSTEREO_PORT}
       dockerfile: dev.Dockerfile
@@ -23,12 +23,13 @@ services:
     container_name: photostereo-service
     environment:
       - BACKEND_URI=http://back:${BACK_PORT}/internal
-  back:
+  back-dev:
     build:
-      context: backend
+      context: ./backend
       dockerfile: dev.Dockerfile
     volumes:
-      - ./backend:/usr/src/app
+      - ./backend/src:/usr/src/app/src
+      - ./backend/tests:/usr/src/app/tests
       - node_modules_back_dev:/usr/src/app/node_modules
       - ./uploads:/usr/src/uploads
       - ./output:/usr/src/output
@@ -41,33 +42,33 @@ services:
     depends_on:
       - mongo
       - photostereo
-  front:
+  front-dev:
     build:
       context: frontend
       args:
         BACKEND_URL: http://localhost:${PORT}/api
       dockerfile: dev.Dockerfile
     volumes:
-      - ./frontend:/usr/src/app
+      - ./frontend/src:/usr/src/app/src
       - node_modules_front_dev:/usr/src/app/node_modules
     container_name: photostereo-front-dev
     env_file:
       - .env
     depends_on:
-      - back
+      - back-dev
   
-  nginx:
+  nginx-dev:
     image: nginx:1.25
     volumes:
       - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
     ports:
       - ${PORT}:80
-    container_name: reverse-proxy
+    container_name: reverse-proxy-dev
     env_file:
       - .env
     depends_on:
-      - front
-      - back
+      - front-dev
+      - back-dev
       - photostereo
 
 volumes:

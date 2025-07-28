@@ -27,7 +27,6 @@ services:
       context: backend
       dockerfile: Dockerfile
     volumes:
-      - ./backend:/usr/src/app
       - node_modules_back:/usr/src/app/node_modules
       - ./uploads:/usr/src/uploads
       - ./output:/usr/src/output
@@ -47,7 +46,6 @@ services:
         BACKEND_URL: http://localhost:${PORT}/api
       dockerfile: Dockerfile
     volumes:
-      - ./frontend:/usr/src/app
       - node_modules_front:/usr/src/app/node_modules
     container_name: photostereo-front
     env_file:

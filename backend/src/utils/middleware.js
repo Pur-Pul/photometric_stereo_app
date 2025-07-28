@@ -20,7 +20,7 @@ const unknownEndpoint = (request, response) => {
 }
 
 const errorHandler = (error, request, response, next) => {
-	logger.error(error.name, error.message)
+	logger.error(error.name, error.message, error)
 
 	if (!error) {next(error)}
 	switch(error.name) {
@@ -31,6 +31,9 @@ const errorHandler = (error, request, response, next) => {
 		case 'JsonWebTokenError':
 			return response.status(401).json({ error: 'token invalid' })
 		case 'MulterError':
+			if (error.code == 'LIMIT_UNEXPECTED_FILE') {
+				return response.status(413).json({ error: `Too many files.` })
+			}
 			return response.status(500).json({ error: `Image uploading error: ${error.message}` })
 		default:
 			return response.status(500).json({ error: `Unkown error: ${error.message}` })
@@ -82,7 +85,7 @@ const imageUpload = multer({
 	}),
 	limits: { fileSize: 15 * 1024 * 1024 },
 	fileFilter: (request, file, callback) => {
-		if (["image/png", "image/jpg", "image/jpeg"].includes(file.mimetype)) { 
+		if (["image/png", "image/jpg", "image/jpeg", "image/bmp"].includes(file.mimetype)) { 
 			callback(null, true)
 		}
 		else {
@@ -90,7 +93,7 @@ const imageUpload = multer({
 			return callback(new Error("Invalid image format."))
 		}
 	}
-}).array('files', 10)
+}).array('files', 15)
 
 module.exports = {
 	requestLogger,
