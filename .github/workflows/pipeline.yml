@@ -10,8 +10,9 @@ jobs:
         working-directory: ./backend
     env: 
       BACK_PORT: 3001
-      MONGODB_URI: mongodb://tester:pass@localhost:27017/test
+      MONGODB_URI: mongodb://tester:pass@localhost/test
       EXPIRE_DELAY: 30
+      SECRET: secret
     
     steps:
     - uses: actions/checkout@v4
