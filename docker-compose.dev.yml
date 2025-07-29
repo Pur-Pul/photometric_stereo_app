@@ -22,7 +22,7 @@ services:
       - 5000:${PHOTOSTEREO_PORT}
     container_name: photostereo-service
     environment:
-      - BACKEND_URI=http://back:${BACK_PORT}/internal
+      - BACKEND_URI=http://back-dev:${BACK_PORT}/internal
   back-dev:
     build:
       context: ./backend

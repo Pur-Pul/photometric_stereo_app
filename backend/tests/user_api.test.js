@@ -27,7 +27,7 @@ beforeEach(async () => {
     await User.deleteMany({})
     await Image.deleteMany({})
     for (let i = 0; i < initialUsers.length; i++) {
-        initialUsers[i].passwordHash = await bcrypt.hash('sekret', 10)
+        initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         let userObject = new User(initialUsers[i])
         await userObject.save()
     }

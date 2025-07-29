@@ -1,10 +1,12 @@
-const { test, after, beforeEach, describe } = require('node:test')
+const { test, after, afterEach, beforeEach, describe } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const app = require('../src/app')
+const fs = require('fs')
+const path = require('path')
 
 const api = supertest(app)
 const User = require('../src/models/user')
@@ -27,12 +29,12 @@ let initialUsers = [
 let initialImages = [
     {
         file: 'test1',
-        format: 'png',
+        format: '.png',
         status: 'pending',
     },
     {
         file: 'test2',
-        format: 'png',
+        format: '.png',
         status: 'done',
     }
 ]
@@ -56,6 +58,11 @@ beforeEach(async () => {
         await userObject.save()
         initialImages[i].id = imageObject.id
     }
+})
+
+afterEach(async () => {
+    await Session.deleteMany({ userId: initialUsers[0].id })
+    await Session.deleteMany({ userId: initialUsers[1].id })
 })
 
 describe('image get all metadata', () => {
@@ -86,8 +93,6 @@ describe('image get all metadata', () => {
             .expect(200)
             .expect('Content-Type', /application\/json/)
     })
-
-    
 
     test('image metadata consists of a non empty list', async () => {
         const result = await api
@@ -237,6 +242,52 @@ describe('image get one metadata', () => {
         assert.equal(result.body.creator.username, initialUsers[0].username)
         assert.equal(result.body.creator.name, initialUsers[0].name)
         assert.equal(result.body.creator.images[0], result.body.id)
+    })
+})
+
+describe('image get one file', () => {
+    beforeEach(async () => {
+        const img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC"
+        const data = img.replace(/^data:image\/\w+;base64,/, "");
+        fs.writeFileSync(path.join(process.cwd(), '../output/test2_normal_map.png'), Buffer.from(data.replace()))
+    })
+    after(() => {
+        fs.unlinkSync(path.join(process.cwd(), '../output/test2_normal_map.png'))
+    })
+
+    test('image file request is successfull with correct authorization', async () => {
+        await api
+            .get(`/api/images/file/${initialImages[1].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(200)
+    })
+
+    test('image file request is rejected with missing authorization', async () => {
+        await api
+            .get(`/api/images/file/${initialImages[1].id}`)
+            .expect(401)
+    })
+
+    test('image file request is rejected with invalid authorization', async () => {
+        await api
+            .get(`/api/images/file/${initialImages[1].id}`)
+            .set('Authorization', `Bearer invalidtoken`)
+            .expect(401)
+    })
+
+    test('image file request is rejected with incorrect authorization', async () => {
+        await api
+            .get(`/api/images/file/${initialImages[1].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(403)
+    })
+
+    test('image file is returned as image/png', async () => {
+        await api
+            .get(`/api/images/file/${initialImages[1].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(200)
+            .expect('Content-Type', /image\/png/)
     })
 })
 

@@ -29,16 +29,23 @@ imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => 
 })
 
 imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response) => {
-	const id = request.params.id
-    const user = request.user
-	const image = await Image.findById(id).populate('creator')
-    if (user.id != image.creator.id) {
-        return response.status(403).json({ error: 'incorrect user' })
-    }
-	const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
-	if (image.status="done" && fs.existsSync(file_path)) {
-		response.sendFile(file_path)
+	try {
+		const id = request.params.id
+		const user = request.user
+		const image = await Image.findById(id).populate('creator')
+		if (user.id != image.creator.id) {
+			return response.status(403).json({ error: 'incorrect user' })
+		}
+		const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
+		console.log(file_path)
+		if (image.status="done" && fs.existsSync(file_path)) {
+			return response.sendFile(file_path)
+		}
+		response.status(404).end()
+	} catch (exception) {
+		next(exception)
 	}
+	
 })
 
 imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {

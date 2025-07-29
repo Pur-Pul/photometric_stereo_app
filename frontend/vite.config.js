@@ -13,7 +13,7 @@ export default defineConfig({
 				changeOrigin: true,
 			},
 		},
-		allowedHosts: ["front"]
+		allowedHosts: ["front", "front-dev"]
 	},
 	build: {
 		outDir: './dist',

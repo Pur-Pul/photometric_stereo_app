@@ -1,4 +1,4 @@
-const { test, after, beforeEach, describe } = require('node:test')
+const { test, after, afterEach, beforeEach, describe } = require('node:test')
 const mongoose = require('mongoose')
 const assert = require('node:assert')
 const supertest = require('supertest')
@@ -35,6 +35,10 @@ beforeEach(async () => {
         initialUsers[i].id = userObject.id
         await initialUsers[i].session.save()
     }
+})
+afterEach(async () => {
+    await Session.deleteMany({ userId: initialUsers[0].id })
+    await Session.deleteMany({ userId: initialUsers[1].id })
 })
 
 describe('logout delete', () => {

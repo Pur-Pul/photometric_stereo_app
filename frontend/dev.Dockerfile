@@ -5,6 +5,6 @@ WORKDIR /usr/src/app
 
 COPY package.json package-lock.json ./
 RUN npm install
-COPY index.html ./
+COPY index.html vite.config.js ./
 
 CMD npm run dev -- --port $FRONT_PORT --host
