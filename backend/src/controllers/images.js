@@ -21,25 +21,26 @@ imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => 
 	const id = request.params.id
     const user = request.user
 	const image = await Image.findById(id).populate('creator')
-    if (user.id != image.creator.id) {
-        return response.status(403).json({ error: 'incorrect user' })
-    }
+	if (!image) { return response.status(404).end() }
+    if (user.id != image.creator.id) { return response.status(403).json({ error: 'incorrect user' }) }
 
 	response.json(image)
 })
 
-imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response) => {
+imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response, next) => {
 	try {
 		const id = request.params.id
 		const user = request.user
 		const image = await Image.findById(id).populate('creator')
-		if (user.id != image.creator.id) {
-			return response.status(403).json({ error: 'incorrect user' })
-		}
-		const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
-		console.log(file_path)
-		if (image.status="done" && fs.existsSync(file_path)) {
-			return response.sendFile(file_path)
+		if (image) {
+			if (user.id != image.creator.id) {
+				return response.status(403).json({ error: 'incorrect user' })
+			}
+			const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
+			console.log(file_path)
+			if (image.status="done" && fs.existsSync(file_path)) {
+				return response.sendFile(file_path)
+			}
 		}
 		response.status(404).end()
 	} catch (exception) {
@@ -53,16 +54,19 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 		if (exception) { next(exception) }
 		else {
 			try {
-				if (request.filenames.length == 1) {
-					for (var i = 0; i < request.filenames.length; i++) {
+				const number_of_files = request.filenames ? request.filenames.length : 0
+				if (number_of_files!= 1) {
+					for (var i = 0; i < number_of_files; i++) {
 						const file = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
 						if (fs.existsSync(file)) { fs.unlinkSync(file) }
 					}
 					throw new ValidationError('Invalid number of files.')
 				} else {
-					const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
-					const newfile = path.join(process.cwd(), `../output/${request.filenames[i]}`)
-					fs.renameSync(oldfile, newfile)
+					const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[0]}`)
+					const newfile = path.join(process.cwd(), `../output/${request.filenames[0]}`)
+					fs.copyFileSync(oldfile, newfile)
+					fs.unlinkSync(oldfile)
+					response.status(201).end()
 				}
 			} catch (exception) {
 				next(exception)

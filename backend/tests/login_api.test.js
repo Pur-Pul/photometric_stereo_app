@@ -1,4 +1,4 @@
-const { test, after, beforeEach, describe } = require('node:test')
+const { test, after, beforeEach, describe, afterEach } = require('node:test')
 const mongoose = require('mongoose')
 const assert = require('node:assert')
 const supertest = require('supertest')
@@ -8,6 +8,7 @@ const app = require('../src/app')
 const api = supertest(app)
 const User = require('../src/models/user')
 const Image = require('../src/models/image')
+const Session = require('../src/models/session')
 
 let initialUsers = [
     {
@@ -28,10 +29,15 @@ beforeEach(async () => {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         let userObject = new User(initialUsers[i])
         await userObject.save()
+        initialUsers[i].id = userObject.id
     }
 })
 
 describe('login post', () => {
+    afterEach(async () => {
+        await Session.deleteMany({ userId: initialUsers[0].id })
+        await Session.deleteMany({ userId: initialUsers[1].id })
+    })
     test('login request succeeds with correct credentials.', async () => {
         const credentials = {
             username: 'test1',

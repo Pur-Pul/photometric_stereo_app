@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken')
 const app = require('../src/app')
 const fs = require('fs')
 const path = require('path')
+const FormData = require('form-data')
 
 const api = supertest(app)
 const User = require('../src/models/user')
@@ -184,6 +185,13 @@ describe('image get one metadata', () => {
             .expect(403)
     })
 
+    test('image metadata request returns 404 if not found.', async () => {
+        await api
+            .get(`/api/images/aaaaaaaaaaaaaaaaaaaaaaaa`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(404)
+    })
+
     test('image metadata is returned as json', async () => {
         await api
             .get(`/api/images/${initialImages[0].id}`)
@@ -248,7 +256,7 @@ describe('image get one metadata', () => {
 describe('image get one file', () => {
     beforeEach(async () => {
         const img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC"
-        const data = img.replace(/^data:image\/\w+;base64,/, "");
+        const data = img.replace(/^data:image\/\w+;base64,/, "")
         fs.writeFileSync(path.join(process.cwd(), '../output/test2_normal_map.png'), Buffer.from(data.replace()))
     })
     after(() => {
@@ -282,12 +290,65 @@ describe('image get one file', () => {
             .expect(403)
     })
 
+    test('image file request returns 404 if not found.', async () => {
+        await api
+            .get(`/api/images/file/aaaaaaaaaaaaaaaaaaaaaaaa`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(404)
+    })
+
     test('image file is returned as image/png', async () => {
         await api
             .get(`/api/images/file/${initialImages[1].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)
+    })
+
+    
+})
+
+describe('image post', () => {
+    const buffer = Buffer.from(
+            'iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC',
+            'base64'
+        )
+    const file = path.join(process.cwd(), 'tests/test3.png')
+    fs.writeFileSync(file, buffer)
+    after(() => {
+        fs.unlinkSync(file)
+    })
+    test('image post is successful with valid authorization', async () => {
+        await api
+            .post('/api/images')
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .expect(201)
+    })
+    test('image post is rejected with missing authorization', async () => {
+        await api
+            .post(`/api/images`)
+            .attach('files', file)
+            .expect(401)
+    })
+    test('image post is rejected with invalid authorization', async () => {
+        await api
+            .post(`/api/images`)
+            .set('Authorization', `Bearer invalidtoken`)
+            .attach('files', file)
+            .expect(401)
+    })
+    test('image post requires exactly one image file.', async () => {
+        await api
+            .post('/api/images')
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(400)
+        await api
+            .post('/api/images')
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .attach('files', file)
+            .expect(400)
     })
 })
 
