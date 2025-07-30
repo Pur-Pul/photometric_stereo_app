@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { performRemove, updateImage } from "../reducers/imageReducer"
+import { performRemove, updateNormalMap } from "../reducers/normalMapReducer"
 import imageService from '../services/images'
 import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
@@ -11,7 +11,7 @@ import DialogActions from '@mui/material/DialogActions'
 const NormalMap = () => {
     const dispatch = useDispatch()
 	const id = useParams().id
-    const image = useSelector((state) => state.images).find((image) => image.id === id)
+    const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
     const [open, setOpen ] = useState(false)
 
     const img = {
@@ -23,36 +23,43 @@ const NormalMap = () => {
     }
     
     useEffect(() => {
-        const getImage = async() => {
-            const new_image = await imageService.get(id)
-            if (JSON.stringify(new_image) !== JSON.stringify(image)) {
-                dispatch(updateImage(new_image))
+        const getNormalMap = async() => {
+            const newNormalMap = await imageService.get(id)
+            if (newNormalMap.layers.length != normalMap.layers.length || newNormalMap.status != normalMap.status) {
+                dispatch(updateNormalMap(newNormalMap))
             }
         }
-		const getImageFile = async () => {
-            const blob = await imageService.getFile(id)
-            dispatch(updateImage({ ...image, src: URL.createObjectURL(blob)}))
+		const getLayers = async () => {
+            console.log(normalMap)
+            const updatedLayers = []
+            for (var i = 0; i < normalMap.layers.length; i++) {
+                const blob = await imageService.getFile(normalMap.layers[i].id)
+                updatedLayers.push({...normalMap.layers[i], src:URL.createObjectURL(blob)})
+            }
+            console.log(updatedLayers)
+            
+            dispatch(updateNormalMap({ ...normalMap, layers: updatedLayers }))
         }
-        if (image && image.src == undefined) {
-            if (image.status == 'done') {
-                getImageFile()
+        if (normalMap) {
+            if (normalMap.status == 'done' && normalMap.layers[0].src == undefined) {
+                getLayers()
             } else {
-                getImage()
+                getNormalMap()
             }
         }
-	}, [image])
+	}, [normalMap])
     const deleteHandler = async (event) => {
         dispatch(performRemove(id))
         setOpen(false)
     }
 
-    return image
-        ? (image.src != undefined 
+    return normalMap && normalMap.layers.length > 0
+        ? (normalMap.layers[0].src != undefined 
             ? <div>
-                <img style={img} src={image.src} />
+                <img style={img} src={normalMap.layers[0].src} />
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined'>
-                    <a href={image.src} download={image.file+image.format} style={{ visibility: 'none' }}>
+                    <a href={normalMap.layers[0].src} download={`normalmap.png`} style={{ visibility: 'none' }}>
                         Download
                     </a>
                 </Button>

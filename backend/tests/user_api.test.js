@@ -60,9 +60,9 @@ describe('user get', () => {
         assert(!('passwordHash' in response.body[0]))
     })
 
-    test('User object contains images field.', async () => {
+    test('User object contains normalMaps field.', async () => {
         const response = await api.get('/api/users')
-        assert('images' in response.body[0])
+        assert('normalMaps' in response.body[0])
     })
 })
 

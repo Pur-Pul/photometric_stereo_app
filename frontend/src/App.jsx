@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser, performReLog } from './reducers/loginReducer'
 import { initializeUsers } from './reducers/userReducer'
-import { initializeImages } from './reducers/imageReducer'
+import { initializeNormalMaps } from './reducers/normalMapReducer'
 import Notification from './components/Notification'
 import LoginForm from './components/Login'
 import UserList from './components/UserList'
@@ -19,7 +19,7 @@ const App = () => {
 	const location = useLocation()
 	
 	useEffect(() => { dispatch(initializeUsers()) }, [dispatch])
-	useEffect(() => { if (user) {dispatch(initializeImages())} }, [dispatch, user])
+	useEffect(() => { if (user) {dispatch(initializeNormalMaps())} }, [dispatch, user])
 	useEffect(() => {
 		const loggedUserJSON = window.localStorage.getItem('loggedUser')
 		if (loggedUserJSON) {

@@ -1,33 +1,33 @@
-const imagesRouter = require('express').Router()
+const normalMapsRouter = require('express').Router()
 const Image = require('../models/image')
+const NormalMap = require('../models/normalMap')
 const middleware = require('../utils/middleware')
 const yaml = require('js-yaml')
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
 const { PHOTOSTEREO_URI } = require('../utils/config')
-const user = require('../models/user')
 const { ValidationError } = require('../utils/errors')
 
-imagesRouter.get('/', middleware.userExtractor, async (request, response) => {
+normalMapsRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
 	if (user) {
-		const images = await Image.find({ creator: user }).populate('creator')
-		response.json(images)
+		const normalMaps = await NormalMap.find({ creator: user }).populate('creator').populate('layers')
+		response.json(normalMaps)
 	}
 })
 
-imagesRouter.get('/:id', middleware.userExtractor, async (request, response) => {
+normalMapsRouter.get('/:id', middleware.userExtractor, async (request, response) => {
 	const id = request.params.id
     const user = request.user
-	const image = await Image.findById(id).populate('creator')
-	if (!image) { return response.status(404).end() }
-    if (user.id != image.creator.id) { return response.status(403).json({ error: 'incorrect user' }) }
+	const normalMap = await NormalMap.findById(id).populate('creator').populate('layers')
+	if (!normalMap) { return response.status(404).end() }
+    if (user.id != normalMap.creator.id) { return response.status(403).json({ error: 'incorrect user' }) }
 
-	response.json(image)
+	response.json(normalMap)
 })
 
-imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.get('/layers/:id', middleware.userExtractor, async (request, response, next) => {
 	try {
 		const id = request.params.id
 		const user = request.user
@@ -36,10 +36,9 @@ imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response
 			if (user.id != image.creator.id) {
 				return response.status(403).json({ error: 'incorrect user' })
 			}
-			const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
-			console.log(file_path)
-			if (image.status="done" && fs.existsSync(file_path)) {
-				return response.sendFile(file_path)
+			console.log(fs.existsSync(image.file))
+			if (fs.existsSync(image.file)) {
+				return response.sendFile(image.file)
 			}
 		}
 		response.status(404).end()
@@ -49,7 +48,7 @@ imagesRouter.get('/file/:id', middleware.userExtractor, async (request, response
 	
 })
 
-imagesRouter.post('/', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.post('/', middleware.userExtractor, async (request, response, next) => {
 	middleware.imageUpload(request, response, async (exception) => {
 		if (exception) { next(exception) }
 		else {
@@ -75,7 +74,7 @@ imagesRouter.post('/', middleware.userExtractor, async (request, response, next)
 	})
 })
 
-imagesRouter.post('/photostereo/', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request, response, next) => {
 	middleware.imageUpload(request, response, async (exception) => {
 		if (exception) { next(exception) }
 		else {
@@ -102,20 +101,21 @@ imagesRouter.post('/photostereo/', middleware.userExtractor, async (request, res
 					if (err) {
 						console.log(err);
 					}
-				});
-				console.log(`${PHOTOSTEREO_URI}/${file_name}`)
-				await axios.post(`${PHOTOSTEREO_URI}/${file_name}`, { format })
-
-				const image = new Image({
-					file: file_name,
-					format : "",
+				})
+				const normalMap = new NormalMap({
+					name: file_name,
 					status: "pending",
 					creator: request.user.id
 				})
-				const saved_image = await (await image.save()).populate('creator')
-				request.user.images = request.user.images.concat(saved_image._id)
+				const saved_map = await (await normalMap.save()).populate('creator')
+
+
+				await axios.post(`${PHOTOSTEREO_URI}/${saved_map.id}`, { file_name, format })
+
+				
+				request.user.normalMaps = request.user.normalMaps.concat(saved_map._id)
 				await request.user.save()
-				response.status(201).json(saved_image)
+				response.status(201).json(saved_map)
 			} catch (exception) {
 				next(exception)
 			}
@@ -124,7 +124,7 @@ imagesRouter.post('/photostereo/', middleware.userExtractor, async (request, res
 	
 })
 
-imagesRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {
 	const id = request.params.id
     const user = request.user
 	try {
@@ -144,4 +144,4 @@ imagesRouter.delete('/:id', middleware.userExtractor, async (request, response, 
 		next(exception)
 	}
 })
-module.exports = imagesRouter
+module.exports = normalMapsRouter

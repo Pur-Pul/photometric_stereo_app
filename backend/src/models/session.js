@@ -6,7 +6,7 @@ const sessionSchema = new mongoose.Schema(
             ref: 'User',
             require: true
         },
-        token: { type: String, require: true }
+        token: { type: String, required: true }
     }, {
         timestamps: true
     }

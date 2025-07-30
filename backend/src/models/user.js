@@ -12,10 +12,10 @@ const userSchema = new mongoose.Schema({
 		minLength: 3,
 		required: true,
 	},
-	images: [
+	normalMaps: [
 		{
 			type: mongoose.Schema.Types.ObjectId,
-			ref: 'Image',
+			ref: 'NormalMap',
 		},
 	],
 })

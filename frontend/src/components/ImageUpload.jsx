@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react"
 import SourceImage from "./SourceImage"
 import { useDispatch } from "react-redux"
-import { generateImage } from "../reducers/imageReducer"
+import { generateNormalMap } from "../reducers/normalMapReducer"
 import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
 import { useSelector } from 'react-redux'
 import Mask from "./Mask"
@@ -46,7 +46,7 @@ const ImageUploadForm = () => {
         event.preventDefault()
         console.log(files)
         console.log(mask)
-        dispatch(generateImage(files, mask))
+        dispatch(generateNormalMap(files, mask))
             .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'success' }, 5)) })
 			.catch((exception) => {
 				console.log(exception)

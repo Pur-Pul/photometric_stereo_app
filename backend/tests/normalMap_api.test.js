@@ -12,6 +12,7 @@ const FormData = require('form-data')
 const api = supertest(app)
 const User = require('../src/models/user')
 const Image = require('../src/models/image')
+const NormalMap = require('../src/models/normalMap')
 const Session = require('../src/models/session')
 
 let initialUsers = [
@@ -27,22 +28,23 @@ let initialUsers = [
     }
 ]
 
-let initialImages = [
+let initialNormalMaps = [
     {
-        file: 'test1',
-        format: '.png',
+        name: 'test1',
         status: 'pending',
+        layers: []
     },
     {
-        file: 'test2',
-        format: '.png',
+        name: 'test2',
         status: 'done',
+        layers: []
     }
 ]
 
 beforeEach(async () => {
     await User.deleteMany({})
     await Image.deleteMany({})
+    await NormalMap.deleteMany({})
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         const userObject = new User(initialUsers[i])
@@ -51,13 +53,13 @@ beforeEach(async () => {
         initialUsers[i].session = new Session({ userId: userObject.id, token: initialUsers[i].token })
         initialUsers[i].session.save()
         initialUsers[i].id = userObject.id
-        initialImages[i].creator = userObject.id
+        initialNormalMaps[i].creator = userObject.id
         
-        const imageObject = new Image(initialImages[i])
-        userObject.images = [imageObject.id]
-        await imageObject.save()
+        const normalMapObject = new NormalMap(initialNormalMaps[i])
+        userObject.normalMaps = [normalMapObject.id]
+        await normalMapObject.save()
         await userObject.save()
-        initialImages[i].id = imageObject.id
+        initialNormalMaps[i].id = normalMapObject.id
     }
 })
 
@@ -66,86 +68,76 @@ afterEach(async () => {
     await Session.deleteMany({ userId: initialUsers[1].id })
 })
 
-describe('image get all metadata', () => {
-    test('image metadata request is successfull with correct authorization', async () => {
+describe('normalmap get all', () => {
+    test('normalmap get all request is successfull with correct authorization', async () => {
         await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
     })
 
-    test('image metadata request is rejected with missing authorization', async () => {
+    test('normalmap get all request is rejected with missing authorization', async () => {
         await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .expect(401)
     })
 
-    test('image metadata request is rejected with invalid authorization', async () => {
+    test('normalmap get all request is rejected with invalid authorization', async () => {
         await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .set('Authorization', `Bearer invalidtoken`)
             .expect(401)
     })
 
-    test('image metadata is returned as json', async () => {
+    test('normalmaps are returned as json', async () => {
         await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
     })
 
-    test('image metadata consists of a non empty list', async () => {
+    test('normalmap get all response consists of a non empty list', async () => {
         const result = await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
         assert.notEqual(result.body.length, 0)
     })
 
-    test('image metadata contains field "id"', async () => {
+    test('normalmap contains field "id"', async () => {
         const result = await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
         assert(result.body[0].id)
     })
 
-    test('image metadata contains field "file" with the correct value', async () => {
+    test('normalmap contains field "name" with the correct value', async () => {
         const result = await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
-        assert(result.body[0].file)
-        assert.equal(result.body[0].file, initialImages[0].file)
+        assert(result.body[0].name)
+        assert.equal(result.body[0].name, initialNormalMaps[0].name)
     })
 
-    test('image metadata contains field "format" with the correct value', async () => {
+    test('normalmap contains field "status" with the correct value', async () => {
         const result = await api
-            .get('/api/images')
-            .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .expect(200)
-            .expect('Content-Type', /application\/json/)
-        assert(result.body[0].format)
-        assert.equal(result.body[0].format, initialImages[0].format)
-    })
-
-    test('image metadata contains field "status" with the correct value', async () => {
-        const result = await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
         assert(result.body[0].status)
-        assert.equal(result.body[0].status, initialImages[0].status)
+        assert.equal(result.body[0].status, initialNormalMaps[0].status)
     })
 
-    test('image metadata contains field "creator" and it is populated.', async () => {
+    test('normalmap contains field "creator" and it is populated.', async () => {
         const result = await api
-            .get('/api/images')
+            .get('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
@@ -153,95 +145,85 @@ describe('image get all metadata', () => {
         assert.equal(result.body[0].creator.id, initialUsers[0].id)
         assert.equal(result.body[0].creator.username, initialUsers[0].username)
         assert.equal(result.body[0].creator.name, initialUsers[0].name)
-        assert.equal(result.body[0].creator.images[0], result.body[0].id)
+        assert.equal(result.body[0].creator.normalMaps[0], result.body[0].id)
     })
 })
 
 describe('image get one metadata', () => {
-    test('image metadata request is successfull with correct authorization', async () => {
+    test('normal map request is successfull with correct authorization', async () => {
         await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
     })
 
-    test('image metadata request is rejected with missing authorization', async () => {
+    test('normal map request is rejected with missing authorization', async () => {
         await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .expect(401)
     })
 
-    test('image metadata request is rejected with invalid authorization', async () => {
+    test('normal map request is rejected with invalid authorization', async () => {
         await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer invalidtoken`)
             .expect(401)
     })
 
-    test('image metadata request is rejected with incorrect authorization', async () => {
+    test('normal map request is rejected with incorrect authorization', async () => {
         await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(403)
     })
 
-    test('image metadata request returns 404 if not found.', async () => {
+    test('normal map request returns 404 if not found.', async () => {
         await api
-            .get(`/api/images/aaaaaaaaaaaaaaaaaaaaaaaa`)
+            .get(`/api/normalMaps/aaaaaaaaaaaaaaaaaaaaaaaa`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(404)
     })
 
-    test('image metadata is returned as json', async () => {
+    test('normal map is returned as json', async () => {
         await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
     })
 
-    test('image metadata contains field "id"', async () => {
+    test('normal map contains field "id"', async () => {
         const result = await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
         assert(result.body.id)
     })
 
-    test('image metadata contains field "file" with the correct value', async () => {
+    test('normal map contains field "name" with the correct value', async () => {
         const result = await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
-        assert(result.body.file)
-        assert.equal(result.body.file, initialImages[0].file)
+        assert(result.body.name)
+        assert.equal(result.body.name, initialNormalMaps[0].name)
     })
 
-    test('image metadata contains field "format" with the correct value', async () => {
+    test('normal map contains field "status" with the correct value', async () => {
         const result = await api
-            .get(`/api/images/${initialImages[0].id}`)
-            .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .expect(200)
-            .expect('Content-Type', /application\/json/)
-        assert(result.body.format)
-        assert.equal(result.body.format, initialImages[0].format)
-    })
-
-    test('image metadata contains field "status" with the correct value', async () => {
-        const result = await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
         assert(result.body.status)
-        assert.equal(result.body.status, initialImages[0].status)
+        assert.equal(result.body.status, initialNormalMaps[0].status)
     })
 
-    test('image metadata contains field "creator" and it is populated.', async () => {
+    test('normal map contains field "creator" and it is populated.', async () => {
         const result = await api
-            .get(`/api/images/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
@@ -249,7 +231,7 @@ describe('image get one metadata', () => {
         assert.equal(result.body.creator.id, initialUsers[0].id)
         assert.equal(result.body.creator.username, initialUsers[0].username)
         assert.equal(result.body.creator.name, initialUsers[0].name)
-        assert.equal(result.body.creator.images[0], result.body.id)
+        assert.equal(result.body.creator.normalMaps[0], result.body.id)
     })
 })
 
@@ -263,43 +245,43 @@ describe('image get one file', () => {
         fs.unlinkSync(path.join(process.cwd(), '../output/test2_normal_map.png'))
     })
 
-    test('image file request is successfull with correct authorization', async () => {
+    test('layer request is successfull with correct authorization', async () => {
         await api
-            .get(`/api/images/file/${initialImages[1].id}`)
+            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
     })
 
-    test('image file request is rejected with missing authorization', async () => {
+    test('layer request is rejected with missing authorization', async () => {
         await api
-            .get(`/api/images/file/${initialImages[1].id}`)
+            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
             .expect(401)
     })
 
-    test('image file request is rejected with invalid authorization', async () => {
+    test('layer request is rejected with invalid authorization', async () => {
         await api
-            .get(`/api/images/file/${initialImages[1].id}`)
+            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
             .set('Authorization', `Bearer invalidtoken`)
             .expect(401)
     })
 
-    test('image file request is rejected with incorrect authorization', async () => {
+    test('layer request is rejected with incorrect authorization', async () => {
         await api
-            .get(`/api/images/file/${initialImages[1].id}`)
+            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(403)
     })
 
-    test('image file request returns 404 if not found.', async () => {
+    test('layer request returns 404 if not found.', async () => {
         await api
-            .get(`/api/images/file/aaaaaaaaaaaaaaaaaaaaaaaa`)
+            .get(`/api/normalMaps/layers/aaaaaaaaaaaaaaaaaaaaaaaa`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(404)
     })
 
-    test('image file is returned as image/png', async () => {
+    test('layer is returned as image/png', async () => {
         await api
-            .get(`/api/images/file/${initialImages[1].id}`)
+            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)
@@ -320,31 +302,31 @@ describe('image post', () => {
     })
     test('image post is successful with valid authorization', async () => {
         await api
-            .post('/api/images')
+            .post('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', file)
             .expect(201)
     })
     test('image post is rejected with missing authorization', async () => {
         await api
-            .post(`/api/images`)
+            .post(`/api/normalMaps`)
             .attach('files', file)
             .expect(401)
     })
     test('image post is rejected with invalid authorization', async () => {
         await api
-            .post(`/api/images`)
+            .post(`/api/normalMaps`)
             .set('Authorization', `Bearer invalidtoken`)
             .attach('files', file)
             .expect(401)
     })
-    test('image post requires exactly one image file.', async () => {
+    test('image post requires exactly one layer.', async () => {
         await api
-            .post('/api/images')
+            .post('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(400)
         await api
-            .post('/api/images')
+            .post('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', file)
             .attach('files', file)

@@ -4,11 +4,10 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 
-
 const usersRouter = require('./controllers/users')
 const loginRouter = require('./controllers/login')
 const logoutRouter = require('./controllers/logout')
-const imagesRouter = require('./controllers/images')
+const normalMapsRouter = require('./controllers/normalMaps')
 const internalRouter = require('./controllers/internal')
 
 const middleware = require('./utils/middleware')
@@ -37,7 +36,7 @@ app.use(middleware.tokenExtractor)
 app.use('/api/users', usersRouter)
 app.use('/api/login', loginRouter)
 app.use('/api/logout', logoutRouter)
-app.use('/api/images', imagesRouter)
+app.use('/api/normalMaps', normalMapsRouter)
 app.use('/internal', internalRouter)
 
 app.use(middleware.unknownEndpoint)

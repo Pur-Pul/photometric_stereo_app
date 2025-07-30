@@ -2,10 +2,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 
 const NormalMapList = () => {
-    const images = useSelector((state) => state.images)
+    const normalMaps = useSelector((state) => state.normalMaps)
     return (
-        images.length > 0 ? <ul>
-            {images.map((image) => <li key={image.id}><Link to={ image.id }>{image.id}</Link></li>)}
+        normalMaps.length > 0 ? <ul>
+            {normalMaps.map((normalMap) => <li key={normalMap.id}><Link to={ normalMap.id }>{normalMap.id}</Link></li>)}
         </ul> : <div>You have not generated any normal maps yet.</div>   
     )
 }

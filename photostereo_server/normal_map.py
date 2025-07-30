@@ -11,9 +11,9 @@ def clear_upload(name):
             print(f'Deleting file {file_path}')
             os.remove(file_path)
 
-def generate_normal_map(name, format):
+def generate_normal_map(dest_file, name, format):
     root_fold = f'{os.path.join(os.getcwd(), '../uploads')}/'
-    out_fold = f'{os.path.join(os.getcwd(), '../output')}/'
+    
     filelist = []
     print(root_fold)
     for file in os.listdir(root_fold):
@@ -46,7 +46,8 @@ def generate_normal_map(name, format):
     normal_map = myps.runphotometry(image_array, np.asarray(mask, dtype=np.uint8))
     normal_map = cv.normalize(normal_map, None, 0, 255, cv.NORM_MINMAX, cv.CV_8UC3)
 
-    cv.imwrite(f'{out_fold}{name}_normal_map.png',normal_map)
+    cv.imwrite(dest_file, normal_map)
+    print(dest_file)
 
     toc = time.process_time()
     print("Process duration: " + str(toc - tic))
@@ -55,24 +56,23 @@ def generate_normal_map(name, format):
     cv.destroyAllWindows()
 
 if __name__ == "__main__":
-    name = sys.argv[1]
-    format = sys.argv[2]
-    url = f'{sys.argv[3]}/{name}'
+    file = f'{os.path.normpath(os.path.join(os.getcwd(), '../output'))}/{sys.argv[1]}_0.png' 
+    name = sys.argv[2]
+    format = sys.argv[3]
+    url = f'{sys.argv[4]}/{sys.argv[1]}'
     try:
-        generate_normal_map(name, format)
+        generate_normal_map(file, name, format)
         res = requests.put(url, json={
-            "file": name,
+            "file": file,
             "format": ".png",
             "status": "done"
         })
-        print(res.json())
     except Exception as e:
         print(e)
         res = requests.put(url, json={
-            "file": name,
+            "file": file,
             "format": ".png",
             "status": f"Unkown error: {e}"
         })
-        print(res.json())
-    clear_upload(name)
+    #clear_upload(name)
     sys.stdout.flush()

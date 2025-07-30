@@ -36,9 +36,9 @@ const expireImage = async (id) => {
 			const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
 			if (fs.existsSync(file_path)) { fs.unlinkSync(file_path) }
 
-			const image_index = creator.images.findIndex((image) => image.toString === id.toString())
-			creator.images.splice(image_index, 1)
-			await creator.save()
+			//const image_index = creator.images.findIndex((image) => image.toString === id.toString())
+			//creator.images.splice(image_index, 1)
+			//await creator.save()
 			await Image.findByIdAndDelete(id)
 			info('Image', id, 'deleted')
 		} else {
