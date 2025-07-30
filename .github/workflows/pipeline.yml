@@ -26,6 +26,11 @@ jobs:
         mongodb-username: tester
         mongodb-password: pass
         mongodb-db: test
+    - name: Create image directories
+      run: |
+        mkdir ../uploads
+        mkdir ../output
+    
     - name: Install dependencies
       run: npm install
     
