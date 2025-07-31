@@ -1,5 +1,5 @@
 const config = require('./utils/config')
-const { expireSessions, expireImages } = require('./utils/expiration_manager')
+const { expireSessions, expireNormalMaps } = require('./utils/expiration_manager')
 const express = require('express')
 const app = express()
 const cors = require('cors')
@@ -25,7 +25,7 @@ mongoose
     })
 
 expireSessions()
-expireImages()
+expireNormalMaps()
 
 app.use(express.static('dist'))
 app.use(cors())

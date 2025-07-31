@@ -8,6 +8,8 @@ const path = require('path')
 const axios = require('axios')
 const { PHOTOSTEREO_URI } = require('../utils/config')
 const { ValidationError } = require('../utils/errors')
+const logger = require('../utils/logger')
+const { expireNormalMap } = require('../utils/expiration_manager')
 
 normalMapsRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
@@ -108,11 +110,7 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
 					creator: request.user.id
 				})
 				const saved_map = await (await normalMap.save()).populate('creator')
-
-
 				await axios.post(`${PHOTOSTEREO_URI}/${saved_map.id}`, { file_name, format })
-
-				
 				request.user.normalMaps = request.user.normalMaps.concat(saved_map._id)
 				await request.user.save()
 				response.status(201).json(saved_map)
@@ -121,25 +119,20 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
 			}
 		}
 	})
-	
 })
 
 normalMapsRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {
 	const id = request.params.id
     const user = request.user
 	try {
-		const image = await Image.findById(id)
-		if (image.creator.toString() === user.id.toString()) {
-			const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
-			if (fs.existsSync(file_path)) { fs.unlinkSync(file_path) }
-			await Image.findByIdAndDelete(id)
-			const image_index = user.images.findIndex((image) => image.toString === id.toString())
-			user.images.splice(image_index, 1)
-			await user.save()
-			response.status(204).end()
+		const normalMap = await NormalMap.findById(id)
+		if (!normalMap) { return response.status(404).end() }
+		if (normalMap.creator.toString() === user.id.toString()) {
+			await expireNormalMap(id, true)
 		} else {
 			return response.status(403).json({ error: 'incorrect user' })
 		}
+		response.status(204).end()
 	} catch(exception) {
 		next(exception)
 	}

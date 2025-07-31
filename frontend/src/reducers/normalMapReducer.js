@@ -1,21 +1,22 @@
 import { createSlice } from '@reduxjs/toolkit'
 import imageService from '../services/images'
+import { notificationSet } from './notificationReducer'
 
 const normalMapSlice = createSlice({
 	name: 'normalMap',
 	initialState: [],
 	reducers: {
 		appendNormalMap(state, action) {
-			state.push(...action.payload)
+			return [...state, ...action.payload]
 		},
 		setNormalMaps(state, action) {
 			return action.payload
 		},
 		deleteNormalMap(state, action) {
-			const normalMap_index = state.findIndex(
-				(normalMap) => normalMap.id === action.payload
-			)
-			state.splice(normalMap_index, 1)
+			const normalMap_index = state.findIndex((normalMap) => normalMap.id === action.payload)
+			const stateClone = [...state]
+			stateClone.splice(normalMap_index, 1)
+			return stateClone
 		},
 		updateNormalMap(state, action) {
 			const normalMap_index = state.findIndex(
@@ -64,8 +65,12 @@ export const createNormalMap = (normalMap) => {
 
 export const performRemove = (id) => {
 	return async (dispatch) => {
-		await imageService.remove(id)
-		dispatch(deleteNormalMap(id))
+		try {
+			await imageService.remove(id)
+			dispatch(deleteNormalMap(id))
+		} catch (err) {
+			notificationSet({ text: err, type: 'error'}, 5)
+		}
 	}
 }
 

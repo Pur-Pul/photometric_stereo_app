@@ -1,5 +1,6 @@
 const Session = require('../models/session')
 const Image = require('../models/image')
+const NormalMap = require('../models/normalMap')
 const User = require('../models/user')
 const { EXPIRE_DELAY } = require('./config')
 const { info, error } = require('./logger')
@@ -27,37 +28,43 @@ const expireSessions = async () => {
 	}
 }
 
-const expireImage = async (id) => {
-	const image = await Image.findById(id)
-	if (image) {
-		const expiration_time = image.updatedAt - new Date() + EXPIRE_DELAY * 60 * 1000
-		if (expiration_time <= 0) {
-			const creator = await User.findById(image.creator)
-			const file_path = path.join(process.cwd(), '../output/', `${image.file}_normal_map${image.format}`)
-			if (fs.existsSync(file_path)) { fs.unlinkSync(file_path) }
-
-			//const image_index = creator.images.findIndex((image) => image.toString === id.toString())
-			//creator.images.splice(image_index, 1)
-			//await creator.save()
-			await Image.findByIdAndDelete(id)
-			info('Image', id, 'deleted')
+const expireNormalMap = async (id, force=false) => {
+	const normalMap = await NormalMap.findById(id).populate('creator')
+	if (normalMap) {
+		const expiration_time = normalMap.updatedAt - new Date() + EXPIRE_DELAY * 60 * 1000
+		if (force || expiration_time <= 0) {
+			for (var i=0; i < normalMap.layers.length; i++) {
+				const image = await Image.findById(normalMap.layers[i])
+				if (fs.existsSync(image.file)) {
+					fs.unlinkSync(image.file)
+					info(`Image ${image.file} has been deleted.`)
+				}
+				await Image.findByIdAndDelete(normalMap.layers[i])
+			}
+			const creator = await User.findById(normalMap.creator.id)
+			
+			const nm_index = creator.normalMaps.findIndex((nm) => nm.toString() === id.toString())
+			creator.normalMaps.splice(nm_index, 1)
+			await creator.save()
+			await NormalMap.findByIdAndDelete(id)
+			info('Normal map', id, 'deleted')
 		} else {
-			info('Image', id, 'will be deleted in', expiration_time/1000, 'seconds.')
-			setTimeout(async () => await expireImage(id), expiration_time)
+			info('Normal map', id, 'will be deleted in', expiration_time/1000, 'seconds.')
+			setTimeout(async () => await expireNormalMap(id), expiration_time)
 		}
 	}
 }
 
-const expireImages = async () => {
-	const images = await Image.find({})
-	for (const image of images) {
-		expireImage(image.id)
+const expireNormalMaps = async () => {
+	const normalMaps = await NormalMap.find({})
+	for (const normalMap of normalMaps) {
+		expireNormalMap(normalMap.id)
 	}
 } 
 
 module.exports = {
 	expireSessions,
 	expireSession,
-	expireImages,
-	expireImage
+	expireNormalMaps,
+	expireNormalMap
 }

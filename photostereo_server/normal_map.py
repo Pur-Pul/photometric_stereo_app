@@ -74,5 +74,5 @@ if __name__ == "__main__":
             "format": ".png",
             "status": f"Unkown error: {e}"
         })
-    #clear_upload(name)
+    clear_upload(name)
     sys.stdout.flush()

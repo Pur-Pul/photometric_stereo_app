@@ -7,12 +7,14 @@ import Button from '@mui/material/Button'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
+import { useNavigate} from 'react-router-dom'
 
 const NormalMap = () => {
     const dispatch = useDispatch()
 	const id = useParams().id
     const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
     const [open, setOpen ] = useState(false)
+    const navigate = useNavigate()
 
     const img = {
         width: '100%',
@@ -51,6 +53,7 @@ const NormalMap = () => {
     const deleteHandler = async (event) => {
         dispatch(performRemove(id))
         setOpen(false)
+        navigate('/normal_map')
     }
 
     return normalMap && normalMap.layers.length > 0

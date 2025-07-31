@@ -1,7 +1,7 @@
 const internalRouter = require('express').Router()
 const Image = require('../models/image')
 const NormalMap = require('../models/normalMap')
-const { expireImage } = require('../utils/expiration_manager')
+const { expireNormalMap } = require('../utils/expiration_manager')
 
 internalRouter.put('/images/:id', async (request, response, next) => {
     try {
@@ -15,7 +15,7 @@ internalRouter.put('/images/:id', async (request, response, next) => {
         normalMap.layers = [new_image.id]
         normalMap.status = "done"
         await normalMap.save()
-        expireImage(new_image.id)
+        expireNormalMap(normalMap.id)
         response.status(201).end()
     } catch(exception) {
         next(exception)

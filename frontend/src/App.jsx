@@ -11,7 +11,7 @@ import ImageUploadForm from './components/ImageUpload'
 import NormalMapList from './components/NormalMapList'
 import NormalMap from './components/NormalMap'
 import NavBar from './components/NavBar'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigate} from 'react-router-dom'
 
 const App = () => {
 	const dispatch = useDispatch()
