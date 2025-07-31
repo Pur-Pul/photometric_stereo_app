@@ -41,10 +41,19 @@ let initialNormalMaps = [
     }
 ]
 
+let initialImages = [
+    {
+        file: path.join(process.cwd(), '../output/test2_normal_map.png'),
+        format: "png"
+    }
+]
+
 beforeEach(async () => {
     await User.deleteMany({})
     await Image.deleteMany({})
     await NormalMap.deleteMany({})
+   
+
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         const userObject = new User(initialUsers[i])
@@ -55,12 +64,21 @@ beforeEach(async () => {
         initialUsers[i].id = userObject.id
         initialNormalMaps[i].creator = userObject.id
         
+        if (i == 1) {
+            const imageObject = new Image({...initialImages[0], creator: userObject.id})
+            await imageObject.save()
+            initialImages[0].id = imageObject.id
+            initialImages[0].creator = imageObject.creator
+            initialNormalMaps[1].images = [imageObject.id]
+        }
+
         const normalMapObject = new NormalMap(initialNormalMaps[i])
         userObject.normalMaps = [normalMapObject.id]
         await normalMapObject.save()
         await userObject.save()
         initialNormalMaps[i].id = normalMapObject.id
     }
+
 })
 
 afterEach(async () => {
@@ -239,35 +257,35 @@ describe('image get one file', () => {
     beforeEach(async () => {
         const img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC"
         const data = img.replace(/^data:image\/\w+;base64,/, "")
-        fs.writeFileSync(path.join(process.cwd(), '../output/test2_normal_map.png'), Buffer.from(data.replace()))
+        fs.writeFileSync(initialImages[0].file, Buffer.from(data.replace()))
     })
     after(() => {
-        fs.unlinkSync(path.join(process.cwd(), '../output/test2_normal_map.png'))
+        fs.unlinkSync(initialImages[0].file)
     })
 
     test('layer request is successfull with correct authorization', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
+            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
     })
 
     test('layer request is rejected with missing authorization', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
+            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
             .expect(401)
     })
 
     test('layer request is rejected with invalid authorization', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
+            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer invalidtoken`)
             .expect(401)
     })
 
     test('layer request is rejected with incorrect authorization', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
+            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(403)
     })
@@ -281,7 +299,7 @@ describe('image get one file', () => {
 
     test('layer is returned as image/png', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialNormalMaps[1].id}`)
+            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)
@@ -292,9 +310,9 @@ describe('image get one file', () => {
 
 describe('image post', () => {
     const buffer = Buffer.from(
-            'iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC',
-            'base64'
-        )
+        'iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC',
+        'base64'
+    )
     const file = path.join(process.cwd(), 'tests/test3.png')
     fs.writeFileSync(file, buffer)
     after(() => {
