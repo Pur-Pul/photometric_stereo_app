@@ -86,6 +86,18 @@ afterEach(async () => {
     await Session.deleteMany({ userId: initialUsers[1].id })
 })
 
+after(async () => {
+    const output_dir = path.join(process.cwd(), '../output/')
+    const files = fs.readdirSync(output_dir)
+    files.forEach(file => {
+        if (file.includes('test')) {
+            fs.unlinkSync(`${output_dir}/${file}`)
+        }
+    })
+    await mongoose.connection.close()
+    process.exit()
+})
+
 describe('normalmap get all', () => {
     test('normalmap get all request is successfull with correct authorization', async () => {
         await api
@@ -253,6 +265,140 @@ describe('normal map get one', () => {
     })
 })
 
+describe('normal map post', () => {
+    const newFile = path.join(process.cwd(), '../output/test3_normal_map.png')
+    beforeEach(async () => {
+        const img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC"
+        const data = img.replace(/^data:image\/\w+;base64,/, "")
+        fs.writeFileSync(newFile, Buffer.from(data.replace()))
+    })
+    after(() => {
+        fs.unlinkSync(newFile)
+    })
+
+    test('normal map post is successfull with valid authorization', async () => {
+        await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(201)
+    })
+
+    test('layer request is rejected with missing authorization', async () => {
+        await api
+            .post(`/api/normalMaps/`)
+            .expect(401)
+    })
+
+    test('layer request is rejected with invalid authorization', async () => {
+        await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer invalidtoken`)
+            .expect(401)
+    })
+
+    test('a new normal map entry is created with a successful post.', async () => {
+        const beforeCount = (await NormalMap.find({})).length
+        await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(201)
+        const afterCount = (await NormalMap.find({})).length
+        assert.equal(afterCount - beforeCount, 1)
+    })
+
+    test('the new normal map entry is returned as json on successful post.', async () => {
+        await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        
+    })
+
+    test('the returned normal map entry contains a "name" field', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        assert(result.body.name)
+    })
+
+    test('the returned normal map entry contains a "status" field with value "done"', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        assert(result.body.status)
+        assert.equal(result.body.status, "done")
+    })
+
+    test('the returned normal map entry contains a "layers" field.', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        assert(result.body.layers)
+    })
+
+    test('the returned normal map "layers" field is empty if no image is included.', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        assert.equal(result.body.layers.length, 0)
+    })
+
+    test('the returned normal map entry contains a "creator" field.', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+        assert(result.body.creator)
+    })
+
+    test('normal map post is successful with an image included.', async () => {
+        await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', newFile)
+            .expect(201)
+    })
+
+    test('including an image adds to normal map layers', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', newFile)
+            .expect(201)
+        assert.equal(result.body.layers.length, 1)
+    })
+
+    test('layers created in image post are added as an image entry', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', newFile)
+            .expect(201)
+        const imageResult = await Image.findById(result.body.layers[0])
+        assert(imageResult)
+    })
+
+    test('layer images created in image post has a exists as files', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', newFile)
+            .expect(201)
+        const imageResult = await Image.findById(result.body.layers[0])
+        assert(fs.existsSync(imageResult.file))
+    })
+})
+
 describe('layer get one', () => {
     beforeEach(async () => {
         const img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC"
@@ -315,36 +461,49 @@ describe('layer post one', () => {
     )
     const file = path.join(process.cwd(), 'tests/test3.png')
     fs.writeFileSync(file, buffer)
+
     after(() => {
         fs.unlinkSync(file)
     })
-    test('image post is successful with valid authorization', async () => {
+    test('layers post is successful with correct authorization', async () => {
         await api
-            .post('/api/normalMaps')
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', file)
             .expect(201)
     })
-    test('image post is rejected with missing authorization', async () => {
+    test('layers post is rejected with missing authorization', async () => {
         await api
-            .post(`/api/normalMaps`)
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
             .attach('files', file)
             .expect(401)
     })
-    test('image post is rejected with invalid authorization', async () => {
+    test('layers post is rejected with invalid authorization', async () => {
         await api
-            .post(`/api/normalMaps`)
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
             .set('Authorization', `Bearer invalidtoken`)
             .attach('files', file)
             .expect(401)
     })
-    test('image post requires exactly one layer.', async () => {
+    test('layers post is rejected with incorrect authorization', async () => {
         await api
-            .post('/api/normalMaps')
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(403)
+    })
+    test('layers post returns 404 if normal map is not found.', async () => {
+        await api
+            .post(`/api/normalMaps/aaaaaaaaaaaaaaaaaaaaaaaa/layers`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(404)
+    })
+    test('layers post requires exactly one layer.', async () => {
+        await api
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(400)
         await api
-            .post('/api/normalMaps')
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', file)
             .attach('files', file)
@@ -410,7 +569,7 @@ describe('normal map delete', () => {
            
     })
 
-    test('normal map deletes all layer image files', async () => {
+    test('normal map delete removes all layer image files', async () => {
         await api
             .delete(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
@@ -419,9 +578,15 @@ describe('normal map delete', () => {
             assert(!fs.existsSync(initialImages[0].file))
            
     })
+
+    test('normal map delete removes normal map reference from the related user.', async () => {
+        await api
+            .delete(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(204)
+
+            const result = await User.findById(initialNormalMaps[0].creator)
+            assert(!result.normalMaps.map(id => id.toString()).includes(initialNormalMaps[0].id.toString()))
+    })
 })
 
-after(async () => {
-    await mongoose.connection.close()
-    process.exit()
-})

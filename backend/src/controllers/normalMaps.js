@@ -55,8 +55,50 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
 		if (exception) { next(exception) }
 		else {
 			try {
+				const layers = []
 				const number_of_files = request.filenames ? request.filenames.length : 0
-				if (number_of_files!= 1) {
+				for (var i = 0; i < number_of_files; i++) {
+					const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
+					const newfile = path.join(process.cwd(), `../output/${request.filenames[i]}`)
+					fs.copyFileSync(oldfile, newfile)
+					fs.unlinkSync(oldfile)
+					const layer = new Image({
+						file: newfile,
+						format: request.body.format,
+						creator: request.user.id
+					})
+					await layer.save()
+					layers.push(layer.id)
+				}
+				const normalMap = new NormalMap({
+					name: `${request.user.id}-${request.timestamp}`,
+					status: 'done',
+					layers,
+					creator: request.user.id
+				})
+				await normalMap.save()
+				response.status(201).json(normalMap)
+			} catch (exception) {
+				next(exception)
+			}
+		}
+	})
+})
+
+normalMapsRouter.post('/:id/layers/', middleware.userExtractor, async (request, response, next) => {
+	middleware.imageUpload(request, response, async (exception) => {
+		if (exception) { next(exception) }
+		else {
+			try {
+				const normalMap = await NormalMap.findById(request.params.id)
+				if (!normalMap) { return response.status(404).end() }
+				if (normalMap.creator.toString() != request.user.id.toString()) {
+					return response.status(403).end()
+				}
+
+
+				const number_of_files = request.filenames ? request.filenames.length : 0
+				if (number_of_files != 1) {
 					for (var i = 0; i < number_of_files; i++) {
 						const file = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
 						if (fs.existsSync(file)) { fs.unlinkSync(file) }

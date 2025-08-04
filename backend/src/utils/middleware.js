@@ -78,7 +78,7 @@ const imageUpload = multer({
 			callback(null, path.join(process.cwd(), '../uploads/'))
 		},
 		filename: (request, file, callback) => {
-			const new_name = request.user.id + '-' + request.timestamp + '.' + file.originalname
+			const new_name = `${request.user.id}-${request.timestamp}.${file.originalname}`
 			request.filenames = request.filenames ? [...request.filenames, new_name] : [new_name]
 			callback(null, new_name)
 		}
