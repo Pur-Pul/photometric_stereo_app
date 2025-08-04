@@ -1,4 +1,4 @@
-const { test, after, beforeEach, describe } = require('node:test')
+const { test, after, afterEach, beforeEach, describe } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
@@ -24,12 +24,19 @@ let initialUsers = [
 ]
 
 beforeEach(async () => {
-    await User.deleteMany({})
-    await Image.deleteMany({})
+    await User.deleteMany({ username: 'test1' })
+    await User.deleteMany({ username: 'test2' })
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         let userObject = new User(initialUsers[i])
         await userObject.save()
+        initialUsers[i].id = userObject.id
+    }
+})
+
+afterEach(async () => {
+    for (var i = 0; i < initialUsers.length; i++) {
+        await User.findByIdAndDelete(initialUsers[i].id)
     }
 })
 
@@ -67,7 +74,14 @@ describe('user get', () => {
 })
 
 describe('user post', () => {
+    beforeEach(async () => {
+        await User.findOneAndDelete({ username: 'newuser' })
+    })
+    afterEach(async() => {
+        await User.findOneAndDelete({ username: 'newuser' })
+    })
     test('New user can be created.', async () => {
+        
         let newUser = {
             username: 'newuser',
             name: 'new user',
@@ -82,8 +96,10 @@ describe('user post', () => {
 
         const response = await api.get('/api/users')
         const titles = response.body.map(r => r.username)
+        
         assert.strictEqual(response.body.length, initialUsers.length + 1)
         assert(titles.includes('newuser'))
+        
     })
 
     test('username is required', async () => {

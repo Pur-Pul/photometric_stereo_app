@@ -1,4 +1,4 @@
-const { test, after, afterEach, beforeEach, describe } = require('node:test')
+const { test, after, afterEach, beforeEach, describe, before } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
@@ -7,7 +7,6 @@ const jwt = require('jsonwebtoken')
 const app = require('../src/app')
 const fs = require('fs')
 const path = require('path')
-const FormData = require('form-data')
 
 const api = supertest(app)
 const User = require('../src/models/user')
@@ -49,11 +48,8 @@ let initialImages = [
 ]
 
 beforeEach(async () => {
-    await User.deleteMany({})
-    await Image.deleteMany({})
-    await NormalMap.deleteMany({})
-   
-
+    await User.deleteMany({ username: 'test1'})
+    await User.deleteMany({ username: 'test2'})
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         const userObject = new User(initialUsers[i])
@@ -84,6 +80,16 @@ beforeEach(async () => {
 afterEach(async () => {
     await Session.deleteMany({ userId: initialUsers[0].id })
     await Session.deleteMany({ userId: initialUsers[1].id })
+    for (var i = 0; i < initialUsers.length; i++) {
+        await NormalMap.deleteMany({ creator: initialUsers[i].id })
+        await User.findByIdAndDelete(initialUsers[i].id)
+    }
+    for (var i = 0; i < initialImages.length; i++) {
+        await User.findByIdAndDelete(initialImages[i].id)
+    }
+    for (var i = 0; i < initialNormalMaps.length; i++) {
+        await User.findByIdAndDelete(initialNormalMaps[i].id)
+    }
 })
 
 after(async () => {
@@ -388,7 +394,7 @@ describe('normal map post', () => {
         assert(imageResult)
     })
 
-    test('layer images created in image post has a exists as files', async () => {
+    test('layer image created in image post exists as a file in the output directory', async () => {
         const result = await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
@@ -508,6 +514,66 @@ describe('layer post one', () => {
             .attach('files', file)
             .attach('files', file)
             .expect(400)
+    })
+    test('sucessful layer post creates a new image entry.', async () => {
+        const beforeCount = (await Image.find({})).length
+        await api
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .expect(201)
+        const afterCount = (await Image.find({})).length
+        assert.equal(afterCount - beforeCount, 1)
+    })
+    test('successful layer post returns normal map object as json.', async () => {
+        await api
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+    })
+    test('the returned normal map contains the field "layers"', async () => {
+        const result = await api
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .expect(201)
+        console.log(result.body)
+        assert(result.body.layers)
+    })
+    test('the layers field of the returned normal map contains a new layer.', async () => {
+        const result = await api
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .expect(201)
+        console.log(result.body)
+        assert(result.body.layers.length, 1)
+    })
+    test('the new layer returned with the normal map contains the field "file"', async () => {
+        const result = await api
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .expect(201)
+        assert(result.body.layers[0].file)
+    })
+    test('the new layer returned with the normal map contains the field "creator".', async () => {
+        const result = await api
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .expect(201)
+        assert(result.body.layers[0].creator)
+    })
+    test('the new layer returned with the exists as a file in the output directory.', async () => {
+        const result = await api
+            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', file)
+            .expect(201)
+        assert(fs.existsSync(result.body.layers[0].file))
     })
 })
 

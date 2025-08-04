@@ -9,10 +9,10 @@ const UPLOADS_DIR = process.env.UPLOADS_DIR
 const OUTPUT_DIR = process.env.OUTPUT_DIR
 console.log(PHOTOSTEREO_URI)
 module.exports = {
-	PORT: PORT ? PORT : 3001,
-	MONGODB_URI,
-	PHOTOSTEREO_URI,
-	EXPIRE_DELAY: EXPIRE_DELAY ? EXPIRE_DELAY : 30,
-	UPLOADS_DIR: UPLOADS_DIR ? UPLOADS_DIR : path.join(process.cwd(), '../uploads/'),
-	OUTPUT_DIR: OUTPUT_DIR ? OUTPUT_DIR : path.join(process.cwd(), '../output/')
+    PORT: PORT ? PORT : 3001,
+    MONGODB_URI,
+    PHOTOSTEREO_URI,
+    EXPIRE_DELAY: EXPIRE_DELAY ? EXPIRE_DELAY : 30,
+    UPLOADS_DIR: UPLOADS_DIR ? UPLOADS_DIR : path.join(process.cwd(), '../uploads/'),
+    OUTPUT_DIR: OUTPUT_DIR ? OUTPUT_DIR : path.join(process.cwd(), '../output/')
 }

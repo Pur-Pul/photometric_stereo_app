@@ -24,8 +24,8 @@ let initialUsers = [
     }
 ]
 beforeEach(async () => {
-    await Image.deleteMany({})
-    await User.deleteMany({})
+    await User.deleteMany({ username: 'test1'})
+    await User.deleteMany({ username: 'test2'})
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         let userObject = new User(initialUsers[i])
@@ -39,6 +39,9 @@ beforeEach(async () => {
 afterEach(async () => {
     await Session.deleteMany({ userId: initialUsers[0].id })
     await Session.deleteMany({ userId: initialUsers[1].id })
+    for (var i = 0; i < initialUsers.length; i++) {
+        await User.findByIdAndDelete(initialUsers[i].id)
+    }
 })
 
 describe('logout delete', () => {

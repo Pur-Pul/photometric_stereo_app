@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const normalMapSchema = new mongoose.Schema(
     {
         name: { type: String, required: true },
-        status: { type: String, required: true},
+        status: { type: String, required: true },
         layers: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Image',

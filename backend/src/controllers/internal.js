@@ -13,7 +13,7 @@ internalRouter.put('/images/:id', async (request, response, next) => {
         })
         await new_image.save()
         normalMap.layers = [new_image.id]
-        normalMap.status = "done"
+        normalMap.status = 'done'
         await normalMap.save()
         expireNormalMap(normalMap.id)
         response.status(201).end()
