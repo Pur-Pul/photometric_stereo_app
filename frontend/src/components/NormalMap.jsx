@@ -8,12 +8,14 @@ import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import { useNavigate} from 'react-router-dom'
+import NormalMapEditor from './NormalMapEditor'
 
 const NormalMap = () => {
     const dispatch = useDispatch()
 	const id = useParams().id
     const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
     const [open, setOpen ] = useState(false)
+    const [edit, setEdit] = useState(false)
     const navigate = useNavigate()
 
     const img = {
@@ -56,6 +58,8 @@ const NormalMap = () => {
         navigate('/normal_map')
     }
 
+    if (edit) return <NormalMapEditor id={id} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
+
     return normalMap && normalMap.layers.length > 0
         ? (normalMap.layers[0].src != undefined 
             ? <div>
@@ -66,6 +70,7 @@ const NormalMap = () => {
                         Download
                     </a>
                 </Button>
+                <Button onClick={() => setEdit(true)} variant='outlined'>Edit</Button>
                 <Dialog open={open} onClose={ () => setOpen(false) } closeAfterTransition={false}>
                     <DialogTitle>Are you sure you want to delete the normal map?</DialogTitle>
                     <DialogActions>

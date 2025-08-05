@@ -51,7 +51,7 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor }) =
     }
 
     return (
-        <div>
+        <div style={{ padding: '5px' }}>
             <InputLabel htmlFor="selector">Color: </InputLabel>
             <div id="selector">
                 <input 
