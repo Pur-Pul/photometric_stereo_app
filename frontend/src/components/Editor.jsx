@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 
 const SIZE_LIMIT = 300
 
-const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor }) => {
+const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style }) => {
     const [drawing, setDrawing] = useState(false)
     const [size, setSize] = useState(null)
 
@@ -47,7 +47,6 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor }) => {
             ctx.drawImage(image, 0, 0, canvasRef.current.width, canvasRef.current.height)
             ctx.scale(scale, scale)
             ctxRef.current = ctx
-            console.log('here')
         }
         
     }
@@ -63,7 +62,6 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor }) => {
 
     const startDraw = (event) => {
         const {offsetX:x, offsetY:y, button} = event.nativeEvent
-        console.log(x,y)
         ctxRef.current.strokeStyle = button == 0 ? leftColor : rightColor
         ctxRef.current.fillStyle = button == 0 ? leftColor : rightColor
         ctxRef.current.lineWidth = pencilSize
@@ -93,13 +91,12 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor }) => {
     }
 
     const editor = {
-        position: 'relative',
         border: '1px solid rgba(0,0,0,1)'
     }
 
 
     return (
-        <div style={{ margin: 'auto' }}>
+        <div style={{ margin: 'auto', ...style}}>
             <canvas 
                 ref={ canvasRef }
                 onMouseDown={ startDraw }

@@ -16,6 +16,7 @@ const NormalMap = () => {
     const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
     const [open, setOpen ] = useState(false)
     const [edit, setEdit] = useState(false)
+    const [size, setSize] = useState(null)
     const navigate = useNavigate()
 
     const img = {
@@ -34,13 +35,11 @@ const NormalMap = () => {
             }
         }
 		const getLayers = async () => {
-            console.log(normalMap)
             const updatedLayers = []
             for (var i = 0; i < normalMap.layers.length; i++) {
                 const blob = await imageService.getFile(normalMap.layers[i].id)
                 updatedLayers.push({...normalMap.layers[i], src:URL.createObjectURL(blob)})
             }
-            console.log(updatedLayers)
             
             dispatch(updateNormalMap({ ...normalMap, layers: updatedLayers }))
         }
@@ -58,12 +57,12 @@ const NormalMap = () => {
         navigate('/normal_map')
     }
 
-    if (edit) return <NormalMapEditor id={id} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
+    if (size && edit) return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
 
     return normalMap && normalMap.layers.length > 0
         ? (normalMap.layers[0].src != undefined 
             ? <div>
-                <img style={img} src={normalMap.layers[0].src} />
+                <img style={img} src={normalMap.layers[0].src} onLoad={(e) => {setSize([e.target.width, e.target.height])}}/>
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined'>
                     <a href={normalMap.layers[0].src} download={`normalmap.png`} style={{ visibility: 'none' }}>

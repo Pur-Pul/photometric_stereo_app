@@ -11,16 +11,31 @@ import FormControl from "@mui/material/FormControl"
 import ColorSelector from "./ColorSelector"
 import Editor from "./Editor"
 import imageService from "../services/images"
+import LayerSelector from "./LayerSelector"
 
 const SIZE_LIMIT = 300
 
-const NormalMapEditor = ({ id, layers, handleDiscard }) => {
+const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [pencilSize, setPencilSize] = useState(10)
     const [leftColor, setLeftColor] = useState('#000000')
     const [rightColor, setRightColor] = useState('#ffffff')
     const [alertOpen, setAlertOpen] = useState(false)
-    const canvasRefs = Array(layers.length).fill(null).map(() => useRef(null))
+    const [selectedLayer, setSelectedLayer] = useState(0)
+    const [newLayers, setNewLayers] = useState(layers)
+    const canvasRefs = Array(5).fill(null).map(() => useRef(null))
+    const emptyCanvasRef = useRef(null)
     const dispath = useDispatch()
+    const emptyImage = new Image(size[0], size[1])
+
+    useEffect(() => {
+        emptyCanvasRef.current = document.createElement('canvas')
+        emptyCanvasRef.current.width = size[0]
+        emptyCanvasRef.current.height = size[1]
+        
+        const ctx = emptyCanvasRef.current.getContext('2d')
+        ctx.fillStyle = 'rgba(0, 0, 0, 0)'
+        ctx.fillRect(0, 0, size[0], size[1])
+    }, [])
 
     const handleSave = () => {
         // TODO
@@ -30,17 +45,33 @@ const NormalMapEditor = ({ id, layers, handleDiscard }) => {
         console.log('Save function not yet implemented.')
     }
 
+    const addLayer = () => {
+        if (newLayers.length < canvasRefs.length) {
+            emptyCanvasRef.current.toBlob((blob) => {
+                setNewLayers([...newLayers, {
+                    src: URL.createObjectURL(blob)
+                }])
+            })
+                
+        }
+    }
+
     return (
         <div style={{ margin: 'auto' }}>
-            {layers.map((layer, index) => <Editor 
-                key={index}
-                src={layer.src}
-                pencilSize={pencilSize}
-                leftColor={leftColor}
-                rightColor={rightColor}
-                canvasRef={canvasRefs[index]}
-                />)}
-            <div style={{ alignItems: 'center', display: 'flex'}}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
+                {newLayers.map((layer, index) => <Editor 
+                    key={index}
+                    style={{ pointerEvents: index !== selectedLayer ? 'none' : 'auto', gridRowStart: 1, gridColumnStart: 1}}
+                    src={layer.src}
+                    pencilSize={pencilSize}
+                    leftColor={leftColor}
+                    rightColor={rightColor}
+                    canvasRef={canvasRefs[index]}
+                    />
+                )}
+            </div>
+            <div style={{ alignItems: 'center', display: 'flex', position: 'relative'}}>
+                <LayerSelector layers={newLayers} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} addLayer={addLayer}/> 
                 <ColorSelector 
                     leftColor={leftColor}
                     rightColor={rightColor}
