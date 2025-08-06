@@ -62,7 +62,7 @@ const NormalMap = () => {
     return normalMap && normalMap.layers.length > 0
         ? (normalMap.layers[0].src != undefined 
             ? <div>
-                <img style={img} src={normalMap.layers[0].src} onLoad={(e) => {setSize([e.target.width, e.target.height])}}/>
+                <img style={img} src={normalMap.layers[0].src} onLoad={(e) => {setSize([e.target.naturalWidth, e.target.naturalHeight])}}/>
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined'>
                     <a href={normalMap.layers[0].src} download={`normalmap.png`} style={{ visibility: 'none' }}>

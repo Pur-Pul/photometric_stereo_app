@@ -19,6 +19,7 @@ class PersistPlot extends React.Component {
         config={this.state.config}
         onInitialized={(figure) => {this.setState(figure)}}
         onUpdate={(figure) => {this.setState(figure)}}
+        style={{cursor: 'cell'}}
         
         onClick={(e) => {
             if (this.props.setLightDir) {
@@ -93,15 +94,16 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
     
     const size = 100
     const aspect_ratio = file.width/file.height
+    const width = Math.round(aspect_ratio*size)
+    const height = size
     const radius = Math.max(0.5 * size * aspect_ratio, 0.5 * size)
-
-    const plane = new Array(size).fill(null).map(() => new Array(aspect_ratio * size).fill(0))
+    const plane = new Array(height).fill(null).map(() => new Array(width).fill(0))
     const sphere = new Sphere(3, radius)
     const canvas = document.createElement('canvas')
     const context = canvas.getContext('2d', { willReadFrequently: true })
 
     useEffect(() => {
-        setColors(getPixels(file.image, aspect_ratio * size, size, canvas, context))
+        setColors(getPixels(file.image, width, height, canvas, context))
     }, [file])
 
     useEffect(() => {
@@ -179,7 +181,7 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
         margin: { l: 35, r: 0, b: 25, t: 25 },
     }
     return (
-        <PersistPlot 
+        <PersistPlot
             data = { data }
             layout = { layout }
             setLightDir = { setLightDir }

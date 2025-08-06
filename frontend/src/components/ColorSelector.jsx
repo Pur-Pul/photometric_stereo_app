@@ -1,25 +1,43 @@
 import { useState, useRef, useEffect } from "react"
-import { InputLabel, Dialog, DialogTitle, DialogActions, Button } from "@mui/material"
+import { InputLabel, Dialog, DialogTitle, DialogActions, Button} from "@mui/material"
+import normal_sphere from '../static/normal_sphere.png'
 
 const ColorWheel = ({currentColor, saveColor, setOpen}) => {
     const canvasRef = useRef(null)
     const ctxRef = useRef(null)
     const [color, setColor] = useState(currentColor)
-    useEffect(() => {
+    const image = new Image()
+    image.onload = () => {
         const canvas = canvasRef.current
+        canvas.width = image.width
+        canvas.height = image.height
         ctxRef.current = canvas.getContext('2d', { willReadFrequently: true })
-    }, [])
+        ctxRef.current.drawImage(image, 0, 0, image.width, image.height)
+    }
+    image.src = normal_sphere
     const getColor = (event) => {
         const {offsetX:x, offsetY:y} = event.nativeEvent
         const raw_data = ctxRef.current.getImageData(x,y,1,1).data
-        setColor(`rgba(${raw_data[0]},${raw_data[1]},${raw_data[2]},${raw_data[3]})`)
+
+        const red = raw_data[0].toString(16)
+        const green = raw_data[1].toString(16)
+        const blue = raw_data[2].toString(16)
+        const hex = `#${red.length===1?`0${red}`:red}${green.length===1?`0${green}`:green}${blue.length===1?`0${blue}`:blue}`
+        setColor(hex)
     }
+
     return (
-        <div>
-            <canvas ref={canvasRef} onMouseDown={getColor}/> 
+        <div style={{textAlign: 'center'}}>
+            <canvas style={{border: '2px solid', cursor: 'cell'}} ref={canvasRef} onMouseDown={getColor}/>
             <DialogActions>
-                <Button onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={() => {
+                <InputLabel htmlFor="chosenColor">{color}</InputLabel>
+                <input
+                    id="chosenColor"
+                    style={{border: '1px solid #000000', padding: '8px 16px', backgroundColor: color, color: color}}
+                    type="button"
+                    />
+                <Button variant='outlined' color='error' onClick={() => setOpen(false)}>Cancel</Button>
+                <Button variant='outlined' onClick={() => {
                     saveColor(color)
                     setOpen(false)
                 }}>Save</Button>
@@ -72,7 +90,7 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor }) =
                     onClick={() => setOpen("right")}
                     />
             </div>
-            <Dialog open={open==="left" || open==="right"} onClose={() => setOpen("")} closeAfterTransition={false}>
+            <Dialog open={open==="left" || open==="right"} onClose={() => setOpen("")} closeAfterTransition={false} fullWidth maxWidth = 'xs'>
                 <DialogTitle>Pick a color</DialogTitle>
                 <ColorWheel 
                     currentColor={ open==="left" ? leftColor : rightColor }

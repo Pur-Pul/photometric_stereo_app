@@ -56,10 +56,13 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     }
 
     const removeLayer = (index) => {
+        console.log(index)
         if (newLayers.length > 1) {
-            newLayers.splice(index, 1)
             console.log(newLayers)
-            setNewLayers([...newLayers])
+            const clonedNewLayers = [...newLayers]
+            clonedNewLayers.splice(index, 1)
+            console.log(clonedNewLayers)
+            setNewLayers(clonedNewLayers)
             if (newLayers.length-1 < selectedLayer) { setSelectedLayer(newLayers.length-1) }
         }
     }

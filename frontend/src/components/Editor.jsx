@@ -9,7 +9,6 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style }) =>
     const [canvasSize, setCanvasSize] = useState(null)
     const [scale, setScale] = useState([1,1])
 
-    //const canvasRef = useRef(null)
     const ctxRef = useRef(null)
     const [mouse, setMouse] = useState(-1)
 
@@ -19,24 +18,21 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style }) =>
         setDrawing(false)
     }}
 
+    useEffect(() => {
+        setFirstLoad(true)
+    }, [src])
+
     const calculateCanvasSize = (imageSize, editorSize) => {
         const canvasAspect = imageSize[0]/imageSize[1]
         const editorAspect = editorSize[0]/editorSize[1]
 
-        const newCanvasSize = canvasAspect >= editorAspect 
+        const canvasSize = canvasAspect >= editorAspect 
             ? [editorSize[0], editorSize[0] / canvasAspect]
             : [editorSize[1] * canvasAspect, editorSize[1]]
 
-        if (canvasSize && (newCanvasSize[0] !== canvasSize[0] || newCanvasSize[1] !== canvasSize[1])) {
-            setCanvasSize(newCanvasSize)
-            setScale([
-                (canvasSize[0]*scale[0])/newCanvasSize[0],
-                (canvasSize[1]*scale[1])/newCanvasSize[1]
-            ])
-        } else if (!canvasSize) {
-            setCanvasSize(newCanvasSize)
-        }
         
+        setCanvasSize(canvasSize)
+
 
         const canvas = canvasRef.current
         if (firstLoad) {
@@ -48,10 +44,9 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style }) =>
                 canvas.height = imageSize[1]
             }
         }
-        
-        canvas.style.width = `${newCanvasSize[0]-2}px`
-        canvas.style.height = `${newCanvasSize[1]-2}px`
-        return canvasAspect >= editorAspect ? canvas.width/editorSize[0] : canvas.height/editorSize[1]
+        canvas.style.width = `${canvasSize[0]-2}px`
+        canvas.style.height = `${canvasSize[1]-2}px`
+        setScale([canvas.width/canvasSize[0], canvas.height/canvasSize[1]])
     }
 
     const image = new Image()
@@ -61,23 +56,19 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style }) =>
             const size = [image.width,image.height]
             setSize(size)
             const canvas = canvasRef.current
-            const ctx = canvas.getContext('2d', { willReadFrequently: true })
+            ctxRef.current = canvas.getContext('2d', { willReadFrequently: true })
 
-            const canvasScale = calculateCanvasSize(size, [window.innerWidth, window.innerHeight * 0.8]) 
+            calculateCanvasSize(size, [window.innerWidth, window.innerHeight * 0.8]) 
 
-            ctx.drawImage(image, 0, 0, canvasRef.current.width, canvasRef.current.height)
-            ctx.scale(canvasScale, canvasScale)
-            ctxRef.current = ctx
+            ctxRef.current.drawImage(image, 0, 0, canvasRef.current.width, canvasRef.current.height)
         }
     }
     image.src = src
-
     useEffect(() => {
         if (size) {
             const handleResize = () => {
                 calculateCanvasSize(size, [window.innerWidth, window.innerHeight * 0.8])
             }
-
             window.addEventListener("resize", handleResize)
         }
         
@@ -125,9 +116,9 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style }) =>
     }
 
     const editor = {
-        border: '1px solid rgba(0,0,0,1)'
+        border: '1px solid rgba(0,0,0,1)',
+        imageRendering: 'pixelated'
     }
-
 
     return (
         <div style={{ margin: 'auto', ...style}}>

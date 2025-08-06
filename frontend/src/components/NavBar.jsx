@@ -1,6 +1,7 @@
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useDispatch } from "react-redux"
 import { performLogout } from '../reducers/loginReducer'
+import { AppBar, Button, Toolbar, Box} from '@mui/material';
 
 const NavBar = ({ user }) => {
     const dispatch = useDispatch()
@@ -11,6 +12,7 @@ const NavBar = ({ user }) => {
 		event.preventDefault()
 		dispatch(performLogout())
 	}
+    const navigate = useNavigate()
     const paths = {
         "/" : "Home",
         "/users" : "Users",
@@ -19,12 +21,16 @@ const NavBar = ({ user }) => {
     paths[`/users/${user.id}`] = user.name
 
     return (
-        <p style={bar}>
-            {Object.keys(paths).map(key => {
-                return <Link key={key} style={{ ...padding, backgroundColor : location.pathname == key ? 'darkGrey' : bar.backgroundColor }} to={key}>{paths[key]}</Link>
-            })}
-            <button onClick={logoutHandler}>logout</button>
-        </p>
+        <AppBar position='static'>
+            <Toolbar>
+                {Object.keys(paths).map(key => {
+                    return <Button key={key} color="inherit" onClick={() => navigate(key)}>
+                        {paths[key]}
+                    </Button>
+                })}
+                <Button sx={{ marginLeft: "auto" }} color="error" onClick={logoutHandler}>Logout</Button>
+            </Toolbar>
+        </AppBar>
     )
 }
 
