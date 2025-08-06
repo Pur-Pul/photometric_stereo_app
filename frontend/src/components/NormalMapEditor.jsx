@@ -51,8 +51,16 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                 setNewLayers([...newLayers, {
                     src: URL.createObjectURL(blob)
                 }])
-            })
-                
+            })    
+        }
+    }
+
+    const removeLayer = (index) => {
+        if (newLayers.length > 1) {
+            newLayers.splice(index, 1)
+            console.log(newLayers)
+            setNewLayers([...newLayers])
+            if (newLayers.length-1 < selectedLayer) { setSelectedLayer(newLayers.length-1) }
         }
     }
 
@@ -71,7 +79,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                 )}
             </div>
             <div style={{ alignItems: 'center', display: 'flex', position: 'relative'}}>
-                <LayerSelector layers={newLayers} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} addLayer={addLayer}/> 
+                <LayerSelector layers={newLayers} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} addLayer={addLayer} removeLayer={removeLayer}/> 
                 <ColorSelector 
                     leftColor={leftColor}
                     rightColor={rightColor}
