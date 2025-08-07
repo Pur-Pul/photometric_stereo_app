@@ -52,7 +52,8 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor }) =
     const colorButton = {
         border: '1px solid #000000',
         padding: '8px 16px',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        borderRadius: '5px'
     }
 
     const arrowButton = {

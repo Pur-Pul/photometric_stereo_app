@@ -12,6 +12,7 @@ import NormalMapList from './components/NormalMapList'
 import NormalMap from './components/NormalMap'
 import NavBar from './components/NavBar'
 import { Routes, Route, useLocation, useNavigate} from 'react-router-dom'
+import ManualCreation from './components/ManualCreation'
 
 const App = () => {
 	const dispatch = useDispatch()
@@ -48,10 +49,12 @@ const App = () => {
 					<NavBar user={user}/>
 					<Notification />
 					<Routes>
-						<Route path="/" element={<ImageUploadForm />} />
+						<Route path="/" element={<h1>Welcome</h1>} />
 						<Route path="/users" element={<UserList />} />
 						<Route path="/users/:id" element={<User />} />
 						<Route path="/normal_map" element={<NormalMapList />} />
+						<Route path="/normal_map/manual/:width/:height" element={<ManualCreation />} />
+						<Route path="/normal_map/photostereo" element={<ImageUploadForm />} />
 						<Route path="/normal_map/:id" element={<NormalMap />} />
 					</Routes>
 				</div>

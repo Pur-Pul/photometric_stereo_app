@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef } from "react"
-import { useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import Dialog from "@mui/material/Dialog"
-import DialogTitle from "@mui/material/DialogTitle"
-import Button from "@mui/material/Button"
-import DialogActions from "@mui/material/DialogActions"
-import TextField from "@mui/material/TextField"
-import InputLabel from "@mui/material/InputLabel"
-import FormControl from "@mui/material/FormControl"
+import { 
+    Button,
+    IconButton,
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    TextField,
+    InputLabel,
+    FormControl,
+    Grid,
+    Tooltip
+} from '@mui/material'
+
 import ColorSelector from "./ColorSelector"
 import Editor from "./Editor"
-import imageService from "../services/images"
 import LayerSelector from "./LayerSelector"
 
 const SIZE_LIMIT = 300
@@ -24,7 +28,9 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     
     const canvasRefs = Array(5).fill(null).map(() => useRef(null))
     const emptyCanvasRef = useRef(null)
-    const [editorState, setEditorState] = useState([layers.map(layer => layer.src)])
+    const initialLayers = [...layers]
+    
+    const [editorState, setEditorState] = useState([initialLayers.map(layer => layer.src)])
     const [editorCursor, setEditorCursor] = useState(0)
     const dispath = useDispatch()
 
@@ -37,6 +43,10 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         const ctx = emptyCanvasRef.current.getContext('2d')
         ctx.fillStyle = 'rgba(0, 0, 0, 0)'
         ctx.fillRect(0, 0, size[0], size[1])
+        if (initialLayers.length === 0) {
+            initialLayers.push({ src: emptyCanvasRef.current.toDataURL() })
+        }
+        setEditorState([initialLayers.map(layer => layer.src)])
     }, [])
 
     const handleSave = () => {
@@ -60,7 +70,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const updateEditorState = (layerIndex, src) => {
         const currentState = editorState.slice(0, editorCursor+1)
         if (currentState.length == 0) {
-            let newState = layers.map(layer => layer.src)
+            let newState = initialLayers.map(layer => layer.src)
             
             newState[layerIndex] = src
             setEditorState([newState])
@@ -98,29 +108,39 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                 }
                 )}
             </div>
-            <div style={{ alignItems: 'center', display: 'flex', position: 'relative'}}>
-                <LayerSelector layers={editorState[editorCursor]} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} addLayer={addLayer} removeLayer={removeLayer}/> 
-                <ColorSelector 
-                    leftColor={leftColor}
-                    rightColor={rightColor}
-                    setLeftColor={setLeftColor}
-                    setRightColor={setRightColor}
-                    />
-                
-                <FormControl>
-                    <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
-                    <TextField
-                        id="pencil-size"
-                        type="number"
-                        slotProps={{ htmlInput : { min:1, max:300 }}}
-                        value={pencilSize}
-                        onChange={(e) => setPencilSize(e.target.value)}
+            <div>
+                <Grid container sx={{ justifyContent: "space-evenly", alignItems: "center", border: '2px solid', padding: '10px', borderRadius: '5px'}}>
+                    <LayerSelector layers={editorState[editorCursor]} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} addLayer={addLayer} removeLayer={removeLayer}/> 
+                    <ColorSelector 
+                        leftColor={leftColor}
+                        rightColor={rightColor}
+                        setLeftColor={setLeftColor}
+                        setRightColor={setRightColor}
                         />
-                </FormControl>
-                <Button onClick={ () => setEditorCursor(editorCursor ? editorCursor-1 : 0)}>Undo</Button>
-                <Button onClick={ () => setEditorCursor(editorCursor < editorState.length-1 ? editorCursor+1 : editorCursor)}>Redo</Button>
-                <Button onClick={ () => { setAlertOpen(true) }} color="error" variant="outlined">Cancel</Button>
-                <Button onClick={ handleSave } color="success" variant="outlined">Save</Button>
+                    
+                    <FormControl>
+                        <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
+                        <TextField
+                            id="pencil-size"
+                            type="number"
+                            slotProps={{ htmlInput : { min:1, max:300 }}}
+                            value={pencilSize}
+                            onChange={(e) => setPencilSize(e.target.value)}
+                            />
+                    </FormControl>
+                    <div style={{ width:'120px' }}>
+                        <Tooltip title={ 'Undo' } placement='top'>
+                            <IconButton sx={{ border: '2px solid', width: '40%', marginRight: '5px'}} disabled={editorCursor === 0} onClick={ () => setEditorCursor(editorCursor ? editorCursor-1 : 0)}> ↶ </IconButton>
+                        </Tooltip>
+                        <Tooltip title={ 'Redo' } placement='top'>
+                            <IconButton  sx={{ border: '2px solid', width: '40%', marginLeft: '5px'}} disabled={editorCursor >= editorState.length-1} onClick={ () => setEditorCursor(editorCursor < editorState.length-1 ? editorCursor+1 : editorCursor)}>↷</IconButton>
+                        </Tooltip>
+                    </div>
+                </Grid>
+                <Grid container sx={{ justifyContent: "flex-end"}}>
+                    <Button variant="outlined" color="error" onClick={ () => { setAlertOpen(true) }}  >Cancel</Button>
+                    <Button variant="outlined" color="success"onClick={ handleSave }  >Save</Button>
+                </Grid>
             </div>
 
             <Dialog open={ alertOpen } onClose={() => { setAlertOpen(false) }} closeAfterTransition={false}>

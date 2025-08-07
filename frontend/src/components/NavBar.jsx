@@ -21,7 +21,7 @@ const NavBar = ({ user }) => {
     paths[`/users/${user.id}`] = user.name
 
     return (
-        <AppBar position='static'>
+        <AppBar position='static' sx={{ borderRadius: '5px' }}>
             <Toolbar>
                 {Object.keys(paths).map(key => {
                     return <Button key={key} color="inherit" onClick={() => navigate(key)}>

@@ -13,7 +13,7 @@ const LayerSelector = ({ layers, selectedLayer, setSelectedLayer, addLayer, remo
         cursor: 'pointer'
     }
     return (
-        <div>
+        <div style={{width: '200px'}}>
             <InputLabel htmlFor='layers'>Layers:</InputLabel>
             <div id='layers'>
                 <button style={layerStyle} onClick={() => addLayer()}>+</button>
