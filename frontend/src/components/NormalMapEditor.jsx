@@ -21,11 +21,13 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [rightColor, setRightColor] = useState('#ffffff')
     const [alertOpen, setAlertOpen] = useState(false)
     const [selectedLayer, setSelectedLayer] = useState(0)
-    const [newLayers, setNewLayers] = useState(layers)
+    
     const canvasRefs = Array(5).fill(null).map(() => useRef(null))
     const emptyCanvasRef = useRef(null)
+    const [editorState, setEditorState] = useState([layers.map(layer => layer.src)])
+    const [editorCursor, setEditorCursor] = useState(0)
     const dispath = useDispatch()
-    const emptyImage = new Image(size[0], size[1])
+
 
     useEffect(() => {
         emptyCanvasRef.current = document.createElement('canvas')
@@ -46,43 +48,58 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     }
 
     const addLayer = () => {
-        if (newLayers.length < canvasRefs.length) {
-            emptyCanvasRef.current.toBlob((blob) => {
-                setNewLayers([...newLayers, {
-                    src: URL.createObjectURL(blob)
-                }])
-            })    
+        if (editorState[editorCursor].length < canvasRefs.length) {
+            updateEditorState(editorState[editorCursor].length, emptyCanvasRef.current.toDataURL())
         }
     }
 
     const removeLayer = (index) => {
-        console.log(index)
-        if (newLayers.length > 1) {
-            console.log(newLayers)
-            const clonedNewLayers = [...newLayers]
-            clonedNewLayers.splice(index, 1)
-            console.log(clonedNewLayers)
-            setNewLayers(clonedNewLayers)
-            if (newLayers.length-1 < selectedLayer) { setSelectedLayer(newLayers.length-1) }
-        }
+        updateEditorState(index, null)
     }
 
+    const updateEditorState = (layerIndex, src) => {
+        const currentState = editorState.slice(0, editorCursor+1)
+        if (currentState.length == 0) {
+            let newState = layers.map(layer => layer.src)
+            
+            newState[layerIndex] = src
+            setEditorState([newState])
+        } else {
+            let newState = [...currentState[editorCursor]]
+            if (layerIndex === newState.length) {
+                newState.push(src)
+            } else if (layerIndex < newState.length) {
+                newState[layerIndex] = src
+            } else {
+                console.log('Editor state error')
+                return
+            }
+            
+            setEditorState([...currentState, newState])
+        }
+        setEditorCursor(editorCursor+1)
+    }
     return (
         <div style={{ margin: 'auto' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
-                {newLayers.map((layer, index) => <Editor 
+                {editorState[editorCursor].map((src, index) => {
+                    return src ? <Editor 
                     key={index}
                     style={{ pointerEvents: index !== selectedLayer ? 'none' : 'auto', gridRowStart: 1, gridColumnStart: 1}}
-                    src={layer.src}
+                    src={src}
                     pencilSize={pencilSize}
                     leftColor={leftColor}
                     rightColor={rightColor}
                     canvasRef={canvasRefs[index]}
+                    layerIndex={index}
+                    updateEditorState={updateEditorState}
                     />
+                    : null
+                }
                 )}
             </div>
             <div style={{ alignItems: 'center', display: 'flex', position: 'relative'}}>
-                <LayerSelector layers={newLayers} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} addLayer={addLayer} removeLayer={removeLayer}/> 
+                <LayerSelector layers={editorState[editorCursor]} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} addLayer={addLayer} removeLayer={removeLayer}/> 
                 <ColorSelector 
                     leftColor={leftColor}
                     rightColor={rightColor}
@@ -100,6 +117,8 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                         onChange={(e) => setPencilSize(e.target.value)}
                         />
                 </FormControl>
+                <Button onClick={ () => setEditorCursor(editorCursor ? editorCursor-1 : 0)}>Undo</Button>
+                <Button onClick={ () => setEditorCursor(editorCursor < editorState.length-1 ? editorCursor+1 : editorCursor)}>Redo</Button>
                 <Button onClick={ () => { setAlertOpen(true) }} color="error" variant="outlined">Cancel</Button>
                 <Button onClick={ handleSave } color="success" variant="outlined">Save</Button>
             </div>
@@ -112,6 +131,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                     handleDiscard()
                 }}> 
                     <DialogActions>
+                        
                         <Button onClick={ () => { setAlertOpen(false) } } variant="outlined">Cancel</Button>
                         <Button type="submit" color="error" variant="outlined">Discard</Button>
                     </DialogActions>

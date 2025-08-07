@@ -18,7 +18,9 @@ const LayerSelector = ({ layers, selectedLayer, setSelectedLayer, addLayer, remo
             <div id='layers'>
                 <button style={layerStyle} onClick={() => addLayer()}>+</button>
                 {
-                    layers.slice(0).reverse().map((layer, index) => <div key={layers.length-1-index} style={{display: 'flex'}}>
+                    layers.slice(0).reverse().map((layer, index) => {
+                    return layer 
+                    ? <div key={layers.length-1-index} style={{display: 'flex'}}>
                         <button 
                             style={{ ...layerStyle, backgroundColor: selectedLayer === layers.length-1-index ? '#adecf0' : '#ffffff' }}
                             onClick={() => setSelectedLayer(layers.length-1-index)}
@@ -26,7 +28,9 @@ const LayerSelector = ({ layers, selectedLayer, setSelectedLayer, addLayer, remo
                                 {`Layer: ${layers.length-1-index}`}
                         </button>
                         <button style={removeStyle} onClick={() => removeLayer(layers.length-1-index)}>-</button>
-                    </div>)
+                    </div> 
+                    : null
+                    })
                 }
             </div>
         </div>

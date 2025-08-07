@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react"
 
 const SIZE_LIMIT = 1000
 
-const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style }) => {
+const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style, layerIndex, updateEditorState }) => {
     const [drawing, setDrawing] = useState(false)
     const [firstLoad, setFirstLoad] = useState(true)
     const [size, setSize] = useState(null)
@@ -105,6 +105,7 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style }) =>
     const endDraw = () => {
         ctxRef.current.closePath()
         setDrawing(false)
+        updateEditorState(layerIndex, canvasRef.current.toDataURL())
     }
 
     const pauseDraw = () => {
