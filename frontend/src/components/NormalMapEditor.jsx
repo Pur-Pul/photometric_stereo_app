@@ -16,21 +16,23 @@ import {
 import ColorSelector from "./ColorSelector"
 import Editor from "./Editor"
 import LayerSelector from "./LayerSelector"
+import pipett from "../static/pipett32.png"
 
 const SIZE_LIMIT = 300
 
 const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [pencilSize, setPencilSize] = useState(10)
-    const [leftColor, setLeftColor] = useState('#000000')
-    const [rightColor, setRightColor] = useState('#ffffff')
+    const [leftColor, setLeftColor] = useState('#8080ff')
+    const [rightColor, setRightColor] = useState('#000000')
     const [alertOpen, setAlertOpen] = useState(false)
     const [selectedLayer, setSelectedLayer] = useState(0)
+    const [tool, setTool] = useState('pencil')
     
     const canvasRefs = Array(5).fill(null).map(() => useRef(null))
     const emptyCanvasRef = useRef(null)
     const initialLayers = [...layers]
     
-    const [editorState, setEditorState] = useState([initialLayers.map(layer => layer.src)])
+    const [editorState, setEditorState] = useState([initialLayers.map(layer => { return { ...layer, visible: true }})])
     const [editorCursor, setEditorCursor] = useState(0)
     const dispath = useDispatch()
 
@@ -46,7 +48,8 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         if (initialLayers.length === 0) {
             initialLayers.push({ src: emptyCanvasRef.current.toDataURL() })
         }
-        setEditorState([initialLayers.map(layer => layer.src)])
+        setEditorState([initialLayers.map(layer => { return { ...layer, visible: true }})])
+        setEditorCursor(0)
     }, [])
 
     const handleSave = () => {
@@ -59,48 +62,56 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
 
     const addLayer = () => {
         if (editorState[editorCursor].length < canvasRefs.length) {
-            updateEditorState(editorState[editorCursor].length, emptyCanvasRef.current.toDataURL())
+            updateEditorState(editorState[editorCursor].length, { src: emptyCanvasRef.current.toDataURL(), visible: true })
         }
+        selectedLayer < 0 ? setSelectedLayer(0) : null
     }
 
     const removeLayer = (index) => {
-        updateEditorState(index, null)
+        updateEditorState(index, undefined)
+        if (selectedLayer >= index) {
+            setSelectedLayer(selectedLayer-1)
+        }
     }
 
-    const updateEditorState = (layerIndex, src) => {
+    const toggleLayer = (index) => {
+        const layer = editorState[editorCursor][index]
+        updateEditorState(index, {...layer, visible: !layer.visible})
+    }
+
+    const updateEditorState = (layerIndex, layer) => {
         const currentState = editorState.slice(0, editorCursor+1)
-        if (currentState.length == 0) {
-            let newState = initialLayers.map(layer => layer.src)
-            
-            newState[layerIndex] = src
-            setEditorState([newState])
+        let newState = [...currentState[editorCursor]]
+        if (layerIndex === newState.length) {
+            layer ? newState.push(layer) : null
+        } else if (layerIndex < newState.length) {
+            layer ? newState.splice(layerIndex, 1, layer) : newState.splice(layerIndex, 1)
         } else {
-            let newState = [...currentState[editorCursor]]
-            if (layerIndex === newState.length) {
-                newState.push(src)
-            } else if (layerIndex < newState.length) {
-                newState[layerIndex] = src
-            } else {
-                console.log('Editor state error')
-                return
-            }
-            
-            setEditorState([...currentState, newState])
+            console.log('Editor state error')
+            return
         }
+        
+        setEditorState([...currentState, newState])
         setEditorCursor(editorCursor+1)
     }
+    console.log(editorState)
     return (
         <div style={{ margin: 'auto' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
-                {editorState[editorCursor].map((src, index) => {
-                    return src ? <Editor 
+                {editorState[editorCursor].map((layer, index) => {
+                    return layer ? <Editor 
                     key={index}
+                    visible={layer.visible}
                     style={{ pointerEvents: index !== selectedLayer ? 'none' : 'auto', gridRowStart: 1, gridColumnStart: 1}}
-                    src={src}
+                    tool={tool}
+                    setTool={setTool}
+                    src={layer.src}
                     pencilSize={pencilSize}
                     leftColor={leftColor}
                     rightColor={rightColor}
-                    canvasRef={canvasRefs[index]}
+                    setLeftColor={setLeftColor}
+                    setRightColor={setRightColor}
+                    canvasRef={canvasRefs[index]} 
                     layerIndex={index}
                     updateEditorState={updateEditorState}
                     />
@@ -109,15 +120,41 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                 )}
             </div>
             <div>
-                <Grid container sx={{ justifyContent: "space-evenly", alignItems: "center", border: '2px solid', padding: '10px', borderRadius: '5px'}}>
-                    <LayerSelector layers={editorState[editorCursor]} selectedLayer={selectedLayer} setSelectedLayer={setSelectedLayer} addLayer={addLayer} removeLayer={removeLayer}/> 
+                <Grid 
+                    container 
+                    sx={{
+                        justifyContent: "space-evenly",
+                        alignItems: "flex-start",
+                        border: '2px solid',
+                        padding: '10px',
+                        borderRadius: '5px'
+                    }}
+                    >
+                    <LayerSelector 
+                        layers={editorState[editorCursor]}
+                        selectedLayer={selectedLayer}
+                        setSelectedLayer={setSelectedLayer}
+                        addLayer={addLayer}
+                        removeLayer={removeLayer}
+                        toggleLayer={toggleLayer}
+                        />
                     <ColorSelector 
                         leftColor={leftColor}
                         rightColor={rightColor}
                         setLeftColor={setLeftColor}
                         setRightColor={setRightColor}
                         />
-                    
+                    <IconButton 
+                        sx={{
+                            border: '2px solid',
+                            width: '50px',
+                            height: '50px'
+                            }} 
+                        color={ tool === 'pipett' ? 'primary' : 'default' }
+                        onClick={() => setTool(tool === 'pipett' ? 'pencil' : 'pipett')}
+                        >
+                        <img src={pipett} />
+                    </IconButton>
                     <FormControl>
                         <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
                         <TextField
@@ -130,10 +167,14 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                     </FormControl>
                     <div style={{ width:'120px' }}>
                         <Tooltip title={ 'Undo' } placement='top'>
-                            <IconButton sx={{ border: '2px solid', width: '40%', marginRight: '5px'}} disabled={editorCursor === 0} onClick={ () => setEditorCursor(editorCursor ? editorCursor-1 : 0)}> ↶ </IconButton>
+                            <span>
+                                <IconButton sx={{ border: '2px solid', width: '40%', marginRight: '5px'}} disabled={editorCursor === 0} onClick={ () => setEditorCursor(editorCursor ? editorCursor-1 : 0)}> ↶ </IconButton>
+                            </span>
                         </Tooltip>
                         <Tooltip title={ 'Redo' } placement='top'>
-                            <IconButton  sx={{ border: '2px solid', width: '40%', marginLeft: '5px'}} disabled={editorCursor >= editorState.length-1} onClick={ () => setEditorCursor(editorCursor < editorState.length-1 ? editorCursor+1 : editorCursor)}>↷</IconButton>
+                            <span>
+                                <IconButton  sx={{ border: '2px solid', width: '40%', marginLeft: '5px'}} disabled={editorCursor >= editorState.length-1} onClick={ () => setEditorCursor(editorCursor < editorState.length-1 ? editorCursor+1 : editorCursor)}>↷</IconButton>
+                            </span>
                         </Tooltip>
                     </div>
                 </Grid>

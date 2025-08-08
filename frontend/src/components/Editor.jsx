@@ -1,8 +1,23 @@
 import { useState, useEffect, useRef } from "react"
+import pipett from '../static/pipett32.png'
 
 const SIZE_LIMIT = 1000
 
-const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style, layerIndex, updateEditorState }) => {
+const Editor = ({ 
+    src,
+    visible,
+    canvasRef,
+    pencilSize,
+    leftColor,
+    rightColor,
+    setLeftColor,
+    setRightColor,
+    style,
+    layerIndex,
+    updateEditorState,
+    tool,
+    setTool
+}) => {
     const [drawing, setDrawing] = useState(false)
     const [firstLoad, setFirstLoad] = useState(true)
     const [size, setSize] = useState(null)
@@ -21,7 +36,6 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style, laye
     useEffect(() => {
         setFirstLoad(true)
     }, [src])
-
     const calculateCanvasSize = (imageSize, editorSize) => {
         const canvasAspect = imageSize[0]/imageSize[1]
         const editorAspect = editorSize[0]/editorSize[1]
@@ -87,25 +101,36 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style, laye
         const x = event.nativeEvent.offsetX*scale[0]
         const y = event.nativeEvent.offsetY*scale[1]
         const button = event.nativeEvent.button
-        ctxRef.current.strokeStyle = button == 0 ? leftColor : rightColor
-        ctxRef.current.fillStyle = button == 0 ? leftColor : rightColor
-        ctxRef.current.lineWidth = pencilSize
-        ctxRef.current.lineCap = 'round'
-        ctxRef.current.beginPath()
-        ctxRef.current.moveTo(x,y)
-        ctxRef.current.arc(x,y,pencilSize/2,0,Math.PI*2,false)
-        ctxRef.current.fill()
-        ctxRef.current.closePath()
-        ctxRef.current.beginPath()
-        ctxRef.current.moveTo(x,y)
-        
-        setDrawing(true)
+        if (tool === 'pencil') {
+            ctxRef.current.strokeStyle = button == 0 ? leftColor : rightColor
+            ctxRef.current.fillStyle = button == 0 ? leftColor : rightColor
+            ctxRef.current.lineWidth = pencilSize
+            ctxRef.current.lineCap = 'round'
+            ctxRef.current.beginPath()
+            ctxRef.current.moveTo(x,y)
+            ctxRef.current.arc(x,y,pencilSize/2,0,Math.PI*2,false)
+            ctxRef.current.fill()
+            ctxRef.current.closePath()
+            ctxRef.current.beginPath()
+            ctxRef.current.moveTo(x,y)
+            
+            setDrawing(true)
+        } else if (tool === 'pipett') {
+            const raw_data = ctxRef.current.getImageData(x,y,1,1).data
+
+            const red = raw_data[0].toString(16)
+            const green = raw_data[1].toString(16)
+            const blue = raw_data[2].toString(16)
+            const hex = `#${red.length===1?`0${red}`:red}${green.length===1?`0${green}`:green}${blue.length===1?`0${blue}`:blue}`
+            button == 0 ? setLeftColor(hex) : setRightColor(hex)
+            setTool('pencil')
+        }
     }
 
     const endDraw = () => {
         ctxRef.current.closePath()
         setDrawing(false)
-        updateEditorState(layerIndex, canvasRef.current.toDataURL())
+        updateEditorState(layerIndex, { src: canvasRef.current.toDataURL(), visible })
     }
 
     const pauseDraw = () => {
@@ -116,13 +141,27 @@ const Editor = ({ src, canvasRef, pencilSize, leftColor, rightColor, style, laye
         ctxRef.current.beginPath()
     }
 
+    const getCursor = () => {
+        switch (tool) {
+            case 'pipett':
+                return `url('${pipett}') 0 32, auto`
+            default:
+                return 'cell'
+        }
+        
+    }
+
+    console.log(visible)
+
     const editor = {
         border: '1px solid rgba(0,0,0,1)',
-        imageRendering: 'pixelated'
+        imageRendering: 'pixelated',
+        cursor: getCursor(),
+        opacity: visible ? 1 : 0
     }
 
     return (
-        <div style={{ margin: 'auto', ...style}}>
+        <div style={{ margin: 'auto',  ...style}}>
             <canvas 
                 ref={ canvasRef }
                 onMouseDown={ startDraw }

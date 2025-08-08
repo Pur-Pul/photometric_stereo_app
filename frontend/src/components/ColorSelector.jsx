@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react"
-import { InputLabel, Dialog, DialogTitle, DialogActions, Button} from "@mui/material"
+import { InputLabel, Dialog, DialogTitle, DialogActions, Button, IconButton, Grid } from "@mui/material"
 import normal_sphere from '../static/normal_sphere.png'
+import pipett from '../static/pipett32.png'
 
 const ColorWheel = ({currentColor, saveColor, setOpen}) => {
     const canvasRef = useRef(null)
@@ -25,10 +26,10 @@ const ColorWheel = ({currentColor, saveColor, setOpen}) => {
         const hex = `#${red.length===1?`0${red}`:red}${green.length===1?`0${green}`:green}${blue.length===1?`0${blue}`:blue}`
         setColor(hex)
     }
-
+    console.log(pipett)
     return (
         <div style={{textAlign: 'center'}}>
-            <canvas style={{border: '2px solid', cursor: 'cell'}} ref={canvasRef} onMouseDown={getColor}/>
+            <canvas style={{border: '2px solid', cursor: `url('${pipett}') 0 32, auto`}} ref={canvasRef} onMouseDown={getColor}/>
             <DialogActions>
                 <InputLabel htmlFor="chosenColor">{color}</InputLabel>
                 <input
@@ -70,26 +71,29 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor }) =
     }
 
     return (
-        <div style={{ padding: '5px' }}>
-            <InputLabel htmlFor="selector">Color: </InputLabel>
-            <div id="selector">
-                <input 
-                    style={{...colorButton, backgroundColor: leftColor, color: leftColor}}
-                    type="button"
-                    onClick={() => setOpen("left")}
-                    />
-                <input 
-                    style={arrowButton}
-                    type="button"
-                    value="⇆"
-                    onClick={handleSwitch}
-                    />
-                <input 
-                    style={{...colorButton, backgroundColor: rightColor, color: rightColor }}
-                    className="colorButton"
-                    type="button"
-                    onClick={() => setOpen("right")}
-                    />
+        <div>
+            <div>
+                <InputLabel htmlFor="selector">Color: </InputLabel>
+                <div id="selector">
+                    <input 
+                        style={{...colorButton, backgroundColor: leftColor, color: leftColor}}
+                        type="button"
+                        onClick={() => setOpen("left")}
+                        />
+                    <input 
+                        style={arrowButton}
+                        type="button"
+                        value="⇆"
+                        onClick={handleSwitch}
+                        />
+                    <input 
+                        style={{...colorButton, backgroundColor: rightColor, color: rightColor }}
+                        className="colorButton"
+                        type="button"
+                        onClick={() => setOpen("right")}
+                        />
+                    
+                </div>
             </div>
             <Dialog open={open==="left" || open==="right"} onClose={() => setOpen("")} closeAfterTransition={false} fullWidth maxWidth = 'xs'>
                 <DialogTitle>Pick a color</DialogTitle>
