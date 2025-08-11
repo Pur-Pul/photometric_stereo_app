@@ -27,6 +27,11 @@ const post = async (data) => {
 	return response.data
 }
 
+const put = async (data, id) => {
+	const response = await axios.put(`${baseUrl}/${id}`, data, { headers: {...getConfig().headers, 'Content-Type': 'multipart/form-data'}})
+	return response.data
+}
+
 const postPhotostereo = async (data) => {
 	const response = await axios.post(`${baseUrl}/photostereo`, data, { headers: {...getConfig().headers, 'Content-Type': 'multipart/form-data'}})
 	return response.data
@@ -51,6 +56,7 @@ export default {
 	getAll,
 	getFile,
 	post,
+	put,
 	postPhotostereo,
 	update,
 	remove,

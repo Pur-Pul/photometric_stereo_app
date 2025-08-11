@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import imageService from '../services/images'
 import { notificationSet } from './notificationReducer'
+import axios from 'axios'
 
 const normalMapSlice = createSlice({
 	name: 'normalMap',
@@ -24,10 +25,25 @@ const normalMapSlice = createSlice({
 			)
 			state[normalMap_index] = action.payload
 		},
+		updateNormalMap(state, action) {
+			const normalMap_index = state.findIndex(
+				(normalMap) => normalMap.id === action.payload.id
+			)
+
+			state[normalMap_index] = action.payload
+		},
+		updateLayers(state, action) {
+			const normalMap_index = state.findIndex(
+				(normalMap) => normalMap.id === action.payload.id
+			)
+
+			const normalMap = state[normalMap_index]
+			state[normalMap_index] = { ...normalMap, layers: action.payload.layers }
+		}
 	},
 })
 
-export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap } =
+export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap, updateLayers } =
 	normalMapSlice.actions
 
 export const initializeNormalMaps = () => {
@@ -52,14 +68,38 @@ export const generateNormalMap = (sourceNormalMaps, mask) => {
 	}
 }
 
-export const createNormalMap = (normalMap) => {
+export const performCreate = (blobs) => {
 	return async (dispatch) => {
-		const data = new FormData()
-		data.append('files', normalMap.src, normalMap.src.name)
-		data.set('format', normalMap.src.name.split('.').pop())
+		try {
+			const data = new FormData()
+			blobs.forEach((blob, index) => {
+				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
+				data.append('files', file, `layer-${index}.png`)
+			})
+			
+			const newNormalMap = await imageService.post(data)
+			dispatch(appendNormalMap([newNormalMap]))
+		} catch (error) {
+			notificationSet({text: error, type: 'error'})
+		}
+	}
+}
 
-		const newNormalMap = await imageService.post(data)
-		dispatch(appendNormalMaps([newNormalMap]))
+export const performLayerUpdate = (blobs, layers, id) => {
+	return async (dispatch) => {
+		try {
+			const data = new FormData()
+		
+			blobs.forEach((blob, index) => {
+				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
+				data.append('files', file, `layer-${index}.png`)
+			})
+			await imageService.put(data, id)
+			dispatch(updateLayers({id, layers}))
+		} catch (error) {
+			notificationSet({text: error, type: 'error'})
+		}
+		
 	}
 }
 
@@ -68,8 +108,8 @@ export const performRemove = (id) => {
 		try {
 			await imageService.remove(id)
 			dispatch(deleteNormalMap(id))
-		} catch (err) {
-			notificationSet({ text: err, type: 'error'}, 5)
+		} catch (error) {
+			notificationSet({ text: error, type: 'error'}, 5)
 		}
 	}
 }

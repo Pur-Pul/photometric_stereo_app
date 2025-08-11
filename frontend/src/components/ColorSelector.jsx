@@ -1,5 +1,14 @@
 import { useState, useRef, useEffect } from "react"
-import { InputLabel, Dialog, DialogTitle, DialogActions, Button, IconButton, Grid } from "@mui/material"
+import { 
+    InputLabel,
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    Button,
+    IconButton,
+    Grid,
+    Tooltip
+} from "@mui/material"
 import normal_sphere from '../static/normal_sphere.png'
 import pipett from '../static/pipett32.png'
 
@@ -75,23 +84,27 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor }) =
             <div>
                 <InputLabel htmlFor="selector">Color: </InputLabel>
                 <div id="selector">
-                    <input 
-                        style={{...colorButton, backgroundColor: leftColor, color: leftColor}}
-                        type="button"
-                        onClick={() => setOpen("left")}
-                        />
+                    <Tooltip title={leftColor} placement='top'>
+                        <input 
+                            style={{...colorButton, backgroundColor: leftColor, color: leftColor}}
+                            type="button"
+                            onClick={() => setOpen("left")}
+                            />
+                    </Tooltip>
                     <input 
                         style={arrowButton}
                         type="button"
                         value="⇆"
                         onClick={handleSwitch}
                         />
-                    <input 
-                        style={{...colorButton, backgroundColor: rightColor, color: rightColor }}
-                        className="colorButton"
-                        type="button"
-                        onClick={() => setOpen("right")}
-                        />
+                    <Tooltip title={rightColor} placement='top'>
+                        <input 
+                            style={{...colorButton, backgroundColor: rightColor, color: rightColor }}
+                            className="colorButton"
+                            type="button"
+                            onClick={() => setOpen("right")}
+                            />
+                    </Tooltip>
                     
                 </div>
             </div>

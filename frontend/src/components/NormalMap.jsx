@@ -26,7 +26,6 @@ const NormalMap = () => {
         objectFit: 'cover',
         border: '1px solid rgba(0,0,0,1)'
     }
-    
     useEffect(() => {
         const getNormalMap = async() => {
             const newNormalMap = await imageService.get(id)
@@ -44,6 +43,7 @@ const NormalMap = () => {
             dispatch(updateNormalMap({ ...normalMap, layers: updatedLayers }))
         }
         if (normalMap) {
+            console.log(normalMap)
             if (normalMap.status == 'done' && normalMap.layers[0].src == undefined) {
                 getLayers()
             } else {

@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import pipett from '../static/pipett32.png'
+import pencil from '../static/pencil32.png'
+import eraser from '../static/eraser32.png'
 
 const SIZE_LIMIT = 1000
 
@@ -170,7 +172,9 @@ const Editor = ({
     }
 
     const pauseDraw = () => {
-        if (drawing) { ctx.closePath() }
+        const ctx = ctxRef.current
+        if (drawing) { ctx.picture.closePath() }
+        ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
     }
 
     const continueDraw = (event) => {
@@ -182,6 +186,10 @@ const Editor = ({
         switch (tool) {
             case 'pipett':
                 return `url('${pipett}') 0 32, auto`
+            case 'pencil':
+                return `url('${pencil}') 0 32, auto`
+            case 'eraser':
+                return `url('${eraser}') 0 32, auto`
             default:
                 return 'cell'
         }

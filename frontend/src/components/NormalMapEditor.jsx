@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useDispatch, useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
 import { 
     Button,
     IconButton,
@@ -13,12 +13,35 @@ import {
     Tooltip
 } from '@mui/material'
 
+import { performCreate, performLayerUpdate } from "../reducers/normalMapReducer"
 import ColorSelector from "./ColorSelector"
 import Editor from "./Editor"
 import LayerSelector from "./LayerSelector"
+import pencil from '../static/pencil32.png'
 import pipett from "../static/pipett32.png"
+import eraser from '../static/eraser32.png'
 
 const SIZE_LIMIT = 300
+
+const ToolButton = ({ toolName, currentTool, setTool, icon } ) => {
+    const selected = currentTool === toolName
+    return (
+        <Tooltip title={ toolName } placement='top'>
+            <IconButton 
+                sx={{
+                    border: '2px solid',
+                    width: '50px',
+                    height: '50px',
+                    backgroundColor: selected ? '#000000' : '#ffffff'
+                    }} 
+                color={ selected ? 'primary' : 'default' }
+                onClick={() => setTool(toolName)}
+                >
+                <img src={icon} style={selected ? {filter: 'invert(100%)', width: '100%', height: '100%'} : {}}/>
+            </IconButton>
+        </Tooltip>
+    )
+}
 
 const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [pencilSize, setPencilSize] = useState(10)
@@ -34,7 +57,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
 
     const [editorState, setEditorState] = useState([initialLayers.map(layer => { return { ...layer, visible: true }})])
     const [editorCursor, setEditorCursor] = useState(0)
-    const dispath = useDispatch()
+    const dispatch = useDispatch()
 
     useEffect(() => {
         emptyCanvasRef.current = document.createElement('canvas')
@@ -51,11 +74,24 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         setEditorCursor(0)
     }, [])
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // TODO
         // Update local normal map with new and updated layers using reducers.
         // Save new layers to backend using image service post.
         // Update exisitng layers in backend using image service put.
+        const blobs = []
+        for (var i = 0; i < editorState[editorCursor].length; i++) {
+            const blob = await new Promise(resolve => canvasRefs[i].current.toBlob(resolve))
+            blobs.push(blob)
+        }
+
+        if (id) {
+            console.log(id)
+            dispatch(performLayerUpdate(blobs, editorState[editorCursor], id))
+        } else {
+            dispatch(performCreate(blobs))
+        }
+
         console.log('Save function not yet implemented.')
     }
 
@@ -143,39 +179,9 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                         setLeftColor={setLeftColor}
                         setRightColor={setRightColor}
                         />
-                    <IconButton 
-                        sx={{
-                            border: '2px solid',
-                            width: '50px',
-                            height: '50px'
-                            }} 
-                        color={ tool === 'pencil' ? 'primary' : 'default' }
-                        onClick={() => setTool('pencil')}
-                        >
-                        Pencil
-                    </IconButton>
-                    <IconButton 
-                        sx={{
-                            border: '2px solid',
-                            width: '50px',
-                            height: '50px'
-                            }} 
-                        color={ tool === 'pipett' ? 'primary' : 'default' }
-                        onClick={() => setTool('pipett')}
-                        >
-                        <img src={pipett} />
-                    </IconButton>
-                    <IconButton 
-                        sx={{
-                            border: '2px solid',
-                            width: '50px',
-                            height: '50px'
-                            }} 
-                        color={ tool === 'eraser' ? 'primary' : 'default' }
-                        onClick={() => setTool('eraser')}
-                        >
-                        Eraser
-                    </IconButton>
+                    <ToolButton toolName='pencil' currentTool={tool} setTool={setTool} icon={pencil}/>
+                    <ToolButton toolName='pipett' currentTool={tool} setTool={setTool} icon={pipett}/>
+                    <ToolButton toolName='eraser' currentTool={tool} setTool={setTool} icon={eraser}/>
                     <FormControl>
                         <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
                         <TextField

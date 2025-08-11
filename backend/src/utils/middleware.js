@@ -80,6 +80,7 @@ const imageUpload = multer({
         filename: (request, file, callback) => {
             const new_name = `${request.user.id}-${request.timestamp}.${file.originalname}`
             request.filenames = request.filenames ? [...request.filenames, new_name] : [new_name]
+            request.originalFilenames = request.originalFilenames ? [...request.originalFilenames, file.originalname] : [file.originalname]
             callback(null, new_name)
         }
     }),
