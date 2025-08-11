@@ -31,11 +31,10 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const canvasRefs = Array(5).fill(null).map(() => useRef(null))
     const emptyCanvasRef = useRef(null)
     const initialLayers = [...layers]
-    
+
     const [editorState, setEditorState] = useState([initialLayers.map(layer => { return { ...layer, visible: true }})])
     const [editorCursor, setEditorCursor] = useState(0)
     const dispath = useDispatch()
-
 
     useEffect(() => {
         emptyCanvasRef.current = document.createElement('canvas')
@@ -94,7 +93,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         setEditorState([...currentState, newState])
         setEditorCursor(editorCursor+1)
     }
-    console.log(editorState)
+
     return (
         <div style={{ margin: 'auto' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
@@ -150,10 +149,32 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                             width: '50px',
                             height: '50px'
                             }} 
+                        color={ tool === 'pencil' ? 'primary' : 'default' }
+                        onClick={() => setTool('pencil')}
+                        >
+                        Pencil
+                    </IconButton>
+                    <IconButton 
+                        sx={{
+                            border: '2px solid',
+                            width: '50px',
+                            height: '50px'
+                            }} 
                         color={ tool === 'pipett' ? 'primary' : 'default' }
-                        onClick={() => setTool(tool === 'pipett' ? 'pencil' : 'pipett')}
+                        onClick={() => setTool('pipett')}
                         >
                         <img src={pipett} />
+                    </IconButton>
+                    <IconButton 
+                        sx={{
+                            border: '2px solid',
+                            width: '50px',
+                            height: '50px'
+                            }} 
+                        color={ tool === 'eraser' ? 'primary' : 'default' }
+                        onClick={() => setTool('eraser')}
+                        >
+                        Eraser
                     </IconButton>
                     <FormControl>
                         <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
