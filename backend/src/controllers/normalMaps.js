@@ -23,7 +23,7 @@ normalMapsRouter.get('/:id', middleware.userExtractor, async (request, response)
     const id = request.params.id
     const user = request.user
     const normalMap = await NormalMap.findById(id).populate('creator').populate('layers')
-    if (!normalMap) { return response.status(404).end() }
+    if (!normalMap) { return response.status(404).json({message: 'Normal map not found.'}) }
     if (user.id !== normalMap.creator.id) { return response.status(403).json({ error: 'incorrect user' }) }
 
     response.json(normalMap)
@@ -43,7 +43,7 @@ normalMapsRouter.get('/layers/:id', middleware.userExtractor, async (request, re
                 return response.sendFile(image.file)
             }
         }
-        response.status(404).end()
+        response.status(404).json({message: 'Normal map not found.'})
     } catch (exception) {
         next(exception)
     }
@@ -93,7 +93,9 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
         else {
             try {
                 const normalMap = await NormalMap.findById(request.params.id).populate('layers')
-                if (!normalMap) { response.status(404).end()}
+                if (!normalMap) { 
+                    console.log('here')
+                    response.status(404).json({message: 'Normal map not found.'})}
 
                 const layers = []
                 const number_of_files = request.filenames ? request.filenames.length : 0
@@ -130,7 +132,7 @@ normalMapsRouter.post('/:id/layers/', middleware.userExtractor, async (request, 
         else {
             try {
                 const normalMap = await NormalMap.findById(request.params.id)
-                if (!normalMap) { return response.status(404).end() }
+                if (!normalMap) { return response.status(404).json({message: 'Normal map not found.'}) }
                 if (normalMap.creator.toString() !== request.user.id.toString()) {
                     return response.status(403).end()
                 }
@@ -216,7 +218,7 @@ normalMapsRouter.delete('/:id', middleware.userExtractor, async (request, respon
     const user = request.user
     try {
         const normalMap = await NormalMap.findById(id)
-        if (!normalMap) { return response.status(404).end() }
+        if (!normalMap) { return response.status(404).json({message: 'Normal map not found.'}) }
         if (normalMap.creator.toString() === user.id.toString()) {
             await expireNormalMap(id, true)
         } else {

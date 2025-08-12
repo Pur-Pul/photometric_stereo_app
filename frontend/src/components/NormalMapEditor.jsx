@@ -20,8 +20,7 @@ import LayerSelector from "./LayerSelector"
 import pencil from '../static/pencil32.png'
 import pipett from "../static/pipett32.png"
 import eraser from '../static/eraser32.png'
-
-const SIZE_LIMIT = 300
+import { notificationSet } from "../reducers/notificationReducer"
 
 const ToolButton = ({ toolName, currentTool, setTool, icon } ) => {
     const selected = currentTool === toolName
@@ -75,10 +74,6 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     }, [])
 
     const handleSave = async () => {
-        // TODO
-        // Update local normal map with new and updated layers using reducers.
-        // Save new layers to backend using image service post.
-        // Update exisitng layers in backend using image service put.
         const blobs = []
         for (var i = 0; i < editorState[editorCursor].length; i++) {
             const blob = await new Promise(resolve => canvasRefs[i].current.toBlob(resolve))
@@ -86,13 +81,11 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         }
 
         if (id) {
-            console.log(id)
             dispatch(performLayerUpdate(blobs, editorState[editorCursor], id))
         } else {
             dispatch(performCreate(blobs))
         }
-
-        console.log('Save function not yet implemented.')
+        dispatch(notificationSet({text: 'Normal map saved.', type: 'success'}, 5))
     }
 
     const addLayer = () => {

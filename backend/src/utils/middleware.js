@@ -16,7 +16,7 @@ const requestLogger = (request, response, next) => {
 }
 
 const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: 'unknown endpoint' })
+    response.status(404).json({ error: 'unknown endpoint' })
 }
 
 const errorHandler = (error, request, response, next) => {
@@ -25,7 +25,7 @@ const errorHandler = (error, request, response, next) => {
     if (!error) {next(error)}
     switch(error.name) {
     case 'CastError':
-        return response.status(400).send({ error: 'malformatted id' })
+        return response.status(400).json({ error: 'malformatted id' })
     case 'ValidationError':
         return response.status(400).json({ error: error.message })
     case 'JsonWebTokenError':

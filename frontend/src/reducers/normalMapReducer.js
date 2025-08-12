@@ -76,11 +76,10 @@ export const performCreate = (blobs) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
 				data.append('files', file, `layer-${index}.png`)
 			})
-			
 			const newNormalMap = await imageService.post(data)
 			dispatch(appendNormalMap([newNormalMap]))
 		} catch (error) {
-			notificationSet({text: error, type: 'error'})
+			dispatch(notificationSet({text: error.response.data.error ? error.response.data.error : 'An error occurred', type:'error'}, 5))
 		}
 	}
 }
@@ -89,7 +88,6 @@ export const performLayerUpdate = (blobs, layers, id) => {
 	return async (dispatch) => {
 		try {
 			const data = new FormData()
-		
 			blobs.forEach((blob, index) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
 				data.append('files', file, `layer-${index}.png`)
@@ -97,20 +95,18 @@ export const performLayerUpdate = (blobs, layers, id) => {
 			await imageService.put(data, id)
 			dispatch(updateLayers({id, layers}))
 		} catch (error) {
-			notificationSet({text: error, type: 'error'})
+			console.log(error)
+			dispatch(notificationSet({text: error.response.data.error ? error.response.data.error : 'An error occurred', type: 'error'}, 5))
 		}
-		
-	}
+	} 
 }
 
 export const performRemove = (id) => {
 	return async (dispatch) => {
-		try {
-			await imageService.remove(id)
-			dispatch(deleteNormalMap(id))
-		} catch (error) {
-			notificationSet({ text: error, type: 'error'}, 5)
-		}
+	
+		await imageService.remove(id)
+		dispatch(deleteNormalMap(id))
+		
 	}
 }
 

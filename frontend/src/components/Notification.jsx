@@ -18,7 +18,6 @@ const Notification = () => {
 		return null
 	}
 	return <Alert severity={notification.type}>{notification.text}</Alert>
-	//return <div className={notification.type}>{notification.text}</div>
 }
 
 export default Notification

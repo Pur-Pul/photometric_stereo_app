@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { performRemove, updateNormalMap } from "../reducers/normalMapReducer"
 import imageService from '../services/images'
 import Button from '@mui/material/Button'
@@ -18,6 +18,7 @@ const NormalMap = () => {
     const [edit, setEdit] = useState(false)
     const [size, setSize] = useState(null)
     const navigate = useNavigate()
+    const canvasRef = useRef(null)
 
     const img = {
         width: '100%',
@@ -50,10 +51,31 @@ const NormalMap = () => {
                 getNormalMap()
             }
         }
+        if (normalMap && normalMap.layers && normalMap.layers.length) {
+            normalMap.layers.forEach((layer, index) => {
+                const image = new Image()
+                image.onload = function() {
+                    const canvas = canvasRef.current
+                    if (!canvas) { return }
+                    if (index === 0) {
+                        const size = [this.width, this.height]
+                        setSize(size)
+                        canvas.width = size[0]
+                        canvas.height = size[1]
+                    }
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+                    ctx.drawImage(this, 0, 0, this.width, this.height)
+                    
+                }
+                image.src = layer.src
+      
+            })
+            
+        }
 	}, [normalMap])
     const deleteHandler = async (event) => {
         dispatch(performRemove(id))
-        setOpen(false)
+        setOpen(false) 
         navigate('/normal_map')
     }
 
@@ -62,13 +84,15 @@ const NormalMap = () => {
     return normalMap && normalMap.layers.length > 0
         ? (normalMap.layers[0].src != undefined 
             ? <div>
-                <img style={img} src={normalMap.layers[0].src} onLoad={(e) => {setSize([e.target.naturalWidth, e.target.naturalHeight])}}/>
+                <canvas ref={canvasRef}/>
+                
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
-                <Button type='label' variant='outlined'>
-                    <a href={normalMap.layers[0].src} download={`normalmap.png`} style={{ visibility: 'none' }}>
-                        Download
-                    </a>
-                </Button>
+                <Button type='label' variant='outlined' onClick={() => {
+                    const link = document.createElement("a")
+                    link.href = canvasRef.current.toDataURL()
+                    link.download = 'normalmap.png'
+                    link.click()
+                }}>Download</Button>
                 <Button onClick={() => setEdit(true)} variant='outlined'>Edit</Button>
                 <Dialog open={open} onClose={ () => setOpen(false) } closeAfterTransition={false}>
                     <DialogTitle>Are you sure you want to delete the normal map?</DialogTitle>

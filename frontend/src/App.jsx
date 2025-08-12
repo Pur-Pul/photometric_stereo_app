@@ -47,16 +47,19 @@ const App = () => {
 			) : (
 				<div>
 					<NavBar user={user}/>
-					<Notification />
-					<Routes>
-						<Route path="/" element={<h1>Welcome</h1>} />
-						<Route path="/users" element={<UserList />} />
-						<Route path="/users/:id" element={<User />} />
-						<Route path="/normal_map" element={<NormalMapList />} />
-						<Route path="/normal_map/manual/:width/:height" element={<ManualCreation />} />
-						<Route path="/normal_map/photostereo" element={<ImageUploadForm />} />
-						<Route path="/normal_map/:id" element={<NormalMap />} />
-					</Routes>
+					<div>
+						<Notification />
+						<Routes >
+							<Route path="/" element={<h1>Welcome</h1>} />
+							<Route path="/users" element={<UserList />} />
+							<Route path="/users/:id" element={<User />} />
+							<Route path="/normal_map" element={<NormalMapList />} />
+							<Route path="/normal_map/manual/:width/:height" element={<ManualCreation />} />
+							<Route path="/normal_map/photostereo" element={<ImageUploadForm />} />
+							<Route path="/normal_map/:id" element={<NormalMap />} />
+						</Routes>
+					</div>
+					
 				</div>
 			)}
 		</div>
