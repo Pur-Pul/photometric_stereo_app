@@ -7,6 +7,10 @@ const normalMapSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Image',
         }],
+        icon: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Image',
+        },
         creator: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'

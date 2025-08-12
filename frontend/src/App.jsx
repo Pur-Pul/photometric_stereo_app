@@ -26,7 +26,6 @@ const App = () => {
 		if (loggedUserJSON) {
 			const user = JSON.parse(loggedUserJSON)
 			dispatch(loginUser(user))
-			
 		}
 		
 	}, [dispatch])

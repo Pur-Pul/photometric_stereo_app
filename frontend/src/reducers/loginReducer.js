@@ -41,14 +41,14 @@ export const performLogout = () => {
 
 export const performReLog = (user) => {
 	return async (dispatch) => {
-		await loginService.get()
-			.catch((err) => {
-				if (err.status == 401) {
-					dispatch(performLogout())
-					dispatch(notificationSet({ text: 'Session expired', type: 'error'}, 5))
-				}
-			})
-		
+		try {
+			await loginService.get()
+		} catch(exception) {
+			if (exception.response.status == 401) {
+				dispatch(performLogout())
+				dispatch(notificationSet({ text: 'Session expired', type: 'error'}, 5))
+			}
+		}
 	}
 }
 

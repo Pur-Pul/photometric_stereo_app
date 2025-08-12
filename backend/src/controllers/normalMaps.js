@@ -57,25 +57,31 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
             try {
                 const normalMapName = `${request.user.id}-${request.timestamp}`
                 const layers = []
+                let icon = null
                 const number_of_files = request.filenames ? request.filenames.length : 0
                 for (var i = 0; i < number_of_files; i++) {
                     const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
                     const newfile = path.join(process.cwd(), `../output/${normalMapName}-${request.originalFilenames[i]}`)
                     fs.copyFileSync(oldfile, newfile)
                     fs.unlinkSync(oldfile)
-                    const layer = new Image({
+                    const image = new Image({
                         file: newfile,
                         format: request.body.format,
                         creator: request.user.id
                     })
-                    await layer.save()
-                    layers.push(layer.id)
+                    await image.save()
+                    if (request.originalFilenames[i] == 'icon.png') {
+                        icon = image.id
+                    } else {
+                        layers.push(image.id)
+                    }
                 }
 
                 const normalMap = new NormalMap({
                     name: normalMapName,
                     status: 'done',
                     layers,
+                    icon,
                     creator: request.user.id
                 })
                 await normalMap.save()
@@ -98,6 +104,7 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                     response.status(404).json({message: 'Normal map not found.'})}
 
                 const layers = []
+                let icon = null
                 const number_of_files = request.filenames ? request.filenames.length : 0
                 for (var i = 0; i < number_of_files; i++) {
                     const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
@@ -105,16 +112,24 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                     fs.copyFileSync(oldfile, newfile)
                     fs.unlinkSync(oldfile)
 
-                    let layer = normalMap.layers.find((layer) => layer.file === newfile)
-                    if (!layer) {
-                        layer = new Image({
+                    if (request.originalFilenames[i] == 'icon.png' && !normalMap.icon) {
+                        icon = new Image({
                             file: newfile,
                             format: request.body.format,
                             creator: request.user.id
                         })
+                    } else {
+                        let layer = normalMap.layers.find((layer) => layer.file === newfile)
+                        if (!layer) {
+                            layer = new Image({
+                                file: newfile,
+                                format: request.body.format,
+                                creator: request.user.id
+                            })
+                        }
+                        await layer.save()
+                        layers.push(layer.id)
                     }
-                    await layer.save()
-                    layers.push(layer.id)
                 }
                 normalMap.layers = layers
                 await normalMap.save()

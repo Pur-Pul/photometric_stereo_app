@@ -22,7 +22,7 @@ const logout = async () => {
 }
 
 const get = async (user) => {
-	const response = await axios.get(baseUrl, getConfig())
+	const response = await axios.get(`${baseUrl}`, getConfig())
 	return response.data
 }
 

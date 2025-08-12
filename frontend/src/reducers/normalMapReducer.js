@@ -68,7 +68,7 @@ export const generateNormalMap = (sourceNormalMaps, mask) => {
 	}
 }
 
-export const performCreate = (blobs) => {
+export const performCreate = (blobs, iconBlob) => {
 	return async (dispatch) => {
 		try {
 			const data = new FormData()
@@ -76,6 +76,7 @@ export const performCreate = (blobs) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
 				data.append('files', file, `layer-${index}.png`)
 			})
+			data.append('files', iconBlob, `layer-icon.png`)
 			const newNormalMap = await imageService.post(data)
 			dispatch(appendNormalMap([newNormalMap]))
 		} catch (error) {
@@ -84,7 +85,7 @@ export const performCreate = (blobs) => {
 	}
 }
 
-export const performLayerUpdate = (blobs, layers, id) => {
+export const performLayerUpdate = (blobs, iconBlob, layers, id) => {
 	return async (dispatch) => {
 		try {
 			const data = new FormData()
@@ -92,6 +93,7 @@ export const performLayerUpdate = (blobs, layers, id) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
 				data.append('files', file, `layer-${index}.png`)
 			})
+			data.append('files', iconBlob, `layer-icon.png`)
 			await imageService.put(data, id)
 			dispatch(updateLayers({id, layers}))
 		} catch (error) {

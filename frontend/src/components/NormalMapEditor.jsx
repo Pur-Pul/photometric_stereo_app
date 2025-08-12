@@ -21,26 +21,9 @@ import pencil from '../static/pencil32.png'
 import pipett from "../static/pipett32.png"
 import eraser from '../static/eraser32.png'
 import { notificationSet } from "../reducers/notificationReducer"
+import ToolButton from './ToolButton'
+import ShapeTool from "./ShapeTool"
 
-const ToolButton = ({ toolName, currentTool, setTool, icon } ) => {
-    const selected = currentTool === toolName
-    return (
-        <Tooltip title={ toolName } placement='top'>
-            <IconButton 
-                sx={{
-                    border: '2px solid',
-                    width: '50px',
-                    height: '50px',
-                    backgroundColor: selected ? '#000000' : '#ffffff'
-                    }} 
-                color={ selected ? 'primary' : 'default' }
-                onClick={() => setTool(toolName)}
-                >
-                <img src={icon} style={selected ? {filter: 'invert(100%)', width: '100%', height: '100%'} : {}}/>
-            </IconButton>
-        </Tooltip>
-    )
-}
 
 const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [pencilSize, setPencilSize] = useState(10)
@@ -52,6 +35,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     
     const canvasRefs = Array(5).fill(null).map(() => useRef(null))
     const emptyCanvasRef = useRef(null)
+    const iconCanvasRef = useRef(null)
     const initialLayers = [...layers]
 
     const [editorState, setEditorState] = useState([initialLayers.map(layer => { return { ...layer, visible: true }})])
@@ -62,6 +46,12 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         emptyCanvasRef.current = document.createElement('canvas')
         emptyCanvasRef.current.width = size[0]
         emptyCanvasRef.current.height = size[1]
+        
+        const aspect = size[0] / size[1]
+
+        iconCanvasRef.current = document.createElement('canvas')
+        iconCanvasRef.current.width = aspect * 64
+        iconCanvasRef.current.height = 64
         
         const ctx = emptyCanvasRef.current.getContext('2d')
         ctx.fillStyle = 'rgba(0, 0, 0, 0)'
@@ -78,12 +68,21 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         for (var i = 0; i < editorState[editorCursor].length; i++) {
             const blob = await new Promise(resolve => canvasRefs[i].current.toBlob(resolve))
             blobs.push(blob)
+
+            const image = new Image()
+            image.onload = function() {
+                const canvas = iconCanvasRef.current
+                const ctx = canvas.getContext('2d', { willReadFrequently: true })
+                ctx.drawImage(this, 0, 0, this.width, this.height)
+            }
+            image.src = canvasRefs[i].current.toDataURL()
         }
+        const iconBlob = await new Promise(resolve => iconCanvasRef.current.toBlob(resolve))
 
         if (id) {
-            dispatch(performLayerUpdate(blobs, editorState[editorCursor], id))
+            dispatch(performLayerUpdate(blobs, iconBlob, editorState[editorCursor], id))
         } else {
-            dispatch(performCreate(blobs))
+            dispatch(performCreate(blobs, iconBlob))
         }
         dispatch(notificationSet({text: 'Normal map saved.', type: 'success'}, 5))
     }
@@ -175,6 +174,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                     <ToolButton toolName='pencil' currentTool={tool} setTool={setTool} icon={pencil}/>
                     <ToolButton toolName='pipett' currentTool={tool} setTool={setTool} icon={pipett}/>
                     <ToolButton toolName='eraser' currentTool={tool} setTool={setTool} icon={eraser}/>
+                    <ShapeTool currentTool={tool} setTool={setTool} />
                     <FormControl>
                         <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
                         <TextField

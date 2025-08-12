@@ -97,6 +97,10 @@ const Editor = ({
                 calculateCanvasSize(size, [window.innerWidth, window.innerHeight * 0.8])
             }
             window.addEventListener("resize", handleResize)
+
+            return () => {
+                window.removeEventListener("resize", handleResize)
+            }
         }
         
     }, [size])

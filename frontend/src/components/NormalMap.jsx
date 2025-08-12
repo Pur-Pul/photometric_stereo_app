@@ -17,16 +17,10 @@ const NormalMap = () => {
     const [open, setOpen ] = useState(false)
     const [edit, setEdit] = useState(false)
     const [size, setSize] = useState(null)
+    const [layers, setLayers] = useState([])
     const navigate = useNavigate()
     const canvasRef = useRef(null)
 
-    const img = {
-        width: '100%',
-        minWidth: '100%',
-        height: '100%',
-        objectFit: 'cover',
-        border: '1px solid rgba(0,0,0,1)'
-    }
     useEffect(() => {
         const getNormalMap = async() => {
             const newNormalMap = await imageService.get(id)
@@ -43,36 +37,37 @@ const NormalMap = () => {
             
             dispatch(updateNormalMap({ ...normalMap, layers: updatedLayers }))
         }
-        if (normalMap) {
-            console.log(normalMap)
-            if (normalMap.status == 'done' && normalMap.layers[0].src == undefined) {
-                getLayers()
-            } else {
-                getNormalMap()
-            }
+        if (!normalMap) { return }
+        if (normalMap.status == 'done' && normalMap.layers[0].src == undefined) {
+            getLayers()
+        } else {
+            getNormalMap()
         }
-        if (normalMap && normalMap.layers && normalMap.layers.length) {
-            normalMap.layers.forEach((layer, index) => {
-                const image = new Image()
-                image.onload = function() {
-                    const canvas = canvasRef.current
-                    if (!canvas) { return }
-                    if (index === 0) {
-                        const size = [this.width, this.height]
-                        setSize(size)
-                        canvas.width = size[0]
-                        canvas.height = size[1]
-                    }
-                    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-                    ctx.drawImage(this, 0, 0, this.width, this.height)
-                    
-                }
-                image.src = layer.src
-      
-            })
-            
+        if (normalMap.layers && normalMap.layers.length) {
+            setLayers(normalMap.layers)
         }
+        
 	}, [normalMap])
+
+    useEffect(() => {
+        layers.forEach((layer, index) => {
+            const image = new Image()
+            image.onload = function() {
+                const canvas = canvasRef.current
+                if (!canvas) { return }
+                if (index === 0) {
+                    const size = [this.width, this.height]
+                    setSize(size)
+                    canvas.width = size[0]
+                    canvas.height = size[1]
+                }
+                const ctx = canvas.getContext('2d', { willReadFrequently: true })
+                ctx.drawImage(this, 0, 0, this.width, this.height)
+            }
+            image.src = layer.src
+        })
+    }, [layers, edit])
+ 
     const deleteHandler = async (event) => {
         dispatch(performRemove(id))
         setOpen(false) 
@@ -84,7 +79,7 @@ const NormalMap = () => {
     return normalMap && normalMap.layers.length > 0
         ? (normalMap.layers[0].src != undefined 
             ? <div>
-                <canvas ref={canvasRef}/>
+                <canvas ref={canvasRef} style={{ border: '1px solid' }}/><br />
                 
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined' onClick={() => {
