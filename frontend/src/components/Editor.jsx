@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import pipett from '../static/pipett32.png'
+import pipette from '../static/pipette32.png'
 import pencil from '../static/pencil32.png'
 import eraser from '../static/eraser32.png'
 
@@ -34,7 +34,7 @@ const Editor = ({
     window.onmousedown = (event) => { mouse === -1 ? setMouse(event.button) : null}
     window.onmouseup = (event) => { if(event.button === mouse) { 
         setMouse(-1) 
-        setDrawing(false)
+        setDrawing(null)
     }}
 
     useEffect(() => {
@@ -105,22 +105,63 @@ const Editor = ({
         
     }, [size])
 
-    const draw = (event) => { 
+    const draw = async (event) => { 
         const x = event.nativeEvent.offsetX*scale[0]
         const y = event.nativeEvent.offsetY*scale[1]
         const ctx = ctxRef.current
         const color = mouse < 1 ? leftColor : rightColor
-        if (drawing) {
-            ctx.picture.lineTo(x,y)
-            ctx.picture.stroke()
-        }
+        
         
         ctx.cursor.fillStyle = color
         ctx.cursor.strokeStyle = color
-        ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
+        
+        
+        //ctx.cursor.moveTo(x,y)
         ctx.cursor.beginPath()
-        ctx.cursor.arc(x,y,tool !== 'pipett' ? pencilSize/2 : Math.min(size[0], size[1])/100,0,Math.PI*2,false)
-        tool === 'pencil' ? ctx.cursor.fill() : ctx.cursor.stroke()
+        switch(tool.name) {
+            case 'eraser':
+                if (drawing) {
+                    ctx.picture.lineTo(x,y)
+                    ctx.picture.stroke()
+                }
+                ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
+                
+                ctx.cursor.arc(x, y, pencilSize/2, 0, Math.PI*2, false)
+                ctx.cursor.stroke()
+                
+                break
+            case 'pencil':
+                if (drawing) {
+                    ctx.picture.lineTo(x,y)
+                    ctx.picture.stroke()
+                }
+                ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
+                ctx.cursor.arc(x, y, pencilSize/2, 0, Math.PI*2, false)
+                ctx.cursor.fill()
+                break
+            case 'pipette':
+                ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
+                ctx.cursor.arc(x, y, Math.min(size[0], size[1])/100, 0, Math.PI*2, false)
+                ctx.cursor.stroke()
+                break
+            case 'shape':
+                if (drawing) {
+                    const image = new Image()
+                    image.src = tool.shape.src
+                    await image.decode()
+                    ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
+                    ctx.cursor.drawImage(image, drawing[0], drawing[1], x-drawing[0], y-drawing[1])
+                } else {
+                    ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
+                    ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
+                    ctx.cursor.arc(x, y, Math.min(size[0], size[1])/100, 0, Math.PI*2, false)
+                    ctx.cursor.stroke()
+                }
+                
+                break
+            default:
+                console.log(`invalid tool: ${tool.name}`)
+        }    
         ctx.cursor.closePath()
     }
 
@@ -142,9 +183,9 @@ const Editor = ({
             ctx.picture.closePath()
             ctx.picture.beginPath()
             ctx.picture.moveTo(x,y)
-            setDrawing(true)
+            setDrawing([x,y])
         }
-        switch(tool) {
+        switch(tool.name) {
             case 'pencil':
                 ctx.picture.globalCompositeOperation='source-over'
                 init()
@@ -153,25 +194,43 @@ const Editor = ({
                 ctx.picture.globalCompositeOperation='destination-out'
                 init()
                 break
-            case 'pipett':
+            case 'pipette':
                 const raw_data = ctx.picture.getImageData(x,y,1,1).data
                 const red = raw_data[0].toString(16)
                 const green = raw_data[1].toString(16)
                 const blue = raw_data[2].toString(16)
                 const hex = `#${red.length===1?`0${red}`:red}${green.length===1?`0${green}`:green}${blue.length===1?`0${blue}`:blue}`
                 button == 0 ? setLeftColor(hex) : setRightColor(hex)
-                setTool('pencil')
+                setTool({name:'pencil'})
+                break
+            case 'shape':
+                setDrawing([x,y])
                 break
             default:
                 console.log(`Invalid tool: ${tool}`)
-
         }
     }
 
-    const endDraw = () => {
+    const endDraw = async (event) => {
+        const x = event.nativeEvent.offsetX*scale[0]
+        const y = event.nativeEvent.offsetY*scale[1]
         const ctx = ctxRef.current
-        ctx.picture.closePath()
-        setDrawing(false)
+        switch (tool.name) {
+            case 'eraser':
+            case 'pencil':
+                ctx.picture.closePath()    
+                break
+            case 'pipette':
+                break
+            case 'shape':
+                const image = new Image()
+                image.src = tool.shape.src
+                await image.decode()
+                ctx.picture.drawImage(image, drawing[0], drawing[1], x-drawing[0], y-drawing[1])
+                break
+        }
+        
+        setDrawing(null)
         updateEditorState(layerIndex, { src: canvasRef.current.toDataURL(), visible })
     }
 
@@ -187,13 +246,15 @@ const Editor = ({
     }
 
     const getCursor = () => {
-        switch (tool) {
-            case 'pipett':
-                return `url('${pipett}') 0 32, auto`
+        switch (tool.name) {
+            case 'pipette':
+                return `url('${pipette}') 0 32, auto`
             case 'pencil':
                 return `url('${pencil}') 0 32, auto`
             case 'eraser':
                 return `url('${eraser}') 0 32, auto`
+            case 'shape':
+                return tool.shape ? `url('${tool.shape.icon.src}') 0 0, auto` : 'cell'
             default:
                 return 'cell'
         }

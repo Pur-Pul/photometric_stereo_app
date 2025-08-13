@@ -24,6 +24,12 @@ const NormalMap = () => {
     useEffect(() => {
         const getNormalMap = async() => {
             const newNormalMap = await imageService.get(id)
+            if (newNormalMap.icon) {
+                const iconBlob = await imageService.getFile(newNormalMap.icon)
+                newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
+            }
+            
+            console.log(newNormalMap)
             if (newNormalMap.layers.length != normalMap.layers.length || newNormalMap.status != normalMap.status) {
                 dispatch(updateNormalMap(newNormalMap))
             }

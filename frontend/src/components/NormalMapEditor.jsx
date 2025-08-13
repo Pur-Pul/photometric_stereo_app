@@ -18,7 +18,7 @@ import ColorSelector from "./ColorSelector"
 import Editor from "./Editor"
 import LayerSelector from "./LayerSelector"
 import pencil from '../static/pencil32.png'
-import pipett from "../static/pipett32.png"
+import pipette from "../static/pipette32.png"
 import eraser from '../static/eraser32.png'
 import { notificationSet } from "../reducers/notificationReducer"
 import ToolButton from './ToolButton'
@@ -31,7 +31,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [rightColor, setRightColor] = useState('#000000')
     const [alertOpen, setAlertOpen] = useState(false)
     const [selectedLayer, setSelectedLayer] = useState(0)
-    const [tool, setTool] = useState('pencil')
+    const [tool, setTool] = useState({name:'pencil'})
     
     const canvasRefs = Array(5).fill(null).map(() => useRef(null))
     const emptyCanvasRef = useRef(null)
@@ -65,17 +65,15 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
 
     const handleSave = async () => {
         const blobs = []
+        const canvas = iconCanvasRef.current
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })
         for (var i = 0; i < editorState[editorCursor].length; i++) {
             const blob = await new Promise(resolve => canvasRefs[i].current.toBlob(resolve))
             blobs.push(blob)
-
             const image = new Image()
-            image.onload = function() {
-                const canvas = iconCanvasRef.current
-                const ctx = canvas.getContext('2d', { willReadFrequently: true })
-                ctx.drawImage(this, 0, 0, this.width, this.height)
-            }
             image.src = canvasRefs[i].current.toDataURL()
+            await image.decode()
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
         }
         const iconBlob = await new Promise(resolve => iconCanvasRef.current.toBlob(resolve))
 
@@ -172,7 +170,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                         setRightColor={setRightColor}
                         />
                     <ToolButton toolName='pencil' currentTool={tool} setTool={setTool} icon={pencil}/>
-                    <ToolButton toolName='pipett' currentTool={tool} setTool={setTool} icon={pipett}/>
+                    <ToolButton toolName='pipette' currentTool={tool} setTool={setTool} icon={pipette}/>
                     <ToolButton toolName='eraser' currentTool={tool} setTool={setTool} icon={eraser}/>
                     <ShapeTool currentTool={tool} setTool={setTool} />
                     <FormControl>

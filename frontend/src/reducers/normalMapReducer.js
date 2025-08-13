@@ -38,7 +38,7 @@ const normalMapSlice = createSlice({
 			)
 
 			const normalMap = state[normalMap_index]
-			state[normalMap_index] = { ...normalMap, layers: action.payload.layers }
+			state[normalMap_index] = { ...normalMap, layers: action.payload.layers, icon: action.payload.icon }
 		}
 	},
 })
@@ -49,6 +49,12 @@ export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap,
 export const initializeNormalMaps = () => {
 	return async (dispatch) => {
 		let normalMaps = await imageService.getAll()
+		for (var i = 0; i < normalMaps.length; i++) {
+			const blob = await imageService.getFile(normalMaps[i].icon)
+
+			normalMaps[i].icon = { id: normalMaps[i].icon, src: URL.createObjectURL(blob)}
+		}
+
 		dispatch(setNormalMaps(normalMaps))
 	}
 }
@@ -76,11 +82,12 @@ export const performCreate = (blobs, iconBlob) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
 				data.append('files', file, `layer-${index}.png`)
 			})
-			data.append('files', iconBlob, `layer-icon.png`)
+			data.append('files', iconBlob, `icon.png`)
 			const newNormalMap = await imageService.post(data)
+			newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
 			dispatch(appendNormalMap([newNormalMap]))
 		} catch (error) {
-			dispatch(notificationSet({text: error.response.data.error ? error.response.data.error : 'An error occurred', type:'error'}, 5))
+			dispatch(notificationSet({ text: error.response.data.error ? error.response.data.error : 'An error occurred', type:'error' }, 5))
 		}
 	}
 }
@@ -93,9 +100,9 @@ export const performLayerUpdate = (blobs, iconBlob, layers, id) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
 				data.append('files', file, `layer-${index}.png`)
 			})
-			data.append('files', iconBlob, `layer-icon.png`)
-			await imageService.put(data, id)
-			dispatch(updateLayers({id, layers}))
+			data.append('files', iconBlob, `icon.png`)
+			const normalMap = await imageService.put(data, id)
+			dispatch(updateLayers({id, layers, icon: { id: normalMap.icon, src: URL.createObjectURL(iconBlob) }}))
 		} catch (error) {
 			console.log(error)
 			dispatch(notificationSet({text: error.response.data.error ? error.response.data.error : 'An error occurred', type: 'error'}, 5))

@@ -70,7 +70,8 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                         creator: request.user.id
                     })
                     await image.save()
-                    if (request.originalFilenames[i] == 'icon.png') {
+                    console.log(request.originalFilenames[i])
+                    if (request.originalFilenames[i] === 'icon.png') {
                         icon = image.id
                     } else {
                         layers.push(image.id)

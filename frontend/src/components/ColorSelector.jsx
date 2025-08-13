@@ -10,7 +10,7 @@ import {
     Tooltip
 } from "@mui/material"
 import normal_sphere from '../static/normal_sphere.png'
-import pipett from '../static/pipett32.png'
+import pipette from '../static/pipette32.png'
 
 const ColorWheel = ({currentColor, saveColor, setOpen}) => {
     const canvasRef = useRef(null)
@@ -35,10 +35,10 @@ const ColorWheel = ({currentColor, saveColor, setOpen}) => {
         const hex = `#${red.length===1?`0${red}`:red}${green.length===1?`0${green}`:green}${blue.length===1?`0${blue}`:blue}`
         setColor(hex)
     }
-    console.log(pipett)
+
     return (
         <div style={{textAlign: 'center'}}>
-            <canvas style={{border: '2px solid', cursor: `url('${pipett}') 0 32, auto`}} ref={canvasRef} onMouseDown={getColor}/>
+            <canvas style={{border: '2px solid', cursor: `url('${pipette}') 0 32, auto`}} ref={canvasRef} onMouseDown={getColor}/>
             <DialogActions>
                 <InputLabel htmlFor="chosenColor">{color}</InputLabel>
                 <input

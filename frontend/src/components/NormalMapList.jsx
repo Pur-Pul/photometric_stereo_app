@@ -12,7 +12,8 @@ import {
     Tooltip,
     TextField,
     InputLabel,
-    FormControl
+    FormControl,
+    IconButton
 } from '@mui/material'
 
 import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
@@ -46,15 +47,12 @@ const ManualOptions = ({width, height, setWidth, setHeight}) => {
     )
 }
 
-const NormalMapList = () => {
-    const [open, setOpen] = useState(false)
+const NewNormalMapForm = ({ open, setOpen }) => {
+    const navigate = useNavigate()
+    const dispatch = useDispatch()
     const [method, setMethod] = useState(null)
     const [width, setWidth] = useState(720)
     const [height, setHeight] = useState(480)
-    const normalMaps = useSelector((state) => state.normalMaps)
-    const navigate = useNavigate()
-    const dispatch = useDispatch()
-
     const handleContinue = () => {
         switch (method) {
             case 'photometric':
@@ -66,7 +64,7 @@ const NormalMapList = () => {
                 navigate(`/normal_map/manual/${width}/${height}`)
                 break
             default:
-                dispatch(notificationSet({text: 'Method not implemented', type:'error'}, 5))
+                dispatch(notificationSet({ text: 'Method not implemented', type:'error' }, 5))
         }
     }
 
@@ -76,16 +74,7 @@ const NormalMapList = () => {
         setWidth(720)
         setHeight(480)
     }
-
-    return (
-        <div>
-            {
-                normalMaps.length > 0 ? <ul>
-                    {normalMaps.map((normalMap) => <li key={normalMap.id}><Link to={ normalMap.id }>{normalMap.id}</Link></li>)}
-                </ul> : <div>You have not created any normal maps yet.</div>
-            }
-            <Button variant='outlined' onClick={() => setOpen(true)}>Create new</Button>
-            <Dialog open={open} closeAfterTransition={false}>
+    return <Dialog open={open} closeAfterTransition={false}>
                 <DialogTitle>New normal map</DialogTitle>
                 <DialogContent>
                     <DialogContentText style={{paddingBottom: '10px'}}>
@@ -114,6 +103,35 @@ const NormalMapList = () => {
                     </Tooltip> 
                 </DialogActions>
             </Dialog>
+}
+
+const NormalMapLink = ({ normalMap }) => {
+    const navigate = useNavigate()
+    return <Button onClick={() => navigate(normalMap.id)}>{
+        normalMap.icon
+            ? <img src={normalMap.icon.src}/>
+            : normalMap.id
+    }</Button>
+}
+
+const NormalMapList = () => {
+    const [open, setOpen] = useState(false)
+    
+    const normalMaps = useSelector((state) => state.normalMaps)
+
+    console.log(normalMaps)
+
+    
+
+    return (
+        <div>
+            {
+                normalMaps.length > 0 ? <ul>
+                    {normalMaps.map((normalMap) => <NormalMapLink key={normalMap.id} normalMap={normalMap} />)}
+                </ul> : <div>You have not created any normal maps yet.</div>
+            }
+            <Button variant='outlined' onClick={() => setOpen(true)}>Create new</Button>
+            <NewNormalMapForm open={open} setOpen={setOpen} />
         </div>
     )
 }
