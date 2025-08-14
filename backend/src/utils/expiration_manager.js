@@ -33,13 +33,15 @@ const expireNormalMap = async (id, force=false) => {
     if (normalMap) {
         const expiration_time = normalMap.updatedAt - new Date() + EXPIRE_DELAY * 60 * 1000
         if (force || expiration_time <= 0) {
-            for (var i=0; i < normalMap.layers.length; i++) {
-                const image = await Image.findById(normalMap.layers[i])
+            const images = normalMap.icon ? [...normalMap.layers, normalMap.icon] : normalMap.layers
+            console.log(images)
+            for (var i=0; i < images.length; i++) {
+                const image = await Image.findById(images[i])
                 if (fs.existsSync(image.file)) {
                     fs.unlinkSync(image.file)
                     info(`Image ${image.file} has been deleted.`)
                 }
-                await Image.findByIdAndDelete(normalMap.layers[i])
+                await Image.findByIdAndDelete(images[i])
             }
             const creator = await User.findById(normalMap.creator.toString())
             if (creator) {

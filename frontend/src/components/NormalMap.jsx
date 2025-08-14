@@ -24,12 +24,12 @@ const NormalMap = () => {
     useEffect(() => {
         const getNormalMap = async() => {
             const newNormalMap = await imageService.get(id)
+            newNormalMap.layers = newNormalMap.layers.map(id => {return{id}})
             if (newNormalMap.icon) {
                 const iconBlob = await imageService.getFile(newNormalMap.icon)
                 newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
             }
             
-            console.log(newNormalMap)
             if (newNormalMap.layers.length != normalMap.layers.length || newNormalMap.status != normalMap.status) {
                 dispatch(updateNormalMap(newNormalMap))
             }
@@ -85,7 +85,7 @@ const NormalMap = () => {
     return normalMap && normalMap.layers.length > 0
         ? (normalMap.layers[0].src != undefined 
             ? <div>
-                <canvas ref={canvasRef} style={{ border: '1px solid' }}/><br />
+                <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%' }}/><br />
                 
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined' onClick={() => {

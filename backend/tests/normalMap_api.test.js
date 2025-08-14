@@ -65,7 +65,7 @@ beforeEach(async () => {
             await imageObject.save()
             initialImages[0].id = imageObject.id
             initialImages[0].creator = imageObject.creator
-            initialNormalMaps[1].images = [imageObject.id]
+            initialNormalMaps[1].layers = [imageObject.id]
         }
 
         const normalMapObject = new NormalMap(initialNormalMaps[i])
@@ -171,7 +171,7 @@ describe('normalmap get all', () => {
         assert.equal(result.body[0].status, initialNormalMaps[0].status)
     })
 
-    test('normalmap contains field "creator" and it is populated.', async () => {
+    test('normalmap contains field "creator" which is populated without passwordhash.', async () => {
         const result = await api
             .get('/api/normalMaps')
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
@@ -182,6 +182,18 @@ describe('normalmap get all', () => {
         assert.equal(result.body[0].creator.username, initialUsers[0].username)
         assert.equal(result.body[0].creator.name, initialUsers[0].name)
         assert.equal(result.body[0].creator.normalMaps[0], result.body[0].id)
+        assert(!result.body[0].creator.passwordHash)
+    })
+
+    test('normalmap contains field "layers", which contains initial layers and is id only.', async () => {
+        const result = await api
+            .get('/api/normalMaps')
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+        assert(result.body[0].layers)
+        assert.equal(result.body[0].layers.length, 1)
+        assert.equal(typeof result.body[0].layers[0], 'string')
     })
 })
 
@@ -257,7 +269,7 @@ describe('normal map get one', () => {
         assert.equal(result.body.status, initialNormalMaps[0].status)
     })
 
-    test('normal map contains field "creator" and it is populated.', async () => {
+    test('normal map contains field "creator" and it is populated without passwordhash..', async () => {
         const result = await api
             .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
@@ -268,6 +280,19 @@ describe('normal map get one', () => {
         assert.equal(result.body.creator.username, initialUsers[0].username)
         assert.equal(result.body.creator.name, initialUsers[0].name)
         assert.equal(result.body.creator.normalMaps[0], result.body.id)
+        assert(!result.body.creator.passwordHash)
+    })
+
+    test('normalmap contains field "layers", which contains initial layers and is id only.', async () => {
+        const result = await api
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+        console.log(result.body)
+        assert(result.body.layers)
+        assert.equal(result.body.layers.length, 1)
+        assert.equal(typeof result.body.layers[0], 'string')
     })
 })
 
@@ -382,6 +407,15 @@ describe('normal map post', () => {
             .attach('files', newFile)
             .expect(201)
         assert.equal(result.body.layers.length, 1)
+    })
+
+    test('normal map layers returned as id only', async () => {
+        const result = await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .attach('files', newFile)
+            .expect(201)
+        assert.equal(typeof result.body.layers[0], 'string')
     })
 
     test('layers created in image post are added as an image entry', async () => {
@@ -539,7 +573,6 @@ describe('layer post one', () => {
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', file)
             .expect(201)
-        console.log(result.body)
         assert(result.body.layers)
     })
     test('the layers field of the returned normal map contains a new layer.', async () => {
@@ -548,32 +581,27 @@ describe('layer post one', () => {
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', file)
             .expect(201)
-        console.log(result.body)
         assert(result.body.layers.length, 1)
     })
-    test('the new layer returned with the normal map contains the field "file"', async () => {
+    test('layers in the returned normal map are id only', async () => {
         const result = await api
             .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', file)
             .expect(201)
-        assert(result.body.layers[0].file)
+        assert.equal(typeof result.body.layers[1], 'string')
     })
-    test('the new layer returned with the normal map contains the field "creator".', async () => {
+    test('the new layer can be fetched with layer get', async () => {
         const result = await api
             .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', file)
             .expect(201)
-        assert(result.body.layers[0].creator)
-    })
-    test('the new layer returned with the exists as a file in the output directory.', async () => {
-        const result = await api
-            .post(`/api/normalMaps/${initialNormalMaps[1].id}/layers`)
+        await api
+            .get(`/api/normalMaps/layers/${result.body.layers[1]}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
-            .attach('files', file)
-            .expect(201)
-        assert(fs.existsSync(result.body.layers[0].file))
+            .expect(200)
+            .expect('Content-Type', /image\/png/)
     })
 })
 
@@ -656,3 +684,81 @@ describe('normal map delete', () => {
     })
 })
 
+describe('normal map put', () => {
+    const buffer = Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC',
+        'base64'
+    )
+    const testlayer = path.join(process.cwd(), 'tests/testlayer.png')
+    const testicon = path.join(process.cwd(), 'tests/icon.png')
+    fs.writeFileSync(testlayer, buffer)
+    fs.writeFileSync(testicon, buffer)
+
+    after(() => {
+        fs.unlinkSync(testlayer)
+        fs.unlinkSync(testicon)
+    })
+    test('normal map put is successful with correct authorization', async () => {
+        await api
+            .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(201)
+    })
+    test('normal map put is rejected with missing authorization', async () => {
+        await api
+            .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .expect(401)
+    })
+    test('normal map put is rejected with invalid authorization', async () => {
+        await api
+            .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .set('Authorization', `Bearer invalidtoken`)
+            .expect(401)
+    })
+    test('normal map put is rejected with incorrect authorization', async () => {
+        await api
+            .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(403)
+    })
+    test('layer and icon included in normal map are appended to the returned object', async () => {
+        const response = await api
+            .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .attach('files', testlayer)
+            .attach('files', testicon)
+            .expect(201)
+        assert(response.body.layers)
+        assert.equal(response.body.layers.length, 1)
+        assert(response.body.icon)
+    })
+    test('layer and icon included in normal map are id only', async () => {
+        const response = await api
+            .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .attach('files', testlayer)
+            .attach('files', testicon)
+            .expect(201)
+        assert.equal(typeof response.body.layers[0], 'string')
+        assert.equal(typeof response.body.icon, 'string')
+    })
+    test('new layer and icon can be fetched with layer get', async () => {
+        const response = await api
+            .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .attach('files', testlayer)
+            .attach('files', testicon)
+            .expect(201)
+        console.log(response.body)
+        await api
+            .get(`/api/normalMaps/layers/${response.body.layers[0]}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(200)
+            .expect('Content-Type', /image\/png/)
+        await api
+            .get(`/api/normalMaps/layers/${response.body.icon}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(200)
+            .expect('Content-Type', /image\/png/)
+    })
+})

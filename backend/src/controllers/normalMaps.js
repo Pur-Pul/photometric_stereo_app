@@ -14,7 +14,7 @@ const { expireNormalMap } = require('../utils/expiration_manager')
 normalMapsRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
     if (user) {
-        const normalMaps = await NormalMap.find({ creator: user }).populate('creator').populate('layers')
+        const normalMaps = await NormalMap.find({ creator: user }).populate('creator')
         response.json(normalMaps)
     }
 })
@@ -22,7 +22,7 @@ normalMapsRouter.get('/', middleware.userExtractor, async (request, response) =>
 normalMapsRouter.get('/:id', middleware.userExtractor, async (request, response) => {
     const id = request.params.id
     const user = request.user
-    const normalMap = await NormalMap.findById(id).populate('creator').populate('layers')
+    const normalMap = await NormalMap.findById(id).populate('creator')
     if (!normalMap) { return response.status(404).json({message: 'Normal map not found.'}) }
     if (user.id !== normalMap.creator.id) { return response.status(403).json({ error: 'incorrect user' }) }
 
@@ -38,12 +38,12 @@ normalMapsRouter.get('/layers/:id', middleware.userExtractor, async (request, re
             if (user.id !== image.creator.id) {
                 return response.status(403).json({ error: 'incorrect user' })
             }
-            console.log(fs.existsSync(image.file))
+            console.log(image.file)
             if (fs.existsSync(image.file)) {
                 return response.sendFile(image.file)
             }
         }
-        response.status(404).json({message: 'Normal map not found.'})
+        response.status(404).json({message: 'Image not found.'})
     } catch (exception) {
         next(exception)
     }
@@ -70,7 +70,7 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                         creator: request.user.id
                     })
                     await image.save()
-                    console.log(request.originalFilenames[i])
+
                     if (request.originalFilenames[i] === 'icon.png') {
                         icon = image.id
                     } else {
@@ -85,8 +85,8 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                     icon,
                     creator: request.user.id
                 })
-                await normalMap.save()
-                response.status(201).json(normalMap)
+                const saved_normalMap = await normalMap.save()
+                response.status(201).json(saved_normalMap)
             } catch (exception) {
                 next(exception)
             }
@@ -100,9 +100,8 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
         else {
             try {
                 const normalMap = await NormalMap.findById(request.params.id).populate('layers')
-                if (!normalMap) { 
-                    console.log('here')
-                    response.status(404).json({message: 'Normal map not found.'})}
+                if (!normalMap) { response.status(404).json({ message: 'Normal map not found.' }) }
+                if (request.user.id.toString() !== normalMap.creator.toString()) { return response.status(403).json({ error: 'incorrect user' }) }
 
                 const layers = []
                 let icon = null
@@ -112,13 +111,14 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                     const newfile = path.join(process.cwd(), `../output/${normalMap.name}-${request.originalFilenames[i]}`)
                     fs.copyFileSync(oldfile, newfile)
                     fs.unlinkSync(oldfile)
-
                     if (request.originalFilenames[i] == 'icon.png' && !normalMap.icon) {
-                        icon = new Image({
+                        const icon = new Image({
                             file: newfile,
                             format: request.body.format,
                             creator: request.user.id
                         })
+                        icon.save()
+                        normalMap.icon = icon.id
                     } else {
                         let layer = normalMap.layers.find((layer) => layer.file === newfile)
                         if (!layer) {
@@ -133,8 +133,8 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                     }
                 }
                 normalMap.layers = layers
-                await normalMap.save()
-                response.status(201).json(normalMap)
+                const saved_normalMap = await normalMap.save()
+                response.status(201).json(saved_normalMap)
             } catch (exception) {
                 next(exception)
             }

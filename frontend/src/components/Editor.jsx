@@ -254,7 +254,7 @@ const Editor = ({
             case 'eraser':
                 return `url('${eraser}') 0 32, auto`
             case 'shape':
-                return tool.shape ? `url('${tool.shape.icon.src}') 0 0, auto` : 'cell'
+                return tool.shape && tool.shape.icon ? `url('${tool.shape.icon.src}') 0 0, auto` : 'cell'
             default:
                 return 'cell'
         }

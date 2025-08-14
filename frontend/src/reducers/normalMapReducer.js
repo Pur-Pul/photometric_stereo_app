@@ -49,7 +49,11 @@ export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap,
 export const initializeNormalMaps = () => {
 	return async (dispatch) => {
 		let normalMaps = await imageService.getAll()
+		
 		for (var i = 0; i < normalMaps.length; i++) {
+			const normalMap = normalMaps[i]
+			normalMap.layers = normalMap.layers.map((id) => {return{id}})
+			if (!normalMaps[i].icon) { continue }
 			const blob = await imageService.getFile(normalMaps[i].icon)
 
 			normalMaps[i].icon = { id: normalMaps[i].icon, src: URL.createObjectURL(blob)}

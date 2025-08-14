@@ -10,6 +10,7 @@ const getSource = async (layers) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d', { willReadFrequently: true })
     for (var i = 0; i < layers.length; i++) {
+        console.log(layers[i])
         const blob = await imageService.getFile(layers[i].id)
         const image = new Image()
         image.src = URL.createObjectURL(blob)
@@ -55,9 +56,9 @@ const ShapeTool = ({currentTool, setTool}) => {
     useEffect(() => {
         const shapes = [...defaultShapes]
         for (var i = 0; i < normalMaps.length; i++) {
+            console.log(normalMaps[i])
             if (!normalMaps[i].status === 'done') { continue }
             shapes.push(normalMaps[i])
-            
         }
         setShapes(shapes)
     }, [currentTool])
@@ -66,11 +67,11 @@ const ShapeTool = ({currentTool, setTool}) => {
         setTool({name: 'shape', shape: selectedShape})
         setOpen(false)
     }
-
+    console.log(selectedShape)
     return (
         <div>
             <div onClick={() => setOpen(true)}>
-                <ToolButton toolName='shape' currentTool={currentTool} setTool={setTool} icon={selectedShape ? selectedShape.icon.src : 'none'}/>
+                <ToolButton toolName='shape' currentTool={currentTool} setTool={setTool} icon={selectedShape && selectedShape.icon ? selectedShape.icon.src : 'none'}/>
             </div>
             <Dialog open={open} closeAfterTransition={false}>
                 <DialogTitle>Select a shape</DialogTitle>
