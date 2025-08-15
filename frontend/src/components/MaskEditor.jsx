@@ -1,133 +1,98 @@
 import { useState, useEffect, useRef } from "react"
-import Dialog from "@mui/material/Dialog"
-import DialogTitle from "@mui/material/DialogTitle"
-import Button from "@mui/material/Button"
-import Checkbox from "@mui/material/Checkbox"
-import FormControlLabel from "@mui/material/FormControlLabel"
-import DialogActions from "@mui/material/DialogActions"
-import TextField from "@mui/material/TextField"
-import InputLabel from "@mui/material/InputLabel"
-import FormControl from "@mui/material/FormControl"
-import ColorSelector from "./ColorSelector"
+import {
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    Button,
+    Checkbox,
+    FormControl,
+    FormControlLabel,
+    TextField,
+    InputLabel,
+    Grid,
+    Tooltip,
+    IconButton
+} from '@mui/material'
 
-const SIZE_LIMIT = 300
+import ColorSelector from "./ColorSelector"
+import Editor from "./Editor"
+import pencil from '../static/pencil32.png'
+import ToolButton from './ToolButton'
 
 const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
-    const [drawing, setDrawing] = useState(false)
-    const [windowSize, setWindowSize] = useState([0,0])
     const [alertOpen, setAlertOpen] = useState(false)
     const [showOverlay, setShowOverlay] = useState(true)
     const [pencilSize, setPencilSize] = useState(10)
     const [leftColor, setLeftColor] = useState('#000000')
     const [rightColor, setRightColor] = useState('#ffffff')
-    const canvasRef = useRef(null)
-    const ctxRef = useRef(null)
-    const [mouse, setMouse] = useState(-1)
+    const [tool, setTool] = useState({name: 'pencil'})
 
-    window.onmousedown = (event) => { mouse === -1 ? setMouse(event.button) : null}
-    window.onmouseup = (event) => { if(event.button === mouse) { 
-        setMouse(-1) 
-        setDrawing(false)
-    }}
+    const [editorState, setEditorState] = useState([[{visible: true, src: maskCanvas.toDataURL()}]])
+    const [editorCursor, setEditorCursor] = useState(0)
+    const canvasRef = useRef(null)
+    const overlayRef = useRef(null)
 
     useEffect(() => {
-        let { clientWidth:editorWidth, clientHeight:editorHeight } = document.getElementById('maskEditor').getElementsByClassName('MuiPaper-root')[0]
-        editorHeight *= 0.8
-
-        const canvasAspect = size[0]/size[1]
-        const editorAspect = editorWidth/editorHeight
-        
-        const windowSize = canvasAspect >= editorAspect 
-            ? [editorWidth, editorWidth / canvasAspect]
-            : [editorHeight * canvasAspect, editorHeight]
-        setWindowSize(windowSize)
-
-        const canvas = canvasRef.current
-        const ctx = canvas.getContext('2d', { willReadFrequently: true })
-        if (Math.max(size[0], size[1]) > SIZE_LIMIT) {
-            canvas.width = canvasAspect >= 1 ? SIZE_LIMIT : canvasAspect * SIZE_LIMIT
-            canvas.height = canvasAspect >= 1 ? SIZE_LIMIT / canvasAspect : SIZE_LIMIT
-        } else {
-            canvas.width = size[0]
-            canvas.height = size[1]
-        }
-        const scale = canvasAspect >= editorAspect ? canvas.width/editorWidth : canvas.height/editorHeight
-        canvas.style.width = `${windowSize[0]-2}px`
-        canvas.style.height = `${windowSize[1]-2}px`
-        //ctx.fillStyle = '#ffffff'
-        //ctx.fillRect(0, 0, canvas.width, canvas.height)
-        ctx.drawImage(maskCanvas, 0, 0, canvasRef.current.width, canvasRef.current.height)
-        ctx.scale(scale, scale)
-        ctxRef.current = ctx 
+        setEditorState([[{visible: true, src: maskCanvas.toDataURL()}]])
+        setEditorCursor(0)
     }, [])
 
-
-    const draw = (event) => {
-        const {offsetX:x, offsetY:y} = event.nativeEvent
-        if (drawing) {
-            ctxRef.current.lineTo(x,y)
-            ctxRef.current.stroke()
+    const updateEditorState = (layerIndex, layer) => {
+        const currentState = editorState.slice(0, editorCursor+1)
+        let newState = [...currentState[editorCursor]]
+        if (layerIndex === newState.length) {
+            layer ? newState.push(layer) : null
+        } else if (layerIndex < newState.length) {
+            layer ? newState.splice(layerIndex, 1, layer) : newState.splice(layerIndex, 1)
+        } else {
+            console.log('Editor state error')
+            return
         }
+        
+        setEditorState([...currentState, newState])
+        setEditorCursor(editorCursor+1)
     }
-
-    const startDraw = (event) => {
-        const {offsetX:x, offsetY:y, button} = event.nativeEvent
-        ctxRef.current.strokeStyle = button == 0 ? leftColor : rightColor
-        ctxRef.current.fillStyle = button == 0 ? leftColor : rightColor
-        ctxRef.current.lineWidth = pencilSize
-        ctxRef.current.lineCap = 'round'
-        ctxRef.current.beginPath()
-        ctxRef.current.moveTo(x,y)
-        ctxRef.current.arc(x,y,pencilSize/2,0,Math.PI*2,false)
-        ctxRef.current.fill()
-        ctxRef.current.closePath()
-        ctxRef.current.beginPath()
-        ctxRef.current.moveTo(x,y)
-        setDrawing(true)
-    }
-
-    const endDraw = () => {
-        ctxRef.current.closePath()
-        setDrawing(false)
-    }
-
-    const pauseDraw = () => {
-        if (drawing) { ctxRef.current.closePath() }
-    }
-
-    const continueDraw = (event) => {
-        ctxRef.current.beginPath()
-    }
-
-
-    const editor = {
-        position: 'relative',
-        opacity: showOverlay ? 0.5 : 1,
-        border: '1px solid rgba(0,0,0,1)'
-    }
-    const overlay = {
-        width: `${windowSize[0]-2}px`,
-        height: `${windowSize[1]-2}px`,
-        position: 'absolute',
-        opacity : 1,
-        z_index: -1
-    }
-
     return (
         <div style={{ margin: 'auto' }}>
-            <img style={{ ...editor, ...overlay }} src={image} alt="Mask editor overlay"/>
-            <canvas 
-                ref={ canvasRef }
-                onMouseDown={ startDraw }
-                onMouseUp={ endDraw }
-                onMouseMove={ draw }
-                onMouseLeave={ pauseDraw }
-                onMouseEnter={ continueDraw }
-                onContextMenu={ (e) => e.preventDefault()}
-                style={editor}
-                />
-            <DialogActions style={{ margin: 'auto' }}>
-                <ColorSelector leftColor={leftColor} rightColor={rightColor} setLeftColor={setLeftColor} setRightColor={setRightColor}/>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
+                
+                <Editor 
+                    style={{ gridRowStart: 1, gridColumnStart: 1}}
+                    src={editorState[editorCursor][0].src}
+                    visible={true}
+                    canvasRef={canvasRef}
+                    pencilSize={pencilSize}
+                    leftColor={leftColor}
+                    rightColor={rightColor}
+                    setLeftColor={setLeftColor}
+                    setRightColor={setRightColor}
+                    layerIndex={0}
+                    updateEditorState={updateEditorState}
+                    tool={tool}
+                    setTool={setTool}
+                    />
+                <Editor
+                    style={{ pointerEvents: 'none', gridRowStart: 1, gridColumnStart: 1, opacity: 0.5}}
+                    src={image}
+                    visible={showOverlay}
+                    canvasRef={overlayRef}
+                    tool={tool}
+                    setTool={setTool}
+                    
+                    />
+            </div>
+            <Grid 
+                container 
+                sx={{
+                    justifyContent: "space-evenly",
+                    alignItems: "flex-start",
+                    border: '2px solid',
+                    padding: '10px',
+                    borderRadius: '5px'
+                }}
+                >
+                <ColorSelector leftColor={leftColor} rightColor={rightColor} setLeftColor={setLeftColor} setRightColor={setRightColor} enableColorWheel={false}/>
+                <ToolButton toolName='pencil' currentTool={tool} setTool={setTool} icon={pencil}/>
                 <FormControl>
                     <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
                     <TextField
@@ -138,11 +103,26 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
                         onChange={(e) => setPencilSize(e.target.value)}
                     />
                 </FormControl>
-                
+                <div style={{ width:'120px' }}>
+                    <Tooltip title={ 'Undo' } placement='top'>
+                        <span>
+                            <IconButton sx={{ border: '2px solid', width: '40%', marginRight: '5px'}} disabled={editorCursor === 0} onClick={ () => setEditorCursor(editorCursor ? editorCursor-1 : 0)}> ↶ </IconButton>
+                        </span>
+                    </Tooltip>
+                    <Tooltip title={ 'Redo' } placement='top'>
+                        <span>
+                            <IconButton  sx={{ border: '2px solid', width: '40%', marginLeft: '5px'}} disabled={editorCursor >= editorState.length-1} onClick={ () => setEditorCursor(editorCursor < editorState.length-1 ? editorCursor+1 : editorCursor)}>↷</IconButton>
+                        </span>
+                    </Tooltip>
+                </div>
                 <FormControlLabel control={ <Checkbox defaultChecked value={ showOverlay } onChange={(e) => setShowOverlay(current => !current)}/> } label="Overlay image"/>
+            </Grid>
+
+            <DialogActions style={{ margin: 'auto' }}>
                 <Button onClick={ () => { setAlertOpen(true) }} color="error" variant="outlined">Cancel</Button>
                 <Button onClick={() => handleSave(canvasRef.current)} color="success" variant="outlined">Save</Button>
             </DialogActions>
+
             <Dialog open={ alertOpen } onClose={() => { setAlertOpen(false) }} closeAfterTransition={false}>
                 <DialogTitle>You are about to discard changes to the mask</DialogTitle>
                 <form onSubmit={(event) => {

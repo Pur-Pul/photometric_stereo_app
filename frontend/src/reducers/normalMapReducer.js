@@ -1,7 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit'
 import imageService from '../services/images'
 import { notificationSet } from './notificationReducer'
-import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
+
 
 const normalMapSlice = createSlice({
 	name: 'normalMap',
@@ -52,10 +53,10 @@ export const initializeNormalMaps = () => {
 		
 		for (var i = 0; i < normalMaps.length; i++) {
 			const normalMap = normalMaps[i]
-			normalMap.layers = normalMap.layers.map((id) => {return{id}})
+			normalMap.layers = normalMap.layers.map((id) => { return {id} })
+
 			if (!normalMaps[i].icon) { continue }
 			const blob = await imageService.getFile(normalMaps[i].icon)
-
 			normalMaps[i].icon = { id: normalMaps[i].icon, src: URL.createObjectURL(blob)}
 		}
 
@@ -78,7 +79,7 @@ export const generateNormalMap = (sourceNormalMaps, mask) => {
 	}
 }
 
-export const performCreate = (blobs, iconBlob) => {
+export const performCreate = (blobs, iconBlob, navigate) => {
 	return async (dispatch) => {
 		try {
 			const data = new FormData()
@@ -88,9 +89,13 @@ export const performCreate = (blobs, iconBlob) => {
 			})
 			data.append('files', iconBlob, `icon.png`)
 			const newNormalMap = await imageService.post(data)
+			newNormalMap.layers = newNormalMap.layers.map((id) => { return { id } })
 			newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
 			dispatch(appendNormalMap([newNormalMap]))
+			dispatch(notificationSet({text: 'Normal map created.', type: 'success'}, 5))
+			navigate(`/normal_map/${newNormalMap.id}`)
 		} catch (error) {
+			console.log(error)
 			dispatch(notificationSet({ text: error.response.data.error ? error.response.data.error : 'An error occurred', type:'error' }, 5))
 		}
 	}
@@ -99,6 +104,7 @@ export const performCreate = (blobs, iconBlob) => {
 export const performLayerUpdate = (blobs, iconBlob, layers, id) => {
 	return async (dispatch) => {
 		try {
+			console.log(layers)
 			const data = new FormData()
 			blobs.forEach((blob, index) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
@@ -107,6 +113,7 @@ export const performLayerUpdate = (blobs, iconBlob, layers, id) => {
 			data.append('files', iconBlob, `icon.png`)
 			const normalMap = await imageService.put(data, id)
 			dispatch(updateLayers({id, layers, icon: { id: normalMap.icon, src: URL.createObjectURL(iconBlob) }}))
+			dispatch(notificationSet({text: 'Normal map saved.', type: 'success'}, 5))
 		} catch (error) {
 			console.log(error)
 			dispatch(notificationSet({text: error.response.data.error ? error.response.data.error : 'An error occurred', type: 'error'}, 5))

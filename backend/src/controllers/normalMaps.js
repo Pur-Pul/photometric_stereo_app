@@ -111,7 +111,7 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                     const newfile = path.join(process.cwd(), `../output/${normalMap.name}-${request.originalFilenames[i]}`)
                     fs.copyFileSync(oldfile, newfile)
                     fs.unlinkSync(oldfile)
-                    if (request.originalFilenames[i] == 'icon.png' && !normalMap.icon) {
+                    if (request.originalFilenames[i] === 'icon.png' && !normalMap.icon) {
                         const icon = new Image({
                             file: newfile,
                             format: request.body.format,
@@ -119,7 +119,7 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                         })
                         icon.save()
                         normalMap.icon = icon.id
-                    } else {
+                    } else if (request.originalFilenames[i] !== 'icon.png') {
                         let layer = normalMap.layers.find((layer) => layer.file === newfile)
                         if (!layer) {
                             layer = new Image({

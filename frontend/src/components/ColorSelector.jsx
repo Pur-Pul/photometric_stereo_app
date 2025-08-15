@@ -56,7 +56,7 @@ const ColorWheel = ({currentColor, saveColor, setOpen}) => {
     )
 }
 
-const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor }) => {
+const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, enableColorWheel=true }) => {
     const [open, setOpen] = useState("")
     
     const colorButton = {
@@ -108,7 +108,7 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor }) =
                     
                 </div>
             </div>
-            <Dialog open={open==="left" || open==="right"} onClose={() => setOpen("")} closeAfterTransition={false} fullWidth maxWidth = 'xs'>
+            <Dialog open={enableColorWheel && (open==="left" || open==="right")} onClose={() => setOpen("")} closeAfterTransition={false} fullWidth maxWidth = 'xs'>
                 <DialogTitle>Pick a color</DialogTitle>
                 <ColorWheel 
                     currentColor={ open==="left" ? leftColor : rightColor }

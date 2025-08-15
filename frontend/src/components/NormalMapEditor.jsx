@@ -12,6 +12,7 @@ import {
     Grid,
     Tooltip
 } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 
 import { performCreate, performLayerUpdate } from "../reducers/normalMapReducer"
 import ColorSelector from "./ColorSelector"
@@ -20,7 +21,6 @@ import LayerSelector from "./LayerSelector"
 import pencil from '../static/pencil32.png'
 import pipette from "../static/pipette32.png"
 import eraser from '../static/eraser32.png'
-import { notificationSet } from "../reducers/notificationReducer"
 import ToolButton from './ToolButton'
 import ShapeTool from "./ShapeTool"
 
@@ -41,6 +41,8 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [editorState, setEditorState] = useState([initialLayers.map(layer => { return { ...layer, visible: true }})])
     const [editorCursor, setEditorCursor] = useState(0)
     const dispatch = useDispatch()
+    const navigate = useNavigate()
+    
 
     useEffect(() => {
         emptyCanvasRef.current = document.createElement('canvas')
@@ -80,9 +82,8 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         if (id) {
             dispatch(performLayerUpdate(blobs, iconBlob, editorState[editorCursor], id))
         } else {
-            dispatch(performCreate(blobs, iconBlob))
+            dispatch(performCreate(blobs, iconBlob, navigate))
         }
-        dispatch(notificationSet({text: 'Normal map saved.', type: 'success'}, 5))
     }
 
     const addLayer = () => {
@@ -210,7 +211,6 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                     handleDiscard()
                 }}> 
                     <DialogActions>
-                        
                         <Button onClick={ () => { setAlertOpen(false) } } variant="outlined">Cancel</Button>
                         <Button type="submit" color="error" variant="outlined">Discard</Button>
                     </DialogActions>

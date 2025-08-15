@@ -78,7 +78,7 @@ const Mask = ({ images, setMask }) => {
                                     maskCanvas = { canvasRef.current }
                                     image= { images[0].image }
                                     handleSave={ handleSave }
-                                    handleDiscard={handleDiscard}/>
+                                    handleDiscard={ handleDiscard }/>
                             </Dialog>
                         </div>
                         : "loading"
