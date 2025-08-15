@@ -59,8 +59,8 @@ class photometry:
         self.normalmap = self.normalmap.astype(np.float32)
         self.normalmap = cv.cvtColor(self.normalmap, cv.COLOR_BGR2RGB)
         output_int = cv.normalize(self.normalmap, None, 0, 255, cv.NORM_MINMAX, cv.CV_8UC3)
-        output_int = cv.bitwise_and(output_int, output_int, mask = mask)
-        self.normalmap = cv.bitwise_and(self.normalmap, self.normalmap, mask = mask)
+        self.normalmap = cv.bitwise_and(output_int, output_int, mask = mask)
+        #self.normalmap = cv.bitwise_and(self.normalmap, self.normalmap, mask = mask)
         if self.display:
             cv.imshow('normal_normalized', output_int)
             cv.imshow('albedo', self.albedo)

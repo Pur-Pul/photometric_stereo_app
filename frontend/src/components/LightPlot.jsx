@@ -127,9 +127,9 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
         },
         {
             type: 'surface',
-            x: plane.map((row, y) => row.map((_, x) => x - row.length/2)),
+            x: plane.map((row, y) => row.map((_, x) => row.length/2-x)),
             y: plane,
-            z: plane.map((row, y) => row.map((_, x) => plane.length/2-y)),
+            z: plane.map((row, y) => row.map((_, x) => y - plane.length/2)),
             
             surfacecolor: colors,
             showscale: false,
@@ -154,10 +154,12 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
 
     var layout = {
         title: { text: "Pick a light direction." },
+        xaxis: {autorange: 'reversed'},
+        zaxis: {autorange: 'reversed'},
         scene: {
             aspectmode:"manual",
             aspectratio: { x:1, y:1, z:1 },
-            camera: { eye: { x: 0, y: -3, z: 0 } },
+            camera: { eye: { x: 0, y: -2, z: 0 } },
             yaxis: {
                 title: { text: 'z' },
                 showticklabels: false,
@@ -166,12 +168,12 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
             zaxis: {
                 title: { text: 'y' },
                 showticklabels: false,
-                range: [-radius, radius]
+                range: [radius, -radius]
                
             },
             xaxis: {
                 showticklabels: false, 
-                range: [-radius, radius]
+                range: [radius, -radius]
             },
         },
         showlegend: false,

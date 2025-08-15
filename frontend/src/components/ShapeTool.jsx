@@ -6,6 +6,34 @@ import normal_sphere from '../static/normal_sphere.png'
 import normal_sphere32 from '../static/normal_sphere32.png'
 import imageService from '../services/images'
 
+const blackToTransparent = async (src) => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+
+    const image = new Image()
+    image.src = src
+    await image.decode()
+
+    canvas.width = image.width
+    canvas.height = image.height
+    ctx.drawImage(image, 0, 0, image.width, image.height)
+    const srcData = ctx.getImageData(0, 0, image.width, image.height).data
+    const outData = new Uint8ClampedArray(srcData.length)
+    for (var i = 0; i < srcData.length; i += 4) {
+        const red = srcData[i]
+        const green = srcData[i+1]
+        const blue = srcData[i+2]
+        const alpha = srcData[i+3]
+        outData[i] = red
+        outData[i+1] = green
+        outData[i+2] = blue
+        outData[i+3] = red+green+blue === 0 ? 0 : alpha
+    }
+
+    ctx.putImageData(new ImageData(outData, image.width, image.height), 0, 0)
+    return canvas.toDataURL()
+}
+
 const getSource = async (layers) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d', { willReadFrequently: true })
@@ -26,12 +54,14 @@ const getSource = async (layers) => {
 
 const Shape = ({shape, selectedShape, setSelectedShape}) => {
     const handleSelect = async () => {
+        let src
         if (!shape.src) {
-            const src = await getSource(shape.layers)
-            setSelectedShape({...shape, src})
+            const originalSrc = await getSource(shape.layers)
+            src = await blackToTransparent(originalSrc)
         } else {
-            setSelectedShape(shape)
+            src = await blackToTransparent(shape.src)
         }
+        setSelectedShape({...shape, src})
     }
     return (
         <div>
@@ -45,11 +75,13 @@ const Shape = ({shape, selectedShape, setSelectedShape}) => {
     )
 }
 
+
+
 const ShapeTool = ({currentTool, setTool}) => {
     const [open, setOpen] = useState(false)
     const [selectedShape, setSelectedShape] = useState(null)
     const defaultShapes = [{ icon: { src: normal_sphere32 }, src: normal_sphere }]
-    const [shapes, setShapes] = useState(defaultShapes)
+    const [shapes, setShapes] = useState([])
     const normalMaps = useSelector((state) => state.normalMaps)
 
     useEffect(() => {

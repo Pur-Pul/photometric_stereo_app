@@ -195,7 +195,7 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
                 let lights = []
                 console.log(request.body.lights)
                 request.body.lights.forEach(light => {
-                    lights = lights.concat(light.split(',').map(Number))
+                    lights = lights.concat(light.split(',').map(val => +Number(val).toFixed(2)))
                 })
                 let data = yaml.dump({
                     rows: request.body.lights.length,

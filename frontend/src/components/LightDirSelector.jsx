@@ -42,7 +42,7 @@ const LightDirSelector = ({ index, files, handleChange }) => {
             default:
                 console.log(`invalid input component ${event.target.id}`)
         }
-        tempLight = tempLight.normalize()
+        //tempLight = tempLight.normalize()
         setLightDir(tempLight)
         
     }
