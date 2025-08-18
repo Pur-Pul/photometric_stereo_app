@@ -118,7 +118,7 @@ class Sphere {
                 const edge1 = new Vector3(uvArr[i][1].x - uvArr[i][0].x, uvArr[i][1].y - uvArr[i][0].y, 0)
                 const edge2 = new Vector3(uvArr[i][2].x - uvArr[i][0].x, uvArr[i][2].y - uvArr[i][0].y, 0)
                 const edge3 = edge1.cross(edge2)
-                if (!edge3.z >= 0) {
+                if (edge3.z < 0) {
                     uvArr[i][0].x += uvArr[i][0].x < 0.25
                     uvArr[i][1].x += uvArr[i][1].x < 0.25
                     uvArr[i][2].x += uvArr[i][2].x < 0.25
