@@ -88,6 +88,86 @@ class Sphere {
         this.sphere_j = sphere_j
         this.sphere_k = sphere_k
     }
+
+    getVertexData() {
+        let data = new Float32Array()
+        this.sphere_polygons.forEach(polygon => {
+            data = Float32Array.of(...data, ...polygon.getVertexData())
+        })
+		
+		return data
+	}
+
+    getUVData() {
+        const uvArr = this.sphere_polygons.map(() => 
+            [
+                { x: 0, y:1 },
+                { x: 0, y:0 },
+                { x: 1, y:0 }
+            ]
+            
+        )
+        const normal_to_uv = (normal) => {
+            return {
+                x: (Math.atan2(normal.y, normal.x) + Math.PI) * 0.5/Math.PI,
+                y: (Math.acos(normal.z) + Math.PI) * 1/Math.PI - 1
+            }
+        }
+        const fix_uv_seam = (polygons) => {
+            polygons.forEach((polygon, i) => {
+                const edge1 = new Vector3(uvArr[i][1].x - uvArr[i][0].x, uvArr[i][1].y - uvArr[i][0].y, 0)
+                const edge2 = new Vector3(uvArr[i][2].x - uvArr[i][0].x, uvArr[i][2].y - uvArr[i][0].y, 0)
+                const edge3 = edge1.cross(edge2)
+                if (!edge3.z >= 0) {
+                    uvArr[i][0].x += uvArr[i][0].x < 0.25
+                    uvArr[i][1].x += uvArr[i][1].x < 0.25
+                    uvArr[i][2].x += uvArr[i][2].x < 0.25
+                }
+            })
+        }
+        const fix_uv_poles = (npole, spole, polygons) => {
+            polygons.forEach((polygon, i) => {
+                const verts = [polygon.v1, polygon.v2, polygon.v3]
+                for (var j = 0; j < 3; j++) { 
+                    if (verts[j].compare(npole) || verts[j].compare(spole)) {
+                        uvArr[i][j].x = (uvArr[i][(j+1) % 3].x + uvArr[i][(j+2) % 3].x) / 2
+                    }
+                }
+            })
+        }
+        var npole = new Vector3(0,0,0)
+        var spole = new Vector3(0,0,0)
+        this.sphere_polygons.forEach((polygon, i) => {
+            polygon.v1.normal = this.sphere_polygons[i].v1.normalize()
+            polygon.v2.normal = this.sphere_polygons[i].v2.normalize()
+            polygon.v3.normal = this.sphere_polygons[i].v3.normalize()
+
+            uvArr[i][0] = normal_to_uv(polygon.v1.normal)
+            uvArr[i][1] = normal_to_uv(polygon.v2.normal)
+            uvArr[i][2] = normal_to_uv(polygon.v3.normal)
+            polygon.tangent = polygon.normal.cross(new Vector3(0,0,1))
+            npole = polygon.v1.z > npole.z ? polygon.v1 : npole
+            npole = polygon.v2.z > npole.z ? polygon.v2 : npole
+            npole = polygon.v3.z > npole.z ? polygon.v3 : npole
+            spole = polygon.v1.z < spole.z ? polygon.v1 : spole
+            spole = polygon.v2.z < spole.z ? polygon.v2 : spole
+            spole = polygon.v3.z < spole.z ? polygon.v3 : spole
+        })
+        
+        fix_uv_seam(this.sphere_polygons)
+        fix_uv_poles(npole, spole, this.sphere_polygons)
+        let data = new Float32Array()
+        uvArr.forEach(uvs => {
+            data = Float32Array.of(...data, ...(new Float32Array(
+                [
+                    uvs[0].x, uvs[0].y,
+                    uvs[1].x, uvs[1].y,
+                    uvs[2].x, uvs[2].y
+                ]
+            )))
+        })
+        return data
+    }
 }
 
 export default Sphere

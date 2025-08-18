@@ -9,6 +9,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import { useNavigate} from 'react-router-dom'
 import NormalMapEditor from './NormalMapEditor'
+import Viewer3D from './Viewer3D'
 
 const NormalMap = () => {
     const dispatch = useDispatch()
@@ -86,7 +87,7 @@ const NormalMap = () => {
         ? (normalMap.layers[0].src != undefined 
             ? <div>
                 <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%' }}/><br />
-                
+                <Viewer3D />
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined' onClick={() => {
                     const link = document.createElement("a")
