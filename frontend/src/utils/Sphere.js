@@ -98,7 +98,7 @@ class Sphere {
 		return data
 	}
 
-    getUVData() {
+    getTextureData() {
         const uvArr = this.sphere_polygons.map(() => 
             [
                 { x: 0, y:1 },
@@ -107,6 +107,22 @@ class Sphere {
             ]
             
         )
+        const normalArr = this.sphere_polygons.map((polygon) => {
+            return [
+                polygon.v1.normalize(),
+                polygon.v2.normalize(),
+                polygon.v3.normalize()
+            ]
+            
+        })
+        const tangentArr = this.sphere_polygons.map((polygon) => {
+            return [
+                polygon.v1.normalize().cross(new Vector3(0,0,1)),
+                polygon.v2.normalize().cross(new Vector3(0,0,1)),
+                polygon.v3.normalize().cross(new Vector3(0,0,1))
+            ]
+            
+        })
         const normal_to_uv = (normal) => {
             return {
                 x: (Math.atan2(normal.y, normal.x) + Math.PI) * 0.5/Math.PI,
@@ -138,14 +154,10 @@ class Sphere {
         var npole = new Vector3(0,0,0)
         var spole = new Vector3(0,0,0)
         this.sphere_polygons.forEach((polygon, i) => {
-            polygon.v1.normal = this.sphere_polygons[i].v1.normalize()
-            polygon.v2.normal = this.sphere_polygons[i].v2.normalize()
-            polygon.v3.normal = this.sphere_polygons[i].v3.normalize()
-
-            uvArr[i][0] = normal_to_uv(polygon.v1.normal)
-            uvArr[i][1] = normal_to_uv(polygon.v2.normal)
-            uvArr[i][2] = normal_to_uv(polygon.v3.normal)
-            polygon.tangent = polygon.normal.cross(new Vector3(0,0,1))
+            uvArr[i][0] = normal_to_uv(this.sphere_polygons[i].v1.normalize())
+            uvArr[i][1] = normal_to_uv(this.sphere_polygons[i].v2.normalize())
+            uvArr[i][2] = normal_to_uv(this.sphere_polygons[i].v3.normalize())
+            
             npole = polygon.v1.z > npole.z ? polygon.v1 : npole
             npole = polygon.v2.z > npole.z ? polygon.v2 : npole
             npole = polygon.v3.z > npole.z ? polygon.v3 : npole
@@ -156,9 +168,9 @@ class Sphere {
         
         fix_uv_seam(this.sphere_polygons)
         fix_uv_poles(npole, spole, this.sphere_polygons)
-        let data = new Float32Array()
+        let uvData = new Float32Array()
         uvArr.forEach(uvs => {
-            data = Float32Array.of(...data, ...(new Float32Array(
+            uvData = Float32Array.of(...uvData, ...(new Float32Array(
                 [
                     uvs[0].x, uvs[0].y,
                     uvs[1].x, uvs[1].y,
@@ -166,7 +178,27 @@ class Sphere {
                 ]
             )))
         })
-        return data
+        let normalData = new Float32Array()
+        normalArr.forEach(normals => {
+            normalData = Float32Array.of(...normalData, ...(new Float32Array(
+                [
+                    normals[0].x, normals[0].y, normals[0].z,
+                    normals[1].x, normals[1].y, normals[1].z,
+                    normals[2].x, normals[2].y, normals[2].z,
+                ]
+            )))
+        })
+        let tangentData = new Float32Array()
+        tangentArr.forEach(tangents => {
+            tangentData = Float32Array.of(...tangentData, ...(new Float32Array(
+                [
+                    tangents[0].x, tangents[0].y, tangents[0].z,
+                    tangents[1].x, tangents[1].y, tangents[1].z,
+                    tangents[2].x, tangents[2].y, tangents[2].z,
+                ]
+            )))
+        })
+        return [uvData, normalData, tangentData]
     }
 }
 

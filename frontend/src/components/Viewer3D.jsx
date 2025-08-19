@@ -43,98 +43,157 @@ const initBuffer = (ctx, data, pointer, length) => {
     const buffer = ctx.createBuffer()
     ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer)
 	ctx.bufferData(ctx.ARRAY_BUFFER, data, ctx.STATIC_DRAW)
-    ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer)
     ctx.vertexAttribPointer(pointer, length, ctx.FLOAT, false, 0, 0)
     ctx.enableVertexAttribArray(pointer)
 }
 
-const Viewer3D = () => {
-    const canvasRef = useRef(null)
+const initTexture = (ctx, canvas, pointer) => {
+    const texture = ctx.createTexture()
+
+    ctx.bindTexture(ctx.TEXTURE_2D, texture)
+    ctx.texImage2D(ctx.TEXTURE_2D, 0, ctx.RGBA, ctx.RGBA, ctx.UNSIGNED_BYTE, canvas)
+    if ((canvas.width && (canvas.width - 1)) == 0 && (canvas.height && (canvas.height - 1)) == 0) {
+        ctx.generateMipmap(ctx.TEXTURE_2D)
+    } else {
+        ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE)
+        ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE)
+        ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.LINEAR)
+    }
+
+    ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, true);
+    ctx.activeTexture(ctx.TEXTURE0)
+    ctx.bindTexture(ctx.TEXTURE_2D, texture)
+    ctx.uniform1i(pointer, 0)
+}
+
+const createProjMat = (fov, zfar, znear) => {
+    const focal = 1 / Math.tan((fov * Math.PI/180)/2)
+    return new Mat4([
+        focal, 0, 0, 0,
+        0, focal, 0, 0,
+        0, 0, (zfar + znear)/(znear - zfar), -1,
+        0, 0, 2 * zfar * znear / (znear - zfar), 0
+    ])
+}
+
+const createViewMat = (pos, up, target) => {
+    
+    const dir = target.sub(pos).normalize()
+    const right = up.cross(dir).normalize()
+
+    return new Mat4([
+        right.x, right.y, right.z, 0,
+        up.x, up.y, up.z, 0,
+        dir.x, dir.y, dir.z, 0,
+        right.dot(pos), up.dot(pos), dir.dot(pos), 1
+    ])
+}
+
+const Viewer3D = ({nmCanvasRef}) => {
+    const canvas3DRef = useRef(null)
+    const canvasMapRef = useRef(null)
+
     const tiltQuat = Quaternion.axisAngle(new Vector3(0,0,1), 45)
     const [cameraPos, setCameraPos] = useState(tiltQuat.rotate(new Vector3(0,3,0)))
     const [cameraUp, setCameraUp] = useState(tiltQuat.rotate(new Vector3(0,0,1)))
+    const [lightPos, setLightPos] = useState(new Vector3(4,0,0))
+    const [color, setColor] = useState('#ffffff')
+
     const [sphere, setSphere] = useState(new Sphere(3, 1))
     const [program, setProgram] = useState(null)
     const [vertexData, setVertexData] = useState(null)
     const [uvData, setUVData] = useState(null)
+    const [normalData, setNormalData] = useState(null)
+    const [tangentData, setTangentData] = useState(null)
+
+    useEffect(() => {
+        if (!canvasMapRef.current) {
+            canvasMapRef.current = document.createElement('canvas')
+        }
+        const canvas = canvasMapRef.current
+        const srcCanvas = nmCanvasRef.current
+        const aspect = srcCanvas.width / srcCanvas.height
+        canvas.width = 500 * aspect
+        canvas.height = 500
+
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })
+        ctx.drawImage(srcCanvas, 0, 0, canvas.width, canvas.height)
+    })
 
     useEffect(() => {
         setVertexData(sphere.getVertexData())
-        setUVData(sphere.getUVData())
+        const [uvData, normalData, tangentData] = sphere.getTextureData()
+        setUVData(uvData)
+        setNormalData(normalData)
+        setTangentData(tangentData)
     }, [sphere])
 
     useEffect(() => {
-        const canvas = canvasRef.current
+        const canvas = canvas3DRef.current
         
         const ctx = canvas.getContext('webgl')
         if (!ctx) { 
             notificationSet('webgl is not avaliable.')
         } else if (!program) {
-            ctx.clearColor(0,0,0,1)
             ctx.enable(ctx.DEPTH_TEST)
             ctx.depthFunc(ctx.LEQUAL)
-            ctx.clear(ctx.COLOR_BUFFER_BIT)
+            
             
             setProgram(initShaders(ctx))
-        } else if (vertexData && uvData) {
-            const target = new Vector3(0,0,0)
-            const dir = target.sub(cameraPos).normalize()
-            
-            const right = cameraUp.cross(dir).normalize()
-
-            const viewMat = new Mat4([
-                right.x, right.y, right.z, 0,
-                cameraUp.x, cameraUp.y, cameraUp.z, 0,
-                dir.x, dir.y, dir.z, 0,
-                right.dot(cameraPos), cameraUp.dot(cameraPos), dir.dot(cameraPos), 1
-            ])
-            
+        } else if (vertexData && uvData && normalData && tangentData) {
+            ctx.clearColor(0,0,0,1)
+            ctx.clear(ctx.COLOR_BUFFER_BIT)
+            const viewMat = createViewMat(cameraPos, cameraUp, new Vector3(0,0,0))
             const worldMat = new Mat4([
                 1, 0, 0, 0,
                 0, 1, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1
             ])
-
-            const zfar = 10
-            const znear = 0.1
-            const fov = 45 * Math.PI/180
-            const focal = 1 / Math.tan(fov/2)
-
-            const projMat = new Mat4([
-                focal, 0, 0, 0,
-                0, focal, 0, 0,
-                0, 0, (zfar + znear)/(znear - zfar), -1,
-                0, 0, 2 * zfar * znear / (znear - zfar), 0
-            ])
+            const projMat = createProjMat(45, 10, 0.1)
 
             const positionPointer = ctx.getAttribLocation(program, 'attPosition')
             const uvPointer = ctx.getAttribLocation(program, 'attUV')
+            const normalPointer = ctx.getAttribLocation(program, 'attNormal')
+            const tangentPointer = ctx.getAttribLocation(program, 'attTangent')
+
             const colorPointer = ctx.getUniformLocation(program, 'uColor')
             const worldPointer = ctx.getUniformLocation(program, 'uWorldMatrix')
             const viewPointer = ctx.getUniformLocation(program, 'uViewMatrix')
             const projPointer = ctx.getUniformLocation(program, 'uProjectionMatrix')
+            const nmPointer = ctx.getUniformLocation(program, 'uNormalMap')
+            const lightPosPointer = ctx.getUniformLocation(program, 'uLightPos')
+            
 
             initBuffer(ctx, vertexData, positionPointer, 3)
             initBuffer(ctx, uvData, uvPointer, 2)
+            initBuffer(ctx, normalData, normalPointer, 3)
+            initBuffer(ctx, tangentData, tangentPointer, 3)
 
             ctx.useProgram(program)
+            initTexture(ctx, canvasMapRef.current, nmPointer)
             ctx.uniformMatrix4fv(worldPointer, false, worldMat.mat)
             ctx.uniformMatrix4fv(viewPointer, false, viewMat.mat)
             ctx.uniformMatrix4fv(projPointer, false, projMat.mat)
-            ctx.uniform4f(colorPointer, 1, 1, 1, 1)
-            ctx.drawArrays(ctx.TRIANGLES, 0, vertexData.length)
+            ctx.uniform4f(colorPointer, 0.1, 1, 0.3, 1)
+            ctx.uniform3f(lightPosPointer, lightPos.x, lightPos.y, lightPos.z)
+            ctx.drawArrays(ctx.TRIANGLES, 0, vertexData.length/3)
             setTimeout(() => {
                 const quat = Quaternion.axisAngle(new Vector3(0,1,0), 1)
-                setCameraPos(quat.rotate(cameraPos))
-                setCameraUp(quat.rotate(cameraUp))
+                //setCameraPos(quat.rotate(cameraPos))
+                //setCameraUp(quat.rotate(cameraUp))
+                setLightPos(quat.rotate(lightPos))
             }, 10)
 
         }
-    }, [cameraPos, program, vertexData, uvData])
+    }, [cameraPos, lightPos, program, vertexData, uvData])
 
     
-    return <canvas ref={canvasRef} width={500} height={500}/>
+    return <canvas 
+        ref={canvas3DRef}
+        width={500}
+        height={500}
+        />
 }
 
 export default Viewer3D

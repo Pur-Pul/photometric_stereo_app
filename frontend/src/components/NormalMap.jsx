@@ -19,11 +19,12 @@ const NormalMap = () => {
     const [edit, setEdit] = useState(false)
     const [size, setSize] = useState(null)
     const [layers, setLayers] = useState([])
+    const [flatImage, setFlatImage] = useState(null)
     const navigate = useNavigate()
     const canvasRef = useRef(null)
 
     useEffect(() => {
-        const getNormalMap = async() => {
+        const getNormalMap = async () => {
             const newNormalMap = await imageService.get(id)
             newNormalMap.layers = newNormalMap.layers.map(id => {return{id}})
             if (newNormalMap.icon) {
@@ -57,22 +58,28 @@ const NormalMap = () => {
 	}, [normalMap])
 
     useEffect(() => {
-        layers.forEach((layer, index) => {
-            const image = new Image()
-            image.onload = function() {
+        const drawLayers = async () => {
+            for (var i = 0; i < layers.length; i++) {
+                const layer = layers[i]
+                if (!layer.src) { continue }
+                const image = new Image()
+                image.src = layer.src
+                await image.decode()
                 const canvas = canvasRef.current
                 if (!canvas) { return }
-                if (index === 0) {
-                    const size = [this.width, this.height]
+                if (i === 0) {
+                    const size = [image.width, image.height]
                     setSize(size)
                     canvas.width = size[0]
                     canvas.height = size[1]
                 }
                 const ctx = canvas.getContext('2d', { willReadFrequently: true })
-                ctx.drawImage(this, 0, 0, this.width, this.height)
+                ctx.drawImage(image, 0, 0, image.width, image.height)
             }
-            image.src = layer.src
-        })
+            setFlatImage(canvasRef.current.toDataURL())
+        }
+        drawLayers()
+        
     }, [layers, edit])
  
     const deleteHandler = async (event) => {
@@ -83,11 +90,9 @@ const NormalMap = () => {
 
     if (size && edit) return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
 
-    return normalMap && normalMap.layers.length > 0
-        ? (normalMap.layers[0].src != undefined 
-            ? <div>
-                <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%' }}/><br />
-                <Viewer3D />
+    return <div>
+                <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%' }}/>
+                {flatImage ? <Viewer3D nmCanvasRef={canvasRef}/> : null}
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined' onClick={() => {
                     const link = document.createElement("a")
@@ -103,10 +108,8 @@ const NormalMap = () => {
                         <Button onClick={deleteHandler} variant='outlined' color='error'>Delete</Button>
                     </DialogActions>
                 </Dialog>
-                
             </div>
-            : <div>Your normal map is being processed...</div>
-        ): <div>loading...</div>
+         
 }
 
 export default NormalMap

@@ -5,17 +5,24 @@ class Polygon {
         this.v1 = v1
         this.v2 = v2
         this.v3 = v3
-		this.uv1 = { x:0, y:1 }
-		this.uv2 = { x:0, y:0 }
-		this.uv3 = { x:1, y:0 }
-		this.normal = new Vector3(1,0,0)
-		this.tangent = new Vector3(0,1,0)
-		this.calculateNormal()
+		this.normal = null
+		this.tangent = null
+		
     }
 	calculateNormal() {
 		const edge_1 = this.v2.sub(this.v1)
 		const edge_2 = this.v3.sub(this.v1)
-		this.normal = edge_2.cross(edge_1).normalize()
+		return edge_2.cross(edge_1).normalize()
+	}
+
+	calculateTangent = function(uv1, uv2, uv3) {
+		var edge1 = this.v2.sub(this.v1)
+		var edge2 = this.v3.sub(this.v1)
+		var delta_UV1 = {x: uv2.x - uv1.x, y: uv2.y - uv1.y}
+		var delta_UV2 = {x: uv3.x - uv1.x, y: uv3.y - uv1.y}
+
+		var f = 1.0 / (delta_UV1.x * delta_UV2.y - delta_UV2.x * delta_UV1.y)
+		return edge1.scalar(delta_UV2.y).sub(edge2.scalar(delta_UV1.y)).scalar(f).normalize(-1)
 	}
 
     subdivide() {
