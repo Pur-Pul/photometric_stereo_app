@@ -91,21 +91,26 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, ena
                             onClick={() => setOpen("left")}
                             />
                     </Tooltip>
-                    <input 
-                        style={arrowButton}
-                        type="button"
-                        value="⇆"
-                        onClick={handleSwitch}
-                        />
-                    <Tooltip title={rightColor} placement='top'>
-                        <input 
-                            style={{...colorButton, backgroundColor: rightColor, color: rightColor }}
-                            className="colorButton"
-                            type="button"
-                            onClick={() => setOpen("right")}
-                            />
-                    </Tooltip>
-                    
+                    {
+                        setRightColor 
+                        ? <div style={{float: 'right'}}>
+                            <input 
+                                style={arrowButton}
+                                type="button"
+                                value="⇆"
+                                onClick={handleSwitch}
+                                />
+                            <Tooltip title={rightColor} placement='top'>
+                                <input 
+                                    style={{...colorButton, backgroundColor: rightColor, color: rightColor }}
+                                    className="colorButton"
+                                    type="button"
+                                    onClick={() => setOpen("right")}
+                                    />
+                            </Tooltip>
+                        </div>
+                        : null
+                    }
                 </div>
             </div>
             <Dialog open={enableColorWheel && (open==="left" || open==="right")} onClose={() => setOpen("")} closeAfterTransition={false} fullWidth maxWidth = 'xs'>

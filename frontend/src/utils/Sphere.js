@@ -116,12 +116,15 @@ class Sphere {
             
         })
         const tangentArr = this.sphere_polygons.map((polygon) => {
-            return [
-                polygon.v1.normalize().cross(new Vector3(0,0,1)),
-                polygon.v2.normalize().cross(new Vector3(0,0,1)),
-                polygon.v3.normalize().cross(new Vector3(0,0,1))
-            ]
-            
+            const npole = new Vector3(0,0,1)
+            const spole = new Vector3(0,0,-1)
+            const vertices = [polygon.v1, polygon.v2, polygon.v3]
+            return vertices.map(vert => {
+                const normal = vert.normalize()
+                return normal.compare(npole) || normal.compare(spole) 
+                    ? polygon.calculateNormal().cross(npole).normalize()
+                    : normal.cross(npole).normalize()
+            })
         })
         const normal_to_uv = (normal) => {
             return {

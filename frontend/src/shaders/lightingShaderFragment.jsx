@@ -19,8 +19,7 @@ vec3 diffuse(vec3 lightDir, float lightDist, vec3 lightColor, float lightRange, 
 
 void main()
 {
-	
-	vec4 texColor = texture2D(uNormalMap, vUV);
+	vec4 texColor = texture2D(uNormalMap, fract(vUV));
 	float lightAmbient = (texColor.r + texColor.g + texColor.b) * 0.2;
 	vec3 normalColor = texColor.rgb * 2. - 1.;
 	vec3 mappedNormal = normalize(vTBN * normalColor);

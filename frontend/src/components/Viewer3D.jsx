@@ -6,6 +6,8 @@ import Sphere from '../utils/Sphere'
 import Mat4 from '../utils/Matrix'
 import Vector3 from '../utils/Vector3'
 import Quaternion from '../utils/Quaternion'
+import ColorSelector from './ColorSelector'
+import { hexToRGB } from '../utils/tools'
 
 const compileShader = (ctx, code, shaderType) => {
     const shader = ctx.createShader(shaderType)
@@ -76,16 +78,15 @@ const createProjMat = (fov, zfar, znear) => {
     ])
 }
 
-const createViewMat = (pos, up, target) => {
-    
+const createViewMat = (camera, target) => {
+    const {pos,right,up} = camera
     const dir = target.sub(pos).normalize()
-    const right = up.cross(dir).normalize()
 
     return new Mat4([
-        right.x, right.y, right.z, 0,
-        up.x, up.y, up.z, 0,
-        dir.x, dir.y, dir.z, 0,
-        right.dot(pos), up.dot(pos), dir.dot(pos), 1
+        right.x, up.x, -dir.x, 0,
+        right.y, up.y, -dir.y, 0,
+        right.z, up.z, -dir.z, 0,
+        -right.dot(pos), -up.dot(pos),    dir.dot(pos),   1
     ])
 }
 
@@ -94,8 +95,12 @@ const Viewer3D = ({nmCanvasRef}) => {
     const canvasMapRef = useRef(null)
 
     const tiltQuat = Quaternion.axisAngle(new Vector3(0,0,1), 45)
-    const [cameraPos, setCameraPos] = useState(tiltQuat.rotate(new Vector3(0,3,0)))
-    const [cameraUp, setCameraUp] = useState(tiltQuat.rotate(new Vector3(0,0,1)))
+    const [camera, setCamera] = useState({
+        pos: new Vector3(0,3,0),
+        right: new Vector3(1,0,0),
+        up: new Vector3(0,0,1)
+    })
+
     const [lightPos, setLightPos] = useState(new Vector3(4,0,0))
     const [color, setColor] = useState('#ffffff')
 
@@ -105,6 +110,7 @@ const Viewer3D = ({nmCanvasRef}) => {
     const [uvData, setUVData] = useState(null)
     const [normalData, setNormalData] = useState(null)
     const [tangentData, setTangentData] = useState(null)
+    const [rotate, setRotate] = useState(null)
 
     useEffect(() => {
         if (!canvasMapRef.current) {
@@ -142,8 +148,8 @@ const Viewer3D = ({nmCanvasRef}) => {
             setProgram(initShaders(ctx))
         } else if (vertexData && uvData && normalData && tangentData) {
             ctx.clearColor(0,0,0,1)
-            ctx.clear(ctx.COLOR_BUFFER_BIT)
-            const viewMat = createViewMat(cameraPos, cameraUp, new Vector3(0,0,0))
+            ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT)
+            const viewMat = createViewMat(camera, new Vector3(0,0,0))
             const worldMat = new Mat4([
                 1, 0, 0, 0,
                 0, 1, 0, 0,
@@ -163,8 +169,7 @@ const Viewer3D = ({nmCanvasRef}) => {
             const projPointer = ctx.getUniformLocation(program, 'uProjectionMatrix')
             const nmPointer = ctx.getUniformLocation(program, 'uNormalMap')
             const lightPosPointer = ctx.getUniformLocation(program, 'uLightPos')
-            
-
+    
             initBuffer(ctx, vertexData, positionPointer, 3)
             initBuffer(ctx, uvData, uvPointer, 2)
             initBuffer(ctx, normalData, normalPointer, 3)
@@ -175,25 +180,42 @@ const Viewer3D = ({nmCanvasRef}) => {
             ctx.uniformMatrix4fv(worldPointer, false, worldMat.mat)
             ctx.uniformMatrix4fv(viewPointer, false, viewMat.mat)
             ctx.uniformMatrix4fv(projPointer, false, projMat.mat)
-            ctx.uniform4f(colorPointer, 0.1, 1, 0.3, 1)
+            const [red, green, blue] = hexToRGB(color)
+            ctx.uniform4f(colorPointer, red/255, green/255, blue/255, 1)
             ctx.uniform3f(lightPosPointer, lightPos.x, lightPos.y, lightPos.z)
             ctx.drawArrays(ctx.TRIANGLES, 0, vertexData.length/3)
             setTimeout(() => {
                 const quat = Quaternion.axisAngle(new Vector3(0,1,0), 1)
-                //setCameraPos(quat.rotate(cameraPos))
-                //setCameraUp(quat.rotate(cameraUp))
                 setLightPos(quat.rotate(lightPos))
             }, 10)
 
         }
-    }, [cameraPos, lightPos, program, vertexData, uvData])
-
+    }, [camera, lightPos, program, vertexData, uvData])
     
-    return <canvas 
-        ref={canvas3DRef}
-        width={500}
-        height={500}
-        />
+    window.onmouseup = (event) => { if(event.button === 0) {setRotate(null)}}
+    //console.log(camera.pos.norm())
+    return <div>
+            <canvas 
+            ref={canvas3DRef}
+            width={500}
+            height={500}
+            onMouseDown={(e) => setRotate({ lastX: e.nativeEvent.offsetX, lastY: e.nativeEvent.offsetY })}
+            onMouseUp={(e) => setRotate(null)}
+            onMouseMove={(e) => {
+                const { offsetX:x, offsetY:y } = e.nativeEvent
+                if (rotate) {
+                    const quat = Quaternion.axisAngle(camera.up, (x - rotate.lastX)/3).mult(Quaternion.axisAngle(camera.right, (y - rotate.lastY)/3))
+                    setCamera({
+                        pos: quat.rotate(camera.pos),
+                        right: quat.rotate(camera.right),
+                        up: quat.rotate(camera.up)
+                    })
+                    setRotate({ lastX:x, lastY:y })
+                }
+            }}
+            />
+            <ColorSelector leftColor={color} setLeftColor={setColor}/>
+        </div>
 }
 
 export default Viewer3D
