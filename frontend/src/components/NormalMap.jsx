@@ -18,10 +18,10 @@ const NormalMap = () => {
     const [open, setOpen ] = useState(false)
     const [edit, setEdit] = useState(false)
     const [size, setSize] = useState(null)
-    const [layers, setLayers] = useState([])
-    const [flatImage, setFlatImage] = useState(null)
+    const [layers, setLayers] = useState([]) 
     const navigate = useNavigate()
     const canvasRef = useRef(null)
+    const [flatImage, setFlatImage] = useState(null)
 
     useEffect(() => {
         const getNormalMap = async () => {
@@ -58,27 +58,30 @@ const NormalMap = () => {
 	}, [normalMap])
 
     useEffect(() => {
-        const drawLayers = async () => {
-            for (var i = 0; i < layers.length; i++) {
-                const layer = layers[i]
-                if (!layer.src) { continue }
-                const image = new Image()
-                image.src = layer.src
-                await image.decode()
+        for (var i = 0; i < layers.length; i++) {
+            const layer = layers[i]
+            if (!layer.src) { continue }
+            const image = new Image()
+            image.onload = function () {
                 const canvas = canvasRef.current
                 if (!canvas) { return }
-                if (i === 0) {
-                    const size = [image.width, image.height]
+                if (this.i === 0) {
+                    const size = [this.width, this.height]
                     setSize(size)
                     canvas.width = size[0]
                     canvas.height = size[1]
                 }
                 const ctx = canvas.getContext('2d', { willReadFrequently: true })
-                ctx.drawImage(image, 0, 0, image.width, image.height)
+                ctx.drawImage(this, 0, 0, this.width, this.height)
+                if (this.i === layers.length-1) {
+                    const flatImage = new Image()
+                    flatImage.onload = function() { setFlatImage(this) }
+                    flatImage.src = canvas.toDataURL()
+                }
             }
-            setFlatImage(canvasRef.current.toDataURL())
+            image.i = i
+            image.src = layer.src
         }
-        drawLayers()
         
     }, [layers, edit])
  
@@ -92,7 +95,7 @@ const NormalMap = () => {
 
     return <div>
                 <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%' }}/>
-                {flatImage ? <Viewer3D nmCanvasRef={canvasRef}/> : null}
+                { flatImage ? <Viewer3D image={flatImage} /> : null }
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined' onClick={() => {
                     const link = document.createElement("a")

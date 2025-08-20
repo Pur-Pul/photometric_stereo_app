@@ -8,6 +8,7 @@ import Vector3 from '../utils/Vector3'
 import Quaternion from '../utils/Quaternion'
 import ColorSelector from './ColorSelector'
 import { hexToRGB } from '../utils/tools'
+import { TextField, FormControl, InputLabel, Grid } from '@mui/material'
 
 const compileShader = (ctx, code, shaderType) => {
     const shader = ctx.createShader(shaderType)
@@ -90,9 +91,10 @@ const createViewMat = (camera, target) => {
     ])
 }
 
-const Viewer3D = ({nmCanvasRef}) => {
+const Viewer3D = ({image}) => {
     const canvas3DRef = useRef(null)
     const canvasMapRef = useRef(null)
+    const FRAMETIME = 33.333333
 
     const tiltQuat = Quaternion.axisAngle(new Vector3(0,0,1), 45)
     const [camera, setCamera] = useState({
@@ -111,20 +113,21 @@ const Viewer3D = ({nmCanvasRef}) => {
     const [normalData, setNormalData] = useState(null)
     const [tangentData, setTangentData] = useState(null)
     const [rotate, setRotate] = useState(null)
+    const [specularStrength, setSpecularStrength] = useState(50)
+    const [animateStep, setAnimateStep] = useState(Date.now())
 
     useEffect(() => {
         if (!canvasMapRef.current) {
             canvasMapRef.current = document.createElement('canvas')
         }
         const canvas = canvasMapRef.current
-        const srcCanvas = nmCanvasRef.current
-        const aspect = srcCanvas.width / srcCanvas.height
+        const aspect = image.width / image.height
         canvas.width = 500 * aspect
         canvas.height = 500
 
         const ctx = canvas.getContext('2d', { willReadFrequently: true })
-        ctx.drawImage(srcCanvas, 0, 0, canvas.width, canvas.height)
-    })
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+    }, [])
 
     useEffect(() => {
         setVertexData(sphere.getVertexData())
@@ -136,15 +139,12 @@ const Viewer3D = ({nmCanvasRef}) => {
 
     useEffect(() => {
         const canvas = canvas3DRef.current
-        
         const ctx = canvas.getContext('webgl')
         if (!ctx) { 
             notificationSet('webgl is not avaliable.')
         } else if (!program) {
             ctx.enable(ctx.DEPTH_TEST)
             ctx.depthFunc(ctx.LEQUAL)
-            
-            
             setProgram(initShaders(ctx))
         } else if (vertexData && uvData && normalData && tangentData) {
             ctx.clearColor(0,0,0,1)
@@ -163,12 +163,15 @@ const Viewer3D = ({nmCanvasRef}) => {
             const normalPointer = ctx.getAttribLocation(program, 'attNormal')
             const tangentPointer = ctx.getAttribLocation(program, 'attTangent')
 
-            const colorPointer = ctx.getUniformLocation(program, 'uColor')
             const worldPointer = ctx.getUniformLocation(program, 'uWorldMatrix')
             const viewPointer = ctx.getUniformLocation(program, 'uViewMatrix')
             const projPointer = ctx.getUniformLocation(program, 'uProjectionMatrix')
+
             const nmPointer = ctx.getUniformLocation(program, 'uNormalMap')
+            const colorPointer = ctx.getUniformLocation(program, 'uColor')
             const lightPosPointer = ctx.getUniformLocation(program, 'uLightPos')
+            const camPosPointer = ctx.getUniformLocation(program, 'uCamPos')
+            const specularStrengthPointer = ctx.getUniformLocation(program, 'uSpecularStrength')
     
             initBuffer(ctx, vertexData, positionPointer, 3)
             initBuffer(ctx, uvData, uvPointer, 2)
@@ -183,38 +186,55 @@ const Viewer3D = ({nmCanvasRef}) => {
             const [red, green, blue] = hexToRGB(color)
             ctx.uniform4f(colorPointer, red/255, green/255, blue/255, 1)
             ctx.uniform3f(lightPosPointer, lightPos.x, lightPos.y, lightPos.z)
+            ctx.uniform3f(camPosPointer, camera.pos.x, camera.pos.y, camera.pos.z)
+            ctx.uniform1f(specularStrengthPointer, specularStrength/100)
             ctx.drawArrays(ctx.TRIANGLES, 0, vertexData.length/3)
-            setTimeout(() => {
-                const quat = Quaternion.axisAngle(new Vector3(0,1,0), 1)
-                setLightPos(quat.rotate(lightPos))
-            }, 10)
-
         }
-    }, [camera, lightPos, program, vertexData, uvData])
+        const deltaTime = Date.now() - animateStep
+        const quat = Quaternion.axisAngle(new Vector3(0,1,0), 2)
+        setLightPos(quat.rotate(lightPos))
+        setTimeout(() => {
+            setAnimateStep(Date.now())
+        }, FRAMETIME)
+    }, [animateStep])
     
     window.onmouseup = (event) => { if(event.button === 0) {setRotate(null)}}
-    //console.log(camera.pos.norm())
+
     return <div>
             <canvas 
-            ref={canvas3DRef}
-            width={500}
-            height={500}
-            onMouseDown={(e) => setRotate({ lastX: e.nativeEvent.offsetX, lastY: e.nativeEvent.offsetY })}
-            onMouseUp={(e) => setRotate(null)}
-            onMouseMove={(e) => {
-                const { offsetX:x, offsetY:y } = e.nativeEvent
-                if (rotate) {
-                    const quat = Quaternion.axisAngle(camera.up, (x - rotate.lastX)/3).mult(Quaternion.axisAngle(camera.right, (y - rotate.lastY)/3))
-                    setCamera({
-                        pos: quat.rotate(camera.pos),
-                        right: quat.rotate(camera.right),
-                        up: quat.rotate(camera.up)
-                    })
-                    setRotate({ lastX:x, lastY:y })
-                }
-            }}
-            />
-            <ColorSelector leftColor={color} setLeftColor={setColor}/>
+                ref={canvas3DRef}
+                width={500}
+                height={500}
+                onMouseDown={(e) => setRotate({ lastX: e.nativeEvent.offsetX, lastY: e.nativeEvent.offsetY })}
+                onMouseUp={(e) => setRotate(null)}
+                onMouseMove={(e) => {
+                    const { offsetX:x, offsetY:y } = e.nativeEvent
+                    const deltaTime = Date.now() - animateStep
+                    if (rotate && deltaTime > FRAMETIME) {
+                        const quat = Quaternion.axisAngle(camera.up, (x - rotate.lastX)/3).mult(Quaternion.axisAngle(camera.right, (y - rotate.lastY)/3))
+                        setCamera({
+                            pos: quat.rotate(camera.pos),
+                            right: quat.rotate(camera.right),
+                            up: quat.rotate(camera.up)
+                        })
+                        setRotate({ lastX:x, lastY:y })
+                    }
+                }}
+                style={{cursor: rotate ? 'grabbing' : 'grab'}}
+                />
+            <Grid container>
+                <ColorSelector leftColor={color} setLeftColor={setColor}/>
+                <FormControl>
+                    <InputLabel htmlFor={'strength'} shrink>Specular strength (%)</InputLabel>
+                    <TextField 
+                        id='strength'
+                        type='number'
+                        value={specularStrength}
+                        InputProps={{ inputProps: { min: 0, max: 100 } }}
+                        onChange={(e) => setSpecularStrength(e.target.value)}
+                        />
+                </FormControl>
+            </Grid>
         </div>
 }
 

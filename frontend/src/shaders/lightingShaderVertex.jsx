@@ -11,11 +11,13 @@ uniform mat4 uWorldMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform vec3 uLightPos;
+uniform vec3 uCamPos;
 
 varying vec2 vUV;
 varying mat3 vTBN;
 varying vec3 vLightDirection;
 varying vec3 vWSNormal;
+varying vec3 vViewDir;
 
 void main()
 {
@@ -24,14 +26,15 @@ void main()
 
     vec3 wsNormal = normalize(uWorldMatrix * vec4(attNormal, 0.0)).xyz;
     vec3 wsTangent = normalize(uWorldMatrix * vec4(attTangent, 0.0)).xyz;
-    vec3 wsBitangent = normalize(cross(wsNormal, wsTangent));
+    vec3 wsBitangent = normalize(cross(wsTangent, wsNormal));
 
     vWSNormal = wsNormal;
-    vTBN = mat3(wsTangent, wsBitangent, wsNormal);
+    vTBN = mat3(-wsTangent, -wsBitangent, wsNormal);
 
     vec4 worldSpace = uWorldMatrix * objectSpacePos;
 
-    vLightDirection = uLightPos - worldSpace.xyz;
+    vViewDir = normalize(uCamPos - worldSpace.xyz);
+    vLightDirection = worldSpace.xyz - uLightPos;
 
     vUV = attUV;
 

@@ -25,7 +25,7 @@ mongoose
     })
 
 expireSessions()
-expireNormalMaps()
+//expireNormalMaps()
 
 app.use(express.static('dist'))
 app.use(cors())
