@@ -3,12 +3,13 @@ import fragCode from '../shaders/lightingShaderFragment'
 import vertCode from '../shaders/lightingShaderVertex'
 import { notificationSet } from '../reducers/notificationReducer'
 import Sphere from '../utils/Sphere'
+import Cube from '../utils/Cube'
 import Mat4 from '../utils/Matrix'
 import Vector3 from '../utils/Vector3'
 import Quaternion from '../utils/Quaternion'
 import ColorSelector from './ColorSelector'
 import { hexToRGB } from '../utils/tools'
-import { TextField, FormControl, InputLabel, Grid } from '@mui/material'
+import { TextField, FormControl, InputLabel, Grid, Button, ButtonGroup } from '@mui/material'
 
 const compileShader = (ctx, code, shaderType) => {
     const shader = ctx.createShader(shaderType)
@@ -50,7 +51,7 @@ const initBuffer = (ctx, data, pointer, length) => {
     ctx.enableVertexAttribArray(pointer)
 }
 
-const initTexture = (ctx, canvas, pointer) => {
+const initTexture = (ctx, canvas) => {
     const texture = ctx.createTexture()
 
     ctx.bindTexture(ctx.TEXTURE_2D, texture)
@@ -62,11 +63,7 @@ const initTexture = (ctx, canvas, pointer) => {
         ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE)
         ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.LINEAR)
     }
-
-    ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, true);
-    ctx.activeTexture(ctx.TEXTURE0)
-    ctx.bindTexture(ctx.TEXTURE_2D, texture)
-    ctx.uniform1i(pointer, 0)
+    return texture
 }
 
 const createProjMat = (fov, zfar, znear) => {
@@ -94,48 +91,49 @@ const createViewMat = (camera, target) => {
 const Viewer3D = ({image}) => {
     const canvas3DRef = useRef(null)
     const canvasMapRef = useRef(null)
+    const canvasTexRef = useRef(null)
     const FRAMETIME = 33.333333
+    const sphere = new Sphere(3, 1)
+    const cube = new Cube(1)
 
-    const tiltQuat = Quaternion.axisAngle(new Vector3(0,0,1), 45)
     const [camera, setCamera] = useState({
         pos: new Vector3(0,3,0),
-        right: new Vector3(1,0,0),
-        up: new Vector3(0,0,1)
+        right: new Vector3(-1,0,0),
+        up: new Vector3(0,0,-1)
     })
 
     const [lightPos, setLightPos] = useState(new Vector3(4,0,0))
     const [color, setColor] = useState('#ffffff')
 
-    const [sphere, setSphere] = useState(new Sphere(3, 1))
+    const [shape, setShape] = useState(sphere)
     const [program, setProgram] = useState(null)
-    const [vertexData, setVertexData] = useState(null)
-    const [uvData, setUVData] = useState(null)
-    const [normalData, setNormalData] = useState(null)
-    const [tangentData, setTangentData] = useState(null)
+
+    const [renderData, setRenderData] = useState(null)
+
     const [rotate, setRotate] = useState(null)
     const [specularStrength, setSpecularStrength] = useState(50)
     const [animateStep, setAnimateStep] = useState(Date.now())
 
     useEffect(() => {
-        if (!canvasMapRef.current) {
-            canvasMapRef.current = document.createElement('canvas')
-        }
-        const canvas = canvasMapRef.current
+        canvasMapRef.current = canvasMapRef.current ? canvasMapRef.current : document.createElement('canvas')
+        canvasTexRef.current = canvasTexRef.current ? canvasTexRef.current : document.createElement('canvas')
+        
         const aspect = image.width / image.height
-        canvas.width = 500 * aspect
-        canvas.height = 500
+        canvasMapRef.current.width = 500 * aspect
+        canvasMapRef.current.height = 500
+        canvasTexRef.current.width = 500 * aspect
+        canvasTexRef.current.height = 500
 
-        const ctx = canvas.getContext('2d', { willReadFrequently: true })
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+        canvasMapRef.current.getContext('2d', { willReadFrequently: true }).drawImage(image, 0, 0, canvasMapRef.current.width, canvasMapRef.current.height)
+        canvasTexRef.current.getContext('2d', { willReadFrequently: true }).drawImage(image, 0, 0, canvasTexRef.current.width, canvasTexRef.current.height)
     }, [])
 
     useEffect(() => {
-        setVertexData(sphere.getVertexData())
-        const [uvData, normalData, tangentData] = sphere.getTextureData()
-        setUVData(uvData)
-        setNormalData(normalData)
-        setTangentData(tangentData)
-    }, [sphere])
+        const vertices = shape.getVertexData()
+        const [uvs, normals, tangents] = shape.getTextureData()
+        
+        setRenderData({vertices, uvs, normals, tangents})
+    }, [shape])
 
     useEffect(() => {
         const canvas = canvas3DRef.current
@@ -145,8 +143,9 @@ const Viewer3D = ({image}) => {
         } else if (!program) {
             ctx.enable(ctx.DEPTH_TEST)
             ctx.depthFunc(ctx.LEQUAL)
+            ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, true)
             setProgram(initShaders(ctx))
-        } else if (vertexData && uvData && normalData && tangentData) {
+        } else if (renderData) {
             ctx.clearColor(0,0,0,1)
             ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT)
             const viewMat = createViewMat(camera, new Vector3(0,0,0))
@@ -168,18 +167,32 @@ const Viewer3D = ({image}) => {
             const projPointer = ctx.getUniformLocation(program, 'uProjectionMatrix')
 
             const nmPointer = ctx.getUniformLocation(program, 'uNormalMap')
+            const texPointer = ctx.getUniformLocation(program, 'uTexture')
             const colorPointer = ctx.getUniformLocation(program, 'uColor')
             const lightPosPointer = ctx.getUniformLocation(program, 'uLightPos')
             const camPosPointer = ctx.getUniformLocation(program, 'uCamPos')
             const specularStrengthPointer = ctx.getUniformLocation(program, 'uSpecularStrength')
     
-            initBuffer(ctx, vertexData, positionPointer, 3)
-            initBuffer(ctx, uvData, uvPointer, 2)
-            initBuffer(ctx, normalData, normalPointer, 3)
-            initBuffer(ctx, tangentData, tangentPointer, 3)
+            initBuffer(ctx, renderData.vertices, positionPointer, 3)
+            initBuffer(ctx, renderData.uvs, uvPointer, 2)
+            initBuffer(ctx, renderData.normals, normalPointer, 3)
+            initBuffer(ctx, renderData.tangents, tangentPointer, 3)
 
             ctx.useProgram(program)
-            initTexture(ctx, canvasMapRef.current, nmPointer)
+            ctx.uniform1i(nmPointer, 0)
+            ctx.uniform1i(texPointer, 1)
+
+            const texture1 = initTexture(ctx, canvasMapRef.current)
+            const texture2 = initTexture(ctx, canvasTexRef.current)
+
+            ctx.activeTexture(ctx.TEXTURE0)
+            ctx.bindTexture(ctx.TEXTURE_2D, texture1)
+            
+            ctx.activeTexture(ctx.TEXTURE1)
+            ctx.bindTexture(ctx.TEXTURE_2D, texture2)
+            
+
+
             ctx.uniformMatrix4fv(worldPointer, false, worldMat.mat)
             ctx.uniformMatrix4fv(viewPointer, false, viewMat.mat)
             ctx.uniformMatrix4fv(projPointer, false, projMat.mat)
@@ -188,9 +201,8 @@ const Viewer3D = ({image}) => {
             ctx.uniform3f(lightPosPointer, lightPos.x, lightPos.y, lightPos.z)
             ctx.uniform3f(camPosPointer, camera.pos.x, camera.pos.y, camera.pos.z)
             ctx.uniform1f(specularStrengthPointer, specularStrength/100)
-            ctx.drawArrays(ctx.TRIANGLES, 0, vertexData.length/3)
+            ctx.drawArrays(ctx.TRIANGLES, 0, renderData.vertices.length/3)
         }
-        const deltaTime = Date.now() - animateStep
         const quat = Quaternion.axisAngle(new Vector3(0,1,0), 2)
         setLightPos(quat.rotate(lightPos))
         setTimeout(() => {
@@ -199,13 +211,31 @@ const Viewer3D = ({image}) => {
     }, [animateStep])
     
     window.onmouseup = (event) => { if(event.button === 0) {setRotate(null)}}
+   
+    const handleTextureUpload = (event) => {
+        const file = event.target.files[0]
+        const image = new Image()
+        image.onload = () => {
+            const canvas = canvasTexRef.current
+            const aspect = image.width / image.height
+            canvas.width = 500 * aspect
+            canvas.height = 500
 
+            const ctx = canvas.getContext('2d', { willReadFrequently: true })
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+        }
+        image.src = URL.createObjectURL(file)
+    }
     return <div>
             <canvas 
                 ref={canvas3DRef}
                 width={500}
                 height={500}
-                onMouseDown={(e) => setRotate({ lastX: e.nativeEvent.offsetX, lastY: e.nativeEvent.offsetY })}
+                onMouseDown={(e) => {
+                    if (e.nativeEvent.buttons === 1) {
+                        setRotate({ lastX: e.nativeEvent.offsetX, lastY: e.nativeEvent.offsetY })
+                    }
+                }}
                 onMouseUp={(e) => setRotate(null)}
                 onMouseMove={(e) => {
                     const { offsetX:x, offsetY:y } = e.nativeEvent
@@ -234,6 +264,19 @@ const Viewer3D = ({image}) => {
                         onChange={(e) => setSpecularStrength(e.target.value)}
                         />
                 </FormControl>
+                <Button component='label' variant="outlined">
+                    Apply texture
+                    <input
+                        style={{ display: 'none' }}
+                        type="file"
+                        onChange={handleTextureUpload}
+                    />
+                </Button>
+                <ButtonGroup>
+                    <Button variant={shape.type === sphere.type ? 'contained' : 'outlined'} onClick={() => setShape(sphere)}>Sphere</Button>
+                    <Button variant={shape.type === cube.type ? 'contained' : 'outlined'} onClick={() => setShape(cube)}>Cube</Button>
+                </ButtonGroup>
+
             </Grid>
         </div>
 }

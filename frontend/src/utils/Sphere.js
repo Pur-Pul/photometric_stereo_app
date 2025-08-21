@@ -3,6 +3,7 @@ import Polygon from "./Polygon"
 
 class Sphere {
     constructor(depth=0, radius=1) {
+        this.type = 'sphere'
         const aspect = (1+Math.sqrt(5))/2
         let base_vertices = [
             new Vector3(-1,			    aspect,		            0).normalize(radius),

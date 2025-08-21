@@ -5,8 +5,8 @@ precision highp float;
 
 uniform vec4 uColor;
 uniform sampler2D uNormalMap;
+uniform sampler2D uTexture;
 uniform float uSpecularStrength;
-
 
 varying vec2 vUV;
 varying mat3 vTBN;
@@ -30,15 +30,18 @@ vec3 specular(vec3 lightDir, float lightDist, vec3 lightColor, float lightRange,
 
 void main()
 {
-	vec4 texColor = texture2D(uNormalMap, fract(vUV));
-	float lightAmbient = (texColor.r + texColor.g + texColor.b) * 0.2;
-	vec3 normalColor = texColor.rgb * 2. - 1.;
+	vec3 normalColor = texture2D(uNormalMap, fract(vUV)).rgb;
+	float lightAmbient = (normalColor.r + normalColor.g + normalColor.b) * 0.2;
+	normalColor = normalColor.rgb * 2. - 1.;
+
+	vec4 texColor = texture2D(uTexture, fract(vUV));
+
 	vec3 mappedNormal = normalize(vTBN * normalColor);
 	float lightDist = length(vLightDirection);
 	vec3 lightDir = normalize(vLightDirection);
 
 	vec3 light = diffuse(lightDir, lightDist, vec3(1,1,1), 500., mappedNormal) + specular(lightDir, lightDist, vec3(1,1,1), 500., mappedNormal);
-    gl_FragColor = uColor * vec4(max(light, vec3(lightAmbient)), 1.);
+    gl_FragColor = texColor * uColor * vec4(max(light, vec3(lightAmbient)), 1.);
 }
 `
 
