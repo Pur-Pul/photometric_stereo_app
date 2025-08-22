@@ -15,7 +15,7 @@ const NavBar = ({ user }) => {
     const navigate = useNavigate()
     const paths = {
         "/" : "Home",
-        "/users" : "Users",
+        "/users" : user.role === 'admin' ? "Users" : null,
         "/normal_map" : "Normal Maps",
     }
     paths[`/users/${user.id}`] = user.name
@@ -24,6 +24,7 @@ const NavBar = ({ user }) => {
         <AppBar position='static' sx={{ borderRadius: '5px' }}>
             <Toolbar>
                 {Object.keys(paths).map(key => {
+                    if (!paths[key]) { return }
                     return <Button key={key} color="inherit" onClick={() => navigate(key)}>
                         {paths[key]}
                     </Button>

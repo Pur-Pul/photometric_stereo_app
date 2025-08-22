@@ -2,10 +2,12 @@ const bcrypt = require('bcrypt')
 const usersRouter = require('express').Router()
 const User = require('../models/user')
 const { ValidationError } = require('../utils/errors')
+const middleware = require('../utils/middleware')
+const user = require('../models/user')
 
-usersRouter.get('/', async (request, response) => {
-    const blogs = await User.find({})
-    response.json(blogs)
+usersRouter.get('/', middleware.userExtractor, async (request, response) => {
+    const users = request.user.role !== 'admin' ? [request.user] : await User.find({})
+    response.json(users)
 })
 
 usersRouter.post('/', async (request, response, next) => {

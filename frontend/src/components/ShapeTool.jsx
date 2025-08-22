@@ -34,11 +34,11 @@ const blackToTransparent = async (src) => {
     return canvas.toDataURL()
 }
 
-const getSource = async (layers) => {
+const getSource = async (shape) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    for (var i = 0; i < layers.length; i++) {
-        const blob = await imageService.getFile(layers[i].id)
+    for (var i = 0; i < shape.layers.length; i++) {
+        const blob = await imageService.getFile(shape.id, shape.layers[i].id)
         const image = new Image()
         image.src = URL.createObjectURL(blob)
         await image.decode()
@@ -56,7 +56,7 @@ const Shape = ({shape, selectedShape, setSelectedShape}) => {
     const handleSelect = async () => {
         let src
         if (!shape.src) {
-            const originalSrc = await getSource(shape.layers)
+            const originalSrc = await getSource(shape)
             src = await blackToTransparent(originalSrc)
         } else {
             src = await blackToTransparent(shape.src)

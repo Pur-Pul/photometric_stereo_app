@@ -28,7 +28,7 @@ const NormalMap = () => {
             const newNormalMap = await imageService.get(id)
             newNormalMap.layers = newNormalMap.layers.map(id => {return{id}})
             if (newNormalMap.icon) {
-                const iconBlob = await imageService.getFile(newNormalMap.icon)
+                const iconBlob = await imageService.getFile(id, newNormalMap.icon)
                 newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
             }
             
@@ -39,7 +39,7 @@ const NormalMap = () => {
 		const getLayers = async () => {
             const updatedLayers = []
             for (var i = 0; i < normalMap.layers.length; i++) {
-                const blob = await imageService.getFile(normalMap.layers[i].id)
+                const blob = await imageService.getFile(id, normalMap.layers[i].id)
                 updatedLayers.push({...normalMap.layers[i], src:URL.createObjectURL(blob)})
             }
             

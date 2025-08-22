@@ -255,7 +255,7 @@ const Viewer3D = ({image}) => {
             <Grid container>
                 <ColorSelector leftColor={color} setLeftColor={setColor}/>
                 <FormControl>
-                    <InputLabel htmlFor={'strength'} shrink>Specular strength (%)</InputLabel>
+                    <InputLabel htmlFor='strength' shrink>Specular strength (%)</InputLabel>
                     <TextField 
                         id='strength'
                         type='number'

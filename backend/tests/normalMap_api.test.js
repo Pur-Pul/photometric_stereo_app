@@ -451,41 +451,48 @@ describe('layer get one', () => {
 
     test('layer request is successfull with correct authorization', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
     })
 
     test('layer request is rejected with missing authorization', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
             .expect(401)
     })
 
     test('layer request is rejected with invalid authorization', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer invalidtoken`)
             .expect(401)
     })
 
     test('layer request is rejected with incorrect authorization', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(403)
     })
 
-    test('layer request returns 404 if not found.', async () => {
+    test('layer request returns 404 if layer is not found.', async () => {
         await api
-            .get(`/api/normalMaps/layers/aaaaaaaaaaaaaaaaaaaaaaaa`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/aaaaaaaaaaaaaaaaaaaaaaaa`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(404)
+    })
+
+    test('layer request returns 404 if normal map is not found.', async () => {
+        await api
+            .get(`/api/normalMaps/aaaaaaaaaaaaaaaaaaaaaaaa/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(404)
     })
 
     test('layer is returned as image/png', async () => {
         await api
-            .get(`/api/normalMaps/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)
@@ -598,7 +605,7 @@ describe('layer post one', () => {
             .attach('files', file)
             .expect(201)
         await api
-            .get(`/api/normalMaps/layers/${result.body.layers[1]}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${result.body.layers[1]}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)
@@ -751,12 +758,12 @@ describe('normal map put', () => {
             .expect(201)
         console.log(response.body)
         await api
-            .get(`/api/normalMaps/layers/${response.body.layers[0]}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${response.body.layers[0]}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)
         await api
-            .get(`/api/normalMaps/layers/${response.body.icon}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${response.body.icon}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)

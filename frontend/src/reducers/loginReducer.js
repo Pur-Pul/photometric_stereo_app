@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit'
 import loginService from '../services/login'
 import imageService from '../services/images'
+import userService from '../services/users'
 import { notificationSet } from './notificationReducer'
 
 const loginSlice = createSlice({
@@ -10,11 +11,13 @@ const loginSlice = createSlice({
 		loginUser(state, action) {
 			imageService.setToken(action.payload.token)
 			loginService.setToken(action.payload.token)
+			userService.setToken(action.payload.token)
 			return action.payload
 		},
 		logoutUser(state, action) {
 			imageService.setToken('')
 			loginService.setToken('')
+			userService.setToken('')
 			return null
 		},
 	},

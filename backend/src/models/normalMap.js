@@ -14,6 +14,12 @@ const normalMapSchema = new mongoose.Schema(
         creator: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
+        },
+        visibility: {
+            type: String,
+            enum: ['public', 'private'],
+            default: 'private',
+            required: true
         }
     }, {
         timestamps: true

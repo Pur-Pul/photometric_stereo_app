@@ -83,9 +83,10 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, ena
         <div>
             <div>
                 <InputLabel htmlFor="selector">Color: </InputLabel>
-                <div id="selector">
+                <div >
                     <Tooltip title={leftColor} placement='top'>
                         <input 
+                            id="selector"
                             style={{...colorButton, backgroundColor: leftColor, color: leftColor}}
                             type="button"
                             onClick={() => setOpen("left")}

@@ -14,7 +14,7 @@ const { expireNormalMap } = require('../utils/expiration_manager')
 normalMapsRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
     if (user) {
-        const normalMaps = await NormalMap.find({ creator: user }).populate('creator')
+        const normalMaps = await NormalMap.find({ $or: [{ creator: user }, { visibility: 'public' }] }).populate('creator')
         response.json(normalMaps)
     }
 })
@@ -24,18 +24,20 @@ normalMapsRouter.get('/:id', middleware.userExtractor, async (request, response)
     const user = request.user
     const normalMap = await NormalMap.findById(id).populate('creator')
     if (!normalMap) { return response.status(404).json({message: 'Normal map not found.'}) }
-    if (user.id !== normalMap.creator.id) { return response.status(403).json({ error: 'incorrect user' }) }
+    if (user.id !== normalMap.creator.id && normalMap.visibility !== 'public') { return response.status(403).json({ error: 'incorrect user' }) }
 
     response.json(normalMap)
 })
 
-normalMapsRouter.get('/layers/:id', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.get('/:normalId/layers/:id', middleware.userExtractor, async (request, response, next) => {
     try {
         const id = request.params.id
+        const normalId = request.params.normalId
         const user = request.user
+        const normalMap = await NormalMap.findById(normalId)
         const image = await Image.findById(id).populate('creator')
-        if (image) {
-            if (user.id !== image.creator.id) {
+        if (normalMap && image) {
+            if (user.id !== image.creator.id && normalMap.visibility !== 'public') {
                 return response.status(403).json({ error: 'incorrect user' })
             }
             console.log(image.file)

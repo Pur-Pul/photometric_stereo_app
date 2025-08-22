@@ -17,8 +17,8 @@ const getAll = async () => {
 	return response.data
 }
 
-const getFile = async (id) => {
-	const response = await axios.get(`${baseUrl}/layers/${id}`, { ...getConfig(), responseType: 'blob' })
+const getFile = async (normalId, id) => {
+	const response = await axios.get(`${baseUrl}/${normalId}/layers/${id}`, { ...getConfig(), responseType: 'blob' })
 	return response.data
 }
 

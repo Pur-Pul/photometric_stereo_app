@@ -56,7 +56,7 @@ export const initializeNormalMaps = () => {
 			normalMap.layers = normalMap.layers.map((id) => { return {id} })
 
 			if (!normalMaps[i].icon) { continue }
-			const blob = await imageService.getFile(normalMaps[i].icon)
+			const blob = await imageService.getFile(normalMaps[i].id, normalMaps[i].icon)
 			normalMaps[i].icon = { id: normalMaps[i].icon, src: URL.createObjectURL(blob)}
 		}
 

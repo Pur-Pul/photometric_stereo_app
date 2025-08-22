@@ -29,7 +29,7 @@ const LayerSelector = ({ layers, selectedLayer, setSelectedLayer, addLayer, remo
     }
     return (
         <div style={{ width: '200px' }}>
-            <InputLabel htmlFor='layers'>Layers:</InputLabel>
+            <InputLabel>Layers:</InputLabel>
             <div id='layers'>
                 
                 <Button variant='outlined' style={{ ...layerStyle }} onClick={() => addLayer()}>+</Button>

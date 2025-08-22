@@ -19,8 +19,8 @@ const App = () => {
 	const user = useSelector((state) => state.login)
 	const location = useLocation()
 	
-	useEffect(() => { dispatch(initializeUsers()) }, [dispatch])
-	useEffect(() => { if (user) {dispatch(initializeNormalMaps())} }, [dispatch, user])
+	useEffect(() => { if (user) { dispatch(initializeUsers()) }}, [dispatch, user])
+	useEffect(() => { if (user) { dispatch(initializeNormalMaps()) }}, [dispatch, user])
 	useEffect(() => {
 		const loggedUserJSON = window.localStorage.getItem('loggedUser')
 		if (loggedUserJSON) {
@@ -50,7 +50,7 @@ const App = () => {
 						<Notification />
 						<Routes >
 							<Route path="/" element={<h1>Welcome</h1>} />
-							<Route path="/users" element={<UserList />} />
+							{ user.role === 'admin' ? <Route path="/users" element={<UserList />} /> : null }
 							<Route path="/users/:id" element={<User />} />
 							<Route path="/normal_map" element={<NormalMapList />} />
 							<Route path="/normal_map/manual/:width/:height" element={<ManualCreation />} />
