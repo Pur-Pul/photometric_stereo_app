@@ -1,18 +1,21 @@
 import { useState, useCallback, useEffect } from "react"
 import SourceImage from "./SourceImage"
+import NameForm from "./NameForm"
 import { useDispatch } from "react-redux"
 import { generateNormalMap } from "../reducers/normalMapReducer"
 import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
 import { useSelector } from 'react-redux'
 import Mask from "./Mask"
 import { useLocation } from "react-router-dom"
-import Button from '@mui/material/Button'
+import { Button, Grid, TextField, InputLabel, FormControl} from '@mui/material'
 
 const ImageUploadForm = () => {
     const location = useLocation()
     const dispatch = useDispatch()
     const [files, setFiles] = useState([])
     const [mask, setMask] = useState(null)
+    const [nameFormOpen, setNameFormOpen] = useState(false)
+    const [name, setName] = useState('')
     const notification = useSelector((state) => { return state.notification })
 
     useEffect(() => {
@@ -44,16 +47,25 @@ const ImageUploadForm = () => {
 
     const submitImages = (event) => {
         event.preventDefault()
-        console.log(files)
-        console.log(mask)
-        dispatch(generateNormalMap(files, mask))
+        setNameFormOpen(true)
+    }
+
+    const handleSave = (event) => {
+        event.preventDefault()
+        const name = event.target.name.value
+        
+        dispatch(generateNormalMap(files, mask, name))
             .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'success' }, 5)) })
 			.catch((exception) => {
 				console.log(exception)
 				dispatch(notificationSet({ text: exception.response.data.error, type: 'error' }, 5))
 			})
+        setNameFormOpen(false)
     }
 
+    const handleCancel = () => {
+        setNameFormOpen(false)
+    }
     return (
         <div>
             <h2>Select images:</h2>
@@ -67,16 +79,28 @@ const ImageUploadForm = () => {
                         style={{ display: 'none' }}
                         type="file"
                         onChange={handleFileSelect}
-                        
                         multiple
                     />
                 </Button>
-                <Button type="submit" color="success" variant="outlined">Submit</Button>
+                <Button type="submit" color="success" variant="outlined" disabled={notification.type === 'warning'}>Submit</Button>
             </form>
             <div>
-                { files.map((file, index) => <SourceImage key={index} files={files} index={index} handleChange={handleChange}/>) }
+                <Grid 
+                    container
+                    spacing={2}
+                    direction='columns'
+                    > {files.map((file, index) =>
+                    <SourceImage key={index} files={files} index={index} handleChange={handleChange} />
+
+                )}
+                </Grid>
             </div>
             <Mask images={files} setMask={setMask}/>
+            <NameForm 
+                open={nameFormOpen}
+                handleCancel={handleCancel}
+                handleSave={handleSave}
+                />
         </div>
     )
 }

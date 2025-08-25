@@ -57,13 +57,16 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
         if (exception) { next(exception) } 
         else {
             try {
+                if (!request.body || !request.body.name) { throw new ValidationError('Name is required')}
+                const name = request.body.name
+
                 const normalMapName = `${request.user.id}-${request.timestamp}`
                 const layers = []
                 let icon = null
                 const number_of_files = request.filenames ? request.filenames.length : 0
                 for (var i = 0; i < number_of_files; i++) {
                     const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
-                    const newfile = path.join(process.cwd(), `../output/${normalMapName}-${request.originalFilenames[i]}`)
+                    const newfile = path.join(process.cwd(), `../output/${request.filenames[i]}`)//`../output/${normalMapName}-${request.originalFilenames[i]}`)
                     fs.copyFileSync(oldfile, newfile)
                     fs.unlinkSync(oldfile)
                     const image = new Image({
@@ -81,7 +84,7 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                 }
 
                 const normalMap = new NormalMap({
-                    name: normalMapName,
+                    name,
                     status: 'done',
                     layers,
                     icon,
@@ -192,6 +195,11 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
         else {
             try {
                 const file_name = `${request.user.id}-${request.timestamp}`
+
+                if (!request.body || !request.body.name) { throw new ValidationError('Name is required')}
+                const name = request.body.name
+
+                if (!request.body.format) { throw new ValidationError('Name is required')}
                 const format = request.body.format
 
                 let lights = []
@@ -215,7 +223,7 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
                     }
                 })
                 const normalMap = new NormalMap({
-                    name: file_name,
+                    name,
                     status: 'pending',
                     creator: request.user.id
                 })

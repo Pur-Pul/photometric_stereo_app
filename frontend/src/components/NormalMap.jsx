@@ -3,10 +3,17 @@ import { useParams } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
 import { performRemove, updateNormalMap } from "../reducers/normalMapReducer"
 import imageService from '../services/images'
-import Button from '@mui/material/Button'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogActions from '@mui/material/DialogActions'
+import { 
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    DialogContent,
+    Select,
+    MenuItem,
+    InputLabel,
+    FormControl
+} from '@mui/material'
 import { useNavigate} from 'react-router-dom'
 import NormalMapEditor from './NormalMapEditor'
 import Viewer3D from './Viewer3D'
@@ -22,6 +29,8 @@ const NormalMap = () => {
     const navigate = useNavigate()
     const canvasRef = useRef(null)
     const [flatImage, setFlatImage] = useState(null)
+    const [visibiliy, setVisibility] = useState(normalMap ? normalMap.visibility : 'private')
+    const [visAlertOpen, setVisAlertOpen] = useState(false)
 
     useEffect(() => {
         const getNormalMap = async () => {
@@ -31,7 +40,7 @@ const NormalMap = () => {
                 const iconBlob = await imageService.getFile(id, newNormalMap.icon)
                 newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
             }
-            
+            setVisibility(newNormalMap.visibility)
             if (newNormalMap.layers.length != normalMap.layers.length || newNormalMap.status != normalMap.status) {
                 dispatch(updateNormalMap(newNormalMap))
             }
@@ -91,11 +100,16 @@ const NormalMap = () => {
         navigate('/normal_map')
     }
 
+    const handleUpdateVisibility = async (vis) => {
+        setVisibility(vis)
+        console.log('Visibility update function is not yet implemented.')
+    }
+
     if (size && edit) return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
 
     return <div>
                 <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%' }}/>
-                { flatImage ? <Viewer3D image={flatImage} /> : null }
+                
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined' onClick={() => {
                     const link = document.createElement("a")
@@ -104,11 +118,38 @@ const NormalMap = () => {
                     link.click()
                 }}>Download</Button>
                 <Button onClick={() => setEdit(true)} variant='outlined'>Edit</Button>
+                <FormControl>
+                <InputLabel id="visibility">Visibility</InputLabel>
+                    <Select
+                        labelId='visibility'
+                        value={visibiliy}
+                        label='Visibility'
+                        onChange={(e) => { e.target.value === 'public' ? setVisAlertOpen(true) : handleUpdateVisibility(e.target.value) }}
+                        >
+                        <MenuItem value='private'>Private</MenuItem>
+                        <MenuItem value='public'>Public</MenuItem>
+                    </Select>
+                </FormControl>
+                { flatImage ? <Viewer3D image={flatImage} /> : null }
                 <Dialog open={open} onClose={ () => setOpen(false) } closeAfterTransition={false}>
                     <DialogTitle>Are you sure you want to delete the normal map?</DialogTitle>
                     <DialogActions>
                         <Button onClick={ () => setOpen(false) } variant='outlined'>Cancel</Button>
                         <Button onClick={deleteHandler} variant='outlined' color='error'>Delete</Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog open={visAlertOpen} closeAfterTransition={false}>
+                    <DialogTitle>Are you sure you want to make the normal map public?</DialogTitle>
+                    <DialogContent>
+                        Any registered user will be able to see and use your normal map.
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={ () => setVisAlertOpen(false) } variant='outlined' color='error'>Cancel</Button>
+                        <Button onClick={() => {
+                            handleUpdateVisibility('public')
+                            setVisAlertOpen(false)
+                        }} variant='outlined' color='success'>Accept</Button>
                     </DialogActions>
                 </Dialog>
             </div>

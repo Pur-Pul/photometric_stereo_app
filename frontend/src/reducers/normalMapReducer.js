@@ -64,7 +64,7 @@ export const initializeNormalMaps = () => {
 	}
 }
 
-export const generateNormalMap = (sourceNormalMaps, mask) => {
+export const generateNormalMap = (sourceNormalMaps, mask, name) => {
 	return async (dispatch) => {
 		const data = new FormData()
 		sourceNormalMaps.forEach((normalMap, index) => {
@@ -73,13 +73,14 @@ export const generateNormalMap = (sourceNormalMaps, mask) => {
 		})
 		data.append('files', mask, mask.name)
 		data.set('format', sourceNormalMaps[0].src.name.split('.').pop())
+		data.set('name', name)
 
 		const newNormalMap = await imageService.postPhotostereo(data)
 		dispatch(appendNormalMap([newNormalMap]))
 	}
 }
 
-export const performCreate = (blobs, iconBlob, navigate) => {
+export const performCreate = (blobs, name, iconBlob, navigate) => {
 	return async (dispatch) => {
 		try {
 			const data = new FormData()
@@ -88,6 +89,7 @@ export const performCreate = (blobs, iconBlob, navigate) => {
 				data.append('files', file, `layer-${index}.png`)
 			})
 			data.append('files', iconBlob, `icon.png`)
+			data.set('name', name)
 			const newNormalMap = await imageService.post(data)
 			newNormalMap.layers = newNormalMap.layers.map((id) => { return { id } })
 			newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }

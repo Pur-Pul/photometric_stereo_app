@@ -108,9 +108,10 @@ const NewNormalMapForm = ({ open, setOpen }) => {
 const NormalMapLink = ({ normalMap }) => {
     const navigate = useNavigate()
     return <Button onClick={() => navigate(normalMap.id)}>{
-        normalMap.icon
-            ? <img src={normalMap.icon.src}/>
-            : normalMap.id
+        <div style={{ border: '1px solid', borderRadius: 10}}>
+            { normalMap.icon ? <img src={normalMap.icon.src}/> : null }
+            <div>{ normalMap.name }</div>
+        </div>
     }</Button>
 }
 

@@ -92,6 +92,8 @@ const Viewer3D = ({image}) => {
     const canvas3DRef = useRef(null)
     const canvasMapRef = useRef(null)
     const canvasTexRef = useRef(null)
+    const [visible, setVisible] = useState(false)
+
     const FRAMETIME = 33.333333
     const sphere = new Sphere(3, 1)
     const cube = new Cube(1)
@@ -114,7 +116,10 @@ const Viewer3D = ({image}) => {
     const [specularStrength, setSpecularStrength] = useState(50)
     const [animateStep, setAnimateStep] = useState(Date.now())
 
+
+
     useEffect(() => {
+        if (!visible) { return }
         canvasMapRef.current = canvasMapRef.current ? canvasMapRef.current : document.createElement('canvas')
         canvasTexRef.current = canvasTexRef.current ? canvasTexRef.current : document.createElement('canvas')
         
@@ -126,16 +131,18 @@ const Viewer3D = ({image}) => {
 
         canvasMapRef.current.getContext('2d', { willReadFrequently: true }).drawImage(image, 0, 0, canvasMapRef.current.width, canvasMapRef.current.height)
         canvasTexRef.current.getContext('2d', { willReadFrequently: true }).drawImage(image, 0, 0, canvasTexRef.current.width, canvasTexRef.current.height)
-    }, [])
+    }, [visible])
 
     useEffect(() => {
+        if (!visible) { return }
         const vertices = shape.getVertexData()
         const [uvs, normals, tangents] = shape.getTextureData()
         
         setRenderData({vertices, uvs, normals, tangents})
-    }, [shape])
+    }, [shape, visible])
 
     useEffect(() => {
+        if (!visible) { return }
         const canvas = canvas3DRef.current
         const ctx = canvas.getContext('webgl')
         if (!ctx) { 
@@ -208,7 +215,7 @@ const Viewer3D = ({image}) => {
         setTimeout(() => {
             setAnimateStep(Date.now())
         }, FRAMETIME)
-    }, [animateStep])
+    }, [animateStep, visible])
     
     window.onmouseup = (event) => { if(event.button === 0) {setRotate(null)}}
    
@@ -226,6 +233,7 @@ const Viewer3D = ({image}) => {
         }
         image.src = URL.createObjectURL(file)
     }
+    if (!visible) { return <Button onClick={() => setVisible(true)}>View 3D preview</Button> }
     return <div>
             <canvas 
                 ref={canvas3DRef}

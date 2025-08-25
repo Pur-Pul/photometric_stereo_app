@@ -311,12 +311,14 @@ describe('normal map post', () => {
         await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .field('name', 'newNormalMap')
             .expect(201)
     })
 
     test('layer request is rejected with missing authorization', async () => {
         await api
             .post(`/api/normalMaps/`)
+            .field('name', 'newNormalMap')
             .expect(401)
     })
 
@@ -324,7 +326,15 @@ describe('normal map post', () => {
         await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer invalidtoken`)
+            .field('name', 'newNormalMap')
             .expect(401)
+    })
+
+    test('normal map post requires a name field.', async () => {
+        await api
+            .post(`/api/normalMaps/`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(400)
     })
 
     test('a new normal map entry is created with a successful post.', async () => {
@@ -332,6 +342,7 @@ describe('normal map post', () => {
         await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .field('name', 'newNormalMap')
             .expect(201)
         const afterCount = (await NormalMap.find({})).length
         assert.equal(afterCount - beforeCount, 1)
@@ -341,24 +352,28 @@ describe('normal map post', () => {
         await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .field('name', 'newNormalMap')
             .expect(201)
             .expect('Content-Type', /application\/json/)
         
     })
 
-    test('the returned normal map entry contains a "name" field', async () => {
+    test('the returned normal map entry contains a "name" field with the same value as the submitted name.', async () => {
         const result = await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .field('name', 'newNormalMap')
             .expect(201)
             .expect('Content-Type', /application\/json/)
         assert(result.body.name)
+        assert.equal(result.body.name, 'newNormalMap')
     })
 
     test('the returned normal map entry contains a "status" field with value "done"', async () => {
         const result = await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .field('name', 'newNormalMap')
             .expect(201)
             .expect('Content-Type', /application\/json/)
         assert(result.body.status)
@@ -369,6 +384,7 @@ describe('normal map post', () => {
         const result = await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .field('name', 'newNormalMap')
             .expect(201)
             .expect('Content-Type', /application\/json/)
         assert(result.body.layers)
@@ -378,6 +394,7 @@ describe('normal map post', () => {
         const result = await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .field('name', 'newNormalMap')
             .expect(201)
             .expect('Content-Type', /application\/json/)
         assert.equal(result.body.layers.length, 0)
@@ -387,6 +404,7 @@ describe('normal map post', () => {
         const result = await api
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .field('name', 'newNormalMap')
             .expect(201)
             .expect('Content-Type', /application\/json/)
         assert(result.body.creator)
@@ -397,6 +415,7 @@ describe('normal map post', () => {
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', newFile)
+            .field('name', 'newNormalMap')
             .expect(201)
     })
 
@@ -405,6 +424,7 @@ describe('normal map post', () => {
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', newFile)
+            .field('name', 'newNormalMap')
             .expect(201)
         assert.equal(result.body.layers.length, 1)
     })
@@ -414,6 +434,7 @@ describe('normal map post', () => {
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', newFile)
+            .field('name', 'newNormalMap')
             .expect(201)
         assert.equal(typeof result.body.layers[0], 'string')
     })
@@ -423,6 +444,7 @@ describe('normal map post', () => {
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', newFile)
+            .field('name', 'newNormalMap')
             .expect(201)
         const imageResult = await Image.findById(result.body.layers[0])
         assert(imageResult)
@@ -433,6 +455,7 @@ describe('normal map post', () => {
             .post(`/api/normalMaps/`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .attach('files', newFile)
+            .field('name', 'newNormalMap')
             .expect(201)
         const imageResult = await Image.findById(result.body.layers[0])
         assert(fs.existsSync(imageResult.file))

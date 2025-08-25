@@ -59,6 +59,7 @@ const Mask = ({ images, setMask }) => {
     return (
         images.length > 0 
             ? <div>
+                <h3>Mask</h3>
                 <canvas style={img} ref={canvasRef} />
                 {   
                     canvasRef.current 

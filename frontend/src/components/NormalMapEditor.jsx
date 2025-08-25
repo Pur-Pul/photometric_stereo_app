@@ -23,6 +23,7 @@ import pipette from "../static/pipette32.png"
 import eraser from '../static/eraser32.png'
 import ToolButton from './ToolButton'
 import ShapeTool from "./ShapeTool"
+import NameForm from "./NameForm"
 
 
 const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
@@ -32,6 +33,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [alertOpen, setAlertOpen] = useState(false)
     const [selectedLayer, setSelectedLayer] = useState(0)
     const [tool, setTool] = useState({name:'pencil'})
+    const [nameFormOpen, setNameFormOpen] = useState(false)
     
     const canvasRefs = Array(5).fill(null).map(() => useRef(null))
     const emptyCanvasRef = useRef(null)
@@ -65,7 +67,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         setEditorCursor(0)
     }, [])
 
-    const handleSave = async () => {
+    const editorToBlobs = async () => {
         const blobs = []
         const canvas = iconCanvasRef.current
         const ctx = canvas.getContext('2d', { willReadFrequently: true })
@@ -78,12 +80,20 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
         }
         const iconBlob = await new Promise(resolve => iconCanvasRef.current.toBlob(resolve))
+        return [blobs, iconBlob]
+    }
 
-        if (id) {
-            dispatch(performLayerUpdate(blobs, iconBlob, editorState[editorCursor], id))
-        } else {
-            dispatch(performCreate(blobs, iconBlob, navigate))
-        }
+    const handleSave = async () => {
+        const [blobs, iconBlob] = await editorToBlobs()
+        console.log(blobs)
+        dispatch(performLayerUpdate(blobs, iconBlob, editorState[editorCursor], id))
+    }
+
+    const handleCreate = async (e) => {
+        e.preventDefault()
+        const name = e.target.name.value
+        const [blobs, iconBlob] = await editorToBlobs()
+        dispatch(performCreate(blobs, name, iconBlob, navigate))
     }
 
     const addLayer = () => {
@@ -125,22 +135,23 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         <div style={{ margin: 'auto' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
                 {editorState[editorCursor].map((layer, index) => {
-                    return layer ? <Editor 
-                    key={index}
-                    visible={layer.visible}
-                    style={{ pointerEvents: index !== selectedLayer ? 'none' : 'auto', gridRowStart: 1, gridColumnStart: 1}}
-                    tool={tool}
-                    setTool={setTool}
-                    src={layer.src}
-                    pencilSize={pencilSize}
-                    leftColor={leftColor}
-                    rightColor={rightColor}
-                    setLeftColor={setLeftColor}
-                    setRightColor={setRightColor}
-                    canvasRef={canvasRefs[index]} 
-                    layerIndex={index}
-                    updateEditorState={updateEditorState}
-                    />
+                    return layer 
+                    ? <Editor 
+                        key={index}
+                        visible={layer.visible}
+                        style={{ pointerEvents: index !== selectedLayer ? 'none' : 'auto', gridRowStart: 1, gridColumnStart: 1}}
+                        tool={tool}
+                        setTool={setTool}
+                        src={layer.src}
+                        pencilSize={pencilSize}
+                        leftColor={leftColor}
+                        rightColor={rightColor}
+                        setLeftColor={setLeftColor}
+                        setRightColor={setRightColor}
+                        canvasRef={canvasRefs[index]} 
+                        layerIndex={index}
+                        updateEditorState={updateEditorState}
+                        />
                     : null
                 }
                 )}
@@ -199,9 +210,10 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                 </Grid>
                 <Grid container sx={{ justifyContent: "flex-end"}}>
                     <Button variant="outlined" color="error" onClick={ () => { setAlertOpen(true) }}  >Cancel</Button>
-                    <Button variant="outlined" color="success"onClick={ handleSave }  >Save</Button>
+                    <Button variant="outlined" color="success" onClick={ () => id ? handleSave() : setNameFormOpen(true) }>{id ? 'Save' : 'Create'}</Button>
                 </Grid>
             </div>
+            <NameForm open={nameFormOpen} handleCancel={() => setNameFormOpen(false)} handleSave={handleCreate}/>
 
             <Dialog open={ alertOpen } onClose={() => { setAlertOpen(false) }} closeAfterTransition={false}>
                 <DialogTitle>You are about to discard changes.</DialogTitle>
@@ -215,6 +227,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                         <Button type="submit" color="error" variant="outlined">Discard</Button>
                     </DialogActions>
                 </form>
+                
             </Dialog>
         </div>
     )
