@@ -103,10 +103,24 @@ export const performCreate = (blobs, name, iconBlob, navigate) => {
 	}
 }
 
+export const performUpdate = (normalMap) => {
+	return async (dispatch) => {
+		try {
+			const data = new FormData()
+			data.set('name', normalMap.name)
+			data.set('visibility', normalMap.visibility)
+			const newNormalMap = await imageService.put(data, normalMap.id)
+			dispatch(updateNormalMap(newNormalMap))
+		} catch (error) {
+			console.log(error)
+			dispatch(notificationSet({ text: error.response.data.error ? error.response.data.error : 'An error occurred', type:'error' }, 5))
+		}
+	}
+}
+
 export const performLayerUpdate = (blobs, iconBlob, layers, id) => {
 	return async (dispatch) => {
 		try {
-			console.log(layers)
 			const data = new FormData()
 			blobs.forEach((blob, index) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
@@ -114,7 +128,15 @@ export const performLayerUpdate = (blobs, iconBlob, layers, id) => {
 			})
 			data.append('files', iconBlob, `icon.png`)
 			const normalMap = await imageService.put(data, id)
-			dispatch(updateLayers({id, layers, icon: { id: normalMap.icon, src: URL.createObjectURL(iconBlob) }}))
+
+			let updatedLayers = layers.filter(layer => layer.id)
+			for (var i = 0; i < normalMap.layers.length; i++) {
+				const layer = { id: normalMap.layers[i] }
+				if (updatedLayers.find(newLayer => newLayer.id === layer.id )) { continue }
+				updatedLayers.push(layer)
+			}
+
+			dispatch(updateLayers({id, layers: updatedLayers, icon: { id: normalMap.icon, src: URL.createObjectURL(iconBlob) }}))
 			dispatch(notificationSet({text: 'Normal map saved.', type: 'success'}, 5))
 		} catch (error) {
 			console.log(error)

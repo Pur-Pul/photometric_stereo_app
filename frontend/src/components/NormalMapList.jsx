@@ -65,7 +65,7 @@ const ManualOptions = ({ width, height, setWidth, setHeight, setReady }) => {
     )
 }
 
-const UploadOptions = ({ normalMap, name, setName, setReady}) => {
+const UploadOptions = ({normalMap, name, setName, setReady, iconBlob, setIconBlob}) => {
     const img = {
         width: '100%',
         minWidth: '100%',
@@ -73,13 +73,25 @@ const UploadOptions = ({ normalMap, name, setName, setReady}) => {
         objectFit: 'cover',
         border: '1px solid rgba(0,0,0,1)'
     }
+    const iconCanvas = document.createElement('canvas')
+    iconCanvas.width = 64
+    iconCanvas.height = 64
+
     useEffect(() => {
-        if (name.length > 0) {
-            setReady(true)
-        } else {
-            setReady(false)
+        const image = new Image()
+        image.onload = () => {
+            const aspect = image.width / image.height
+            iconCanvas.width = aspect * 64
+            iconCanvas.height = 64
+            ctx.drawImage(image, 0, 0, iconCanvas.width, iconCanvas.height)
+            iconCanvas.toBlob(blob => setIconBlob(blob))
         }
-    }, [name])
+        image.src = normalMap.src
+        const ctx = iconCanvas.getContext('2d', { willReadFrequently: true })
+    }, [normalMap])
+
+    useEffect(() => { setReady(name.length > 0 && iconBlob) }, [name, iconBlob])
+    
     return <Grid container spacing={2}>
         <Grid size={12}>
             <TextField 
@@ -105,6 +117,7 @@ const NewNormalMapForm = ({ open, setOpen }) => {
     const [normalMap, setNormalMap] = useState(null)
     const [name, setName] = useState(null)
     const [ready, setReady] = useState(false)
+    const [iconBlob, setIconBlob] = useState(null)
     const handleContinue = () => {
         switch (method) {
             case 'photometric':
@@ -116,8 +129,8 @@ const NewNormalMapForm = ({ open, setOpen }) => {
                 navigate(`/normal_map/manual/${width}/${height}`)
                 break
             case 'upload':
-                //dispatch(performCreate([normalMap.file], name, ))
-                console.log('Upload function not yet implemented.')
+                dispatch(performCreate([normalMap.file], name, iconBlob, navigate))
+                //console.log('Upload function not yet implemented.')
                 break
             default:
                 dispatch(notificationSet({ text: 'Method not implemented', type:'error' }, 5))
@@ -137,8 +150,7 @@ const NewNormalMapForm = ({ open, setOpen }) => {
         setName(file.name.split('.')[0])
         setMethod('upload')
     }
-
-    //setMethod(method === 'upload' ? null : 'upload')
+    
     return <Dialog open={open} closeAfterTransition={false}>
                 <DialogTitle>New normal map</DialogTitle>
                 <DialogContent>
@@ -175,7 +187,7 @@ const NewNormalMapForm = ({ open, setOpen }) => {
                         }
                         {
                             method === 'upload' && normalMap
-                                ? <UploadOptions normalMap={normalMap} name={name} setName={setName} setReady={setReady} />
+                                ? <UploadOptions normalMap={normalMap} name={name} setName={setName} setReady={setReady} iconBlob={iconBlob} setIconBlob={setIconBlob}/>
                                 : null
                         }
                     </Grid>
@@ -205,12 +217,9 @@ const NormalMapLink = ({ normalMap }) => {
 
 const NormalMapList = () => {
     const [open, setOpen] = useState(false)
-    
     const normalMaps = useSelector((state) => state.normalMaps)
 
     console.log(normalMaps)
-
-    
 
     return (
         <div>

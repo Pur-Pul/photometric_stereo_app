@@ -103,39 +103,46 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
         if (exception) { next(exception) }
         else {
             try {
-                const normalMap = await NormalMap.findById(request.params.id).populate('layers')
+                const { format, visibility } = request.body ? request.body : {}
+                console.log(request.body)
+
+                const normalMap = await NormalMap.findById(request.params.id).populate('layers')                
                 if (!normalMap) { response.status(404).json({ message: 'Normal map not found.' }) }
                 if (request.user.id.toString() !== normalMap.creator.toString()) { return response.status(403).json({ error: 'incorrect user' }) }
 
                 const layers = []
-                const number_of_files = request.filenames ? request.filenames.length : 0
-                for (var i = 0; i < number_of_files; i++) {
-                    const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
-                    const newfile = path.join(process.cwd(), `../output/${normalMap.name}-${request.originalFilenames[i]}`)
-                    fs.copyFileSync(oldfile, newfile)
-                    fs.unlinkSync(oldfile)
-                    if (request.originalFilenames[i] === 'icon.png' && !normalMap.icon) {
-                        const icon = new Image({
-                            file: newfile,
-                            format: request.body.format,
-                            creator: request.user.id
-                        })
-                        icon.save()
-                        normalMap.icon = icon.id
-                    } else if (request.originalFilenames[i] !== 'icon.png') {
-                        let layer = normalMap.layers.find((layer) => layer.file === newfile)
-                        if (!layer) {
-                            layer = new Image({
+                if (request.filenames) {
+                    if (!format) { throw new ValidationError('Image format is required.') }
+                    for (var i = 0; i < request.filenames.length; i++) {
+                        const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
+                        const newfile = path.join(process.cwd(), `../output/${normalMap.name}-${request.originalFilenames[i]}`)
+                        fs.copyFileSync(oldfile, newfile)
+                        fs.unlinkSync(oldfile)
+                        if (request.originalFilenames[i] === 'icon.png' && !normalMap.icon) {
+                            const icon = new Image({
                                 file: newfile,
-                                format: request.body.format,
+                                format,
                                 creator: request.user.id
                             })
+                            icon.save()
+                            normalMap.icon = icon.id
+                        } else if (request.originalFilenames[i] !== 'icon.png') {
+                            let layer = normalMap.layers.find((layer) => layer.file === newfile)
+                            if (!layer) {
+                                layer = new Image({
+                                    file: newfile,
+                                    format,
+                                    creator: request.user.id
+                                })
+                            }
+                            await layer.save()
+                            layers.push(layer.id)
                         }
-                        await layer.save()
-                        layers.push(layer.id)
                     }
+                    normalMap.layers = layers
                 }
-                normalMap.layers = layers
+                
+                normalMap.visibility = visibility ? visibility : normalMap.visibility
                 const saved_normalMap = await normalMap.save()
                 response.status(201).json(saved_normalMap)
             } catch (exception) {

@@ -90,6 +90,7 @@ const ShapeTool = ({currentTool, setTool}) => {
             if (!normalMaps[i].status === 'done') { continue }
             shapes.push(normalMaps[i])
         }
+        console.log(shapes)
         setShapes(shapes)
     }, [currentTool])
 

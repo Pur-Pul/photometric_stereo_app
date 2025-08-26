@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
-import { performRemove, updateNormalMap } from "../reducers/normalMapReducer"
+import { performRemove, updateNormalMap, performUpdate } from "../reducers/normalMapReducer"
 import imageService from '../services/images'
 import { 
     Button,
@@ -40,7 +40,7 @@ const NormalMap = () => {
                 const iconBlob = await imageService.getFile(id, newNormalMap.icon)
                 newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
             }
-            setVisibility(newNormalMap.visibility)
+            
             if (newNormalMap.layers.length != normalMap.layers.length || newNormalMap.status != normalMap.status) {
                 dispatch(updateNormalMap(newNormalMap))
             }
@@ -63,7 +63,7 @@ const NormalMap = () => {
         if (normalMap.layers && normalMap.layers.length) {
             setLayers(normalMap.layers)
         }
-        
+        setVisibility(normalMap.visibility)
 	}, [normalMap])
 
     useEffect(() => {
@@ -101,8 +101,7 @@ const NormalMap = () => {
     }
 
     const handleUpdateVisibility = async (vis) => {
-        setVisibility(vis)
-        console.log('Visibility update function is not yet implemented.')
+        dispatch(performUpdate({...normalMap, visibility: vis}))
     }
 
     if (size && edit) return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
