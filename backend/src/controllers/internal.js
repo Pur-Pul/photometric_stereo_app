@@ -2,12 +2,18 @@ const internalRouter = require('express').Router()
 const Image = require('../models/image')
 const NormalMap = require('../models/normalMap')
 const { expireNormalMap } = require('../utils/expiration_manager')
+const fs = require('fs')
+const path = require('path')
 
 internalRouter.put('/images/:id', async (request, response, next) => {
     try {
         const normalMap = await NormalMap.findById(request.params.id)
+        const newfile = path.join(process.cwd(), `../output/${normalMap.name}-layer-0.png`)
+        fs.copyFileSync(request.body.file, newfile)
+        fs.unlinkSync(request.body.file)
+
         const new_image = new Image({
-            file: request.body.file,
+            file: newfile,
             format: request.body.format,
             creator: normalMap.creator
         })

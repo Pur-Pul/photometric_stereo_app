@@ -40,7 +40,6 @@ normalMapsRouter.get('/:normalId/layers/:id', middleware.userExtractor, async (r
             if (user.id !== image.creator.id && normalMap.visibility !== 'public') {
                 return response.status(403).json({ error: 'incorrect user' })
             }
-            console.log(image.file)
             if (fs.existsSync(image.file)) {
                 return response.sendFile(image.file)
             }
@@ -66,7 +65,7 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                 const number_of_files = request.filenames ? request.filenames.length : 0
                 for (var i = 0; i < number_of_files; i++) {
                     const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
-                    const newfile = path.join(process.cwd(), `../output/${request.filenames[i]}`)//`../output/${normalMapName}-${request.originalFilenames[i]}`)
+                    const newfile = path.join(process.cwd(), `../output/${name}-${request.originalFilenames[i]}`)
                     fs.copyFileSync(oldfile, newfile)
                     fs.unlinkSync(oldfile)
                     const image = new Image({
@@ -109,7 +108,6 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                 if (request.user.id.toString() !== normalMap.creator.toString()) { return response.status(403).json({ error: 'incorrect user' }) }
 
                 const layers = []
-                let icon = null
                 const number_of_files = request.filenames ? request.filenames.length : 0
                 for (var i = 0; i < number_of_files; i++) {
                     const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
