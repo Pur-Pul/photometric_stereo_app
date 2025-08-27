@@ -10,7 +10,7 @@ jobs:
         working-directory: ./backend
     env: 
       BACK_PORT: 3001
-      MONGODB_URI: mongodb://tester:pass@localhost/test?authMechanism=DEFAULT&authSource=admin
+      MONGODB_URI: mongodb://tester:pass@localhost/?authMechanism=DEFAULT&authSource=admin
       EXPIRE_DELAY: 30
       SECRET: secret
     
