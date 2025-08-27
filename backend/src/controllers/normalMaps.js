@@ -70,7 +70,6 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                     fs.unlinkSync(oldfile)
                     const image = new Image({
                         file: newfile,
-                        format: request.body.format,
                         creator: request.user.id
                     })
                     await image.save()
@@ -103,7 +102,7 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
         if (exception) { next(exception) }
         else {
             try {
-                const { format, visibility } = request.body ? request.body : {}
+                const { visibility } = request.body ? request.body : {}
                 console.log(request.body)
 
                 const normalMap = await NormalMap.findById(request.params.id).populate('layers')                
@@ -112,7 +111,6 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
 
                 const layers = []
                 if (request.filenames) {
-                    if (!format) { throw new ValidationError('Image format is required.') }
                     for (var i = 0; i < request.filenames.length; i++) {
                         const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
                         const newfile = path.join(process.cwd(), `../output/${normalMap.name}-${request.originalFilenames[i]}`)
@@ -121,7 +119,6 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                         if (request.originalFilenames[i] === 'icon.png' && !normalMap.icon) {
                             const icon = new Image({
                                 file: newfile,
-                                format,
                                 creator: request.user.id
                             })
                             icon.save()
@@ -131,7 +128,6 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                             if (!layer) {
                                 layer = new Image({
                                     file: newfile,
-                                    format,
                                     creator: request.user.id
                                 })
                             }
@@ -179,7 +175,6 @@ normalMapsRouter.post('/:id/layers/', middleware.userExtractor, async (request, 
 
                     const layer = new Image({
                         file: newfile,
-                        format: request.body.format,
                         creator: request.user.id
                     })
                     await layer.save()
@@ -204,7 +199,7 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
                 if (!request.body || !request.body.name) { throw new ValidationError('Name is required')}
                 const name = request.body.name
 
-                if (!request.body.format) { throw new ValidationError('Name is required')}
+                if (!request.body.format) { throw new ValidationError('Format is required')}
                 const format = request.body.format
 
                 let lights = []

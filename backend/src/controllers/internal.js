@@ -14,7 +14,6 @@ internalRouter.put('/images/:id', async (request, response, next) => {
 
         const new_image = new Image({
             file: newfile,
-            format: request.body.format,
             creator: normalMap.creator
         })
         await new_image.save()

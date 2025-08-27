@@ -42,8 +42,7 @@ let initialNormalMaps = [
 
 let initialImages = [
     {
-        file: path.join(process.cwd(), '../output/test2_normal_map.png'),
-        format: "png"
+        file: path.join(process.cwd(), '../output/test2_normal_map.png')
     }
 ]
 

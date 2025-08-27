@@ -2,7 +2,6 @@ const mongoose = require('mongoose')
 const imageSchema = new mongoose.Schema(
     {
         file: { type: String, required: true },
-        format: { type: String, required: false },
         creator: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
