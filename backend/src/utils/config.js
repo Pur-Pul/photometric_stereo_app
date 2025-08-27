@@ -8,9 +8,9 @@ const getMongoURI = (node_env, uri) => {
         case 'production':
             return `${parts[0]}production${tail}`
         case 'developement':
-            return `${uri}dev${tail}`
+            return `${parts[0]}dev${tail}`
         case 'test':
-            return `${uri}test${tail}`
+            return `${parts[0]}test${tail}`
         default:
             throw new Error(`Invalid NODE_ENV: ${node_env}. NODE_ENV needs to be 'production', 'developement' or 'test']`)
     }
