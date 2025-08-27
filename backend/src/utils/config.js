@@ -2,13 +2,15 @@ require('dotenv').config()
 const path = require('path')
 
 const getMongoURI = (node_env, uri) => {
+    const parts = uri.split('?')
+    const tail = parts.length > 1 ? `?${parts[1]}` : ''
     switch(node_env) {
         case 'production':
-            return `${uri}production`
+            return `${parts[0]}production${tail}`
         case 'developement':
-            return `${uri}dev`
+            return `${uri}dev${tail}`
         case 'test':
-            return `${uri}test`
+            return `${uri}test${tail}`
         default:
             throw new Error(`Invalid NODE_ENV: ${node_env}. NODE_ENV needs to be 'production', 'developement' or 'test']`)
     }
