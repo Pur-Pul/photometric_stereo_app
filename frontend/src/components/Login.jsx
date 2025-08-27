@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { performLogin } from '../reducers/loginReducer.js'
+import { performLogin } from '../reducers/loginReducer'
 import { notificationSet } from '../reducers/notificationReducer.js'
 import { useDispatch } from 'react-redux'
 
@@ -19,7 +19,7 @@ const LoginForm = () => {
 				console.log(exception)
 				dispatch(
 					notificationSet(
-						{ text: exception.response.data.error, type: 'error' },
+						{ text: exception.response ? exception.response.data.error : 'Unkown error', type: 'error' },
 						5
 					)
 				)
@@ -37,6 +37,7 @@ const LoginForm = () => {
 						value={username}
 						name="Username"
 						onChange={({ target }) => setUsername(target.value)}
+						data-testid='login-username'
 					/>
 				</div>
 				<div>
@@ -46,9 +47,10 @@ const LoginForm = () => {
 						value={password}
 						name="Password"
 						onChange={({ target }) => setPassword(target.value)}
+						data-testid='login-password'
 					/>
 				</div>
-				<button type="submit">login</button>
+				<button type="submit" data-testid='login-button'>login</button>
 			</form>
 		</div>
 	)
