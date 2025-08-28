@@ -22,20 +22,20 @@ import store from '../store'
 describe("Login form", () => {
     afterEach(() => {
         vi.clearAllMocks();
-    });
+    })
     test('Login button is rendered', () => {
         render(<Provider store={store}><Login /></Provider>)
-        const loginButton = screen.getByTestId('login-button')
+        const loginButton = screen.queryByTestId('login-button')
         expect(loginButton).toBeInTheDocument()
     })
     test('Username field is rendered', () => {
         render(<Provider store={store}><Login /></Provider>)
-        const loginUsername = screen.getByTestId('login-username')
+        const loginUsername = screen.queryByTestId('login-username')
         expect(loginUsername).toBeInTheDocument()
     })
     test('Password field is rendered', () => {
         render(<Provider store={store}><Login /></Provider>)
-        const loginPassword = screen.getByTestId('login-password')
+        const loginPassword = screen.queryByTestId('login-password')
         expect(loginPassword).toBeInTheDocument()
     })
     test('Clicking login calls performLogin.', async () => {
