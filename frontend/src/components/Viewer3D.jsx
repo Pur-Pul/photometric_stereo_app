@@ -56,12 +56,13 @@ const initTexture = (ctx, canvas) => {
 
     ctx.bindTexture(ctx.TEXTURE_2D, texture)
     ctx.texImage2D(ctx.TEXTURE_2D, 0, ctx.RGBA, ctx.RGBA, ctx.UNSIGNED_BYTE, canvas)
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.NEAREST)
+    ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.NEAREST)
     if ((canvas.width && (canvas.width - 1)) == 0 && (canvas.height && (canvas.height - 1)) == 0) {
         ctx.generateMipmap(ctx.TEXTURE_2D)
     } else {
         ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE)
         ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_T, ctx.CLAMP_TO_EDGE)
-        ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.LINEAR)
     }
     return texture
 }
@@ -124,10 +125,11 @@ const Viewer3D = ({image}) => {
         canvasTexRef.current = canvasTexRef.current ? canvasTexRef.current : document.createElement('canvas')
         
         const aspect = image.width / image.height
-        canvasMapRef.current.width = 500 * aspect
-        canvasMapRef.current.height = 500
-        canvasTexRef.current.width = 500 * aspect
-        canvasTexRef.current.height = 500
+        const maxHeight = Math.max(image.width, image.height)
+        canvasMapRef.current.width = Math.min(maxHeight, 500) * aspect
+        canvasMapRef.current.height = Math.min(maxHeight, 500)
+        canvasTexRef.current.width = Math.min(maxHeight, 500) * aspect
+        canvasTexRef.current.height = Math.min(maxHeight, 500)
 
         canvasMapRef.current.getContext('2d', { willReadFrequently: true }).drawImage(image, 0, 0, canvasMapRef.current.width, canvasMapRef.current.height)
         canvasTexRef.current.getContext('2d', { willReadFrequently: true }).drawImage(image, 0, 0, canvasTexRef.current.width, canvasTexRef.current.height)
@@ -225,8 +227,10 @@ const Viewer3D = ({image}) => {
         image.onload = () => {
             const canvas = canvasTexRef.current
             const aspect = image.width / image.height
-            canvas.width = 500 * aspect
-            canvas.height = 500
+            const maxHeight = Math.max(image.width, image.height)
+    
+            canvas.width = Math.min(maxHeight, 500) * aspect
+            canvas.height = Math.min(maxHeight, 500)
 
             const ctx = canvas.getContext('2d', { willReadFrequently: true })
             ctx.drawImage(image, 0, 0, canvas.width, canvas.height)

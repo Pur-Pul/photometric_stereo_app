@@ -10,7 +10,8 @@ const UploadOptions = ({normalMap, name, setName, setReady, iconBlob, setIconBlo
         minWidth: '100%',
         height: '100%',
         objectFit: 'cover',
-        border: '1px solid rgba(0,0,0,1)'
+        border: '1px solid rgba(0,0,0,1)',
+        imageRendering: 'pixelated',
     }
     const iconCanvas = document.createElement('canvas')
     iconCanvas.width = 64

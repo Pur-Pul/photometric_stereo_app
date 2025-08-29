@@ -107,7 +107,7 @@ const NormalMap = () => {
     if (size && edit) return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
 
     return <div>
-                <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%' }}/>
+                <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%', imageRendering: 'pixelated' }}/>
                 
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined' onClick={() => {
