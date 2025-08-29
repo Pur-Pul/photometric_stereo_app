@@ -130,7 +130,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         setEditorState([...currentState, newState])
         setEditorCursor(editorCursor+1)
     }
-
+    
     return (
         <div style={{ margin: 'auto' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
@@ -184,7 +184,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
                     <ToolButton toolName='pencil' currentTool={tool} setTool={setTool} icon={pencil}/>
                     <ToolButton toolName='pipette' currentTool={tool} setTool={setTool} icon={pipette}/>
                     <ToolButton toolName='eraser' currentTool={tool} setTool={setTool} icon={eraser}/>
-                    <ShapeTool currentTool={tool} setTool={setTool} />
+                    <ShapeTool currentTool={tool} setTool={setTool} maxHeight={Math.max(size[0], size[1])}/>
                     <FormControl>
                         <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
                         <TextField

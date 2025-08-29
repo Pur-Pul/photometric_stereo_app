@@ -61,30 +61,42 @@ const NewNormalMapForm = ({ open, setOpen }) => {
         setMethod('upload')
     }
     
-    return <Dialog open={open} closeAfterTransition={false}>
+    return <Dialog open={open} closeAfterTransition={false} data-testid='normal-map-form'>
                 <DialogTitle>New normal map</DialogTitle>
                 <DialogContent>
                     <Grid container spacing={2}>
-                        <DialogContentText style={{paddingBottom: '10px'}}>
+                        <DialogContentText style={{paddingBottom: '10px'}} data-testid='form-description'>
                             Normal maps can be generated using a photometric stereo algorithm or it can be drawn manually. Generated normal maps can also be edited manually afterwards. 
                         </DialogContentText>
-                        <ButtonGroup>
-                            <Button variant={method === 'photometric' ? 'contained' : 'outlined'} onClick={() => {
-                                setReady(true)
-                                setMethod(method === 'photometric' ? null : 'photometric')
-                            }}>Photometric stereo</Button>
-                            <Button variant={method === 'manual' ? 'contained' : 'outlined'} onClick={() => {
-                                setReady(false)
-                                setMethod(method === 'manual' ? null : 'manual')
-                            }}>Manual</Button>
-                            <Button component='label' variant={method === 'upload' ? 'contained' : 'outlined'}>
+                        <ButtonGroup data-testid='form-option-buttons'>
+                            <Button 
+                                variant={method === 'photometric' ? 'contained' : 'outlined'}
+                                data-testid='button-photometric'
+                                onClick={() => {
+                                    setReady(true)
+                                    setMethod(method === 'photometric' ? null : 'photometric')
+                                }}
+                                >Photometric stereo</Button>
+                            <Button
+                                variant={method === 'manual' ? 'contained' : 'outlined'}
+                                data-testid='button-manual'
+                                onClick={() => {
+                                    setReady(false)
+                                    setMethod(method === 'manual' ? null : 'manual')
+                                }}
+                                >Manual</Button>
+                            <Button 
+                                component='label'
+                                variant={method === 'upload' ? 'contained' : 'outlined'}
+                                data-testid='button-upload'>
                                 Upload
                                 <input
                                     hidden
                                     type="file"
+                                    data-testid='file-upload'
                                     onClick={(e) => {
                                         setReady(false)
-                                        e.target.value=null
+                                        e.target.value=''
                                     }}
                                     onChange={handleUpload}
                                     />
@@ -105,10 +117,10 @@ const NewNormalMapForm = ({ open, setOpen }) => {
                 </DialogContent>
                 
                 <DialogActions>
-                    <Button variant='outlined' color='error' onClick={handleClose}>Cancel</Button>
+                    <Button variant='outlined' color='error' data-testid='form-cancel' onClick={handleClose}>Cancel</Button>
                     <Tooltip title={ method ? '' : 'Select a method to continue' } placement='top'>
                         <span>
-                            <Button variant='outlined' disabled={!(method && ready)} onClick={handleContinue}>Continue</Button>
+                            <Button variant='outlined' disabled={!(method && ready)} data-testid='form-continue' onClick={handleContinue}>Continue</Button>
                         </span>
                     </Tooltip> 
                 </DialogActions>
