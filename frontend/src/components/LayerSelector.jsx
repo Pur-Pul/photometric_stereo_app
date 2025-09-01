@@ -29,26 +29,26 @@ const LayerSelector = ({ layers, selectedLayer, setSelectedLayer, addLayer, remo
     }
     return (
         <div style={{ width: '200px' }}>
-            <InputLabel>Layers:</InputLabel>
+            <InputLabel data-testid='layer-selector-title'>Layers:</InputLabel>
             <div id='layers'>
                 
-                <Button variant='outlined' style={{ ...layerStyle }} onClick={() => addLayer()}>+</Button>
+                <Button data-testid='layer-add' variant='outlined' style={{ ...layerStyle }} onClick={() => addLayer()}>+</Button>
                 {
                     layers.slice(0).reverse().map((layer, index) => {
                     return layer 
                     ? 
                         <ButtonGroup key={layers.length-1-index} style={{width: '100%'}}>
                             <Button
+                                data-testid={`layer-${layers.length-1-index}-select-button`}
                                 variant={selectedLayer === layers.length-1-index ? 'contained' : 'outlined' }
                                 style={{ ...layerStyle}}
                                 onClick={() => setSelectedLayer(layers.length-1-index)}
                                 >
                                     {`Layer: ${layers.length-1-index}`}
                             </Button>
-                            <Button variant='contained' color={layer.visible ? 'info' : 'secondary'} style={visibleStyle} onClick={() => toggleLayer(layers.length-1-index)}>{layer.visible ? '👁' : '-'}</Button>
-                            <Button variant='contained' color='error' style={removeStyle} onClick={() => removeLayer(layers.length-1-index)}>x</Button>
+                            <Button data-testid={`layer-${layers.length-1-index}-hide-button`} variant='contained' color={layer.visible ? 'info' : 'secondary'} style={visibleStyle} onClick={() => toggleLayer(layers.length-1-index)}>{layer.visible ? '👁' : '-'}</Button>
+                            <Button data-testid={`layer-${layers.length-1-index}-delete-button`} variant='contained' color='error' style={removeStyle} onClick={() => removeLayer(layers.length-1-index)}>x</Button>
                         </ButtonGroup>
-                    
                     : null
                     })
                 }
