@@ -30,11 +30,12 @@ const UploadOptions = ({normalMap, name, setName, setReady, iconBlob, setIconBlo
         const ctx = iconCanvas.getContext('2d', { willReadFrequently: true })
     }, [normalMap])
 
-    useEffect(() => { setReady(name.length > 0 && iconBlob) }, [name, iconBlob])
+    useEffect(() => { setReady(name.length > 0 && iconBlob !== undefined && iconBlob !== null) }, [name, iconBlob])
     
     return <Grid container spacing={2}>
         <Grid size={12}>
             <TextField 
+                slotProps={{ htmlInput : { 'data-testid': 'upload-name' }}}
                 error={name.length<1}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -43,7 +44,7 @@ const UploadOptions = ({normalMap, name, setName, setReady, iconBlob, setIconBlo
                 />
         </Grid>
         <Grid size={12}>
-            <img style={img} src={ normalMap.src }/>
+            <img data-testid='upload-image' style={img} src={ normalMap.src }/>
         </Grid>
     </Grid>
 }

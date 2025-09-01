@@ -2,20 +2,26 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import store from '../store'
+import { useEffect } from 'react'
 
 vi.mock('./ManualOptions', () => {
     return { default: vi.fn(({setReady, setWidth, setHeight}) => {
-        setReady(true)
-        setWidth(100)
-        setHeight(100)
+        useEffect(() => {
+            setReady(true)
+            setWidth(100)
+            setHeight(100)
+        }, [])
         return <mock-ManualOptions data-testid='mocked-manual-options' />
     })}
 })
 
 vi.mock('./UploadOptions', () => {
     return { default: vi.fn(({setReady, setIconBlob}) => {
-        setReady(true)
-        setIconBlob('iconBlob')
+        useEffect(() => {
+            setReady(true)
+            setIconBlob('iconBlob')
+        }, [])
+        
         return <mock-UploadOptions data-testid='mocked-upload-options' />
     })}
 })
