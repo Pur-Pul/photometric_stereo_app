@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import store from '../store'
@@ -35,6 +35,7 @@ describe('Upload options renders.', () => {
         const mockedSetReady = vi.fn()
         render(<Provider store={store}><UploadOptions normalMap={{ src: 'test' }} name={'test'} setName={() => {}} setReady={mockedSetReady} iconBlob={null} setIconBlob={() => {}} /></Provider>)
         expect(mockedSetReady.mock.calls.at(-1)[0]).toBe(false)
+        cleanup()
         render(<Provider store={store}><UploadOptions normalMap={{ src: 'test' }} name={'test'} setName={() => {}} setReady={mockedSetReady} iconBlob={undefined} setIconBlob={() => {}} /></Provider>)
         expect(mockedSetReady.mock.calls.at(-1)[0]).toBe(false)
     })

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { 
     InputLabel,
     Dialog,
@@ -14,20 +14,24 @@ import pipette from '../static/pipette32.png'
 
 const ColorWheel = ({currentColor, saveColor, setOpen}) => {
     const canvasRef = useRef(null)
-    const ctxRef = useRef(null)
     const [color, setColor] = useState(currentColor)
     const image = new Image()
+  
     image.onload = () => {
         const canvas = canvasRef.current
         canvas.width = image.width
         canvas.height = image.height
-        ctxRef.current = canvas.getContext('2d', { willReadFrequently: true })
-        ctxRef.current.drawImage(image, 0, 0, image.width, image.height)
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })
+        ctx.drawImage(image, 0, 0, image.width, image.height)
     }
     image.src = normal_sphere
+    
+
     const getColor = (event) => {
         const {offsetX:x, offsetY:y} = event.nativeEvent
-        const raw_data = ctxRef.current.getImageData(x,y,1,1).data
+        const ctx = canvasRef.current.getContext('2d', { willReadFrequently: true })
+        const raw_data = ctx.getImageData(x,y,1,1).data
+        console.log(x,y)
 
         const red = raw_data[0].toString(16)
         const green = raw_data[1].toString(16)
@@ -35,10 +39,10 @@ const ColorWheel = ({currentColor, saveColor, setOpen}) => {
         const hex = `#${red.length===1?`0${red}`:red}${green.length===1?`0${green}`:green}${blue.length===1?`0${blue}`:blue}`
         setColor(hex)
     }
-
+        console.log('here')
     return (
-        <div style={{textAlign: 'center'}}>
-            <canvas style={{border: '2px solid', cursor: `url('${pipette}') 0 32, auto`}} ref={canvasRef} onMouseDown={getColor}/>
+        <div style={{textAlign: 'center'}} data-testid='color-wheel'>
+            <canvas data-testid='color-wheel-canvas' style={{border: '2px solid', cursor: `url('${pipette}') 0 32, auto`}} ref={canvasRef} onMouseDown={getColor}/>
             <DialogActions>
                 <InputLabel htmlFor="chosenColor">{color}</InputLabel>
                 <input
@@ -46,8 +50,8 @@ const ColorWheel = ({currentColor, saveColor, setOpen}) => {
                     style={{border: '1px solid #000000', padding: '8px 16px', backgroundColor: color, color: color}}
                     type="button"
                     />
-                <Button variant='outlined' color='error' onClick={() => setOpen(false)}>Cancel</Button>
-                <Button variant='outlined' onClick={() => {
+                <Button data-testid='cancel-color' variant='outlined' color='error' onClick={() => setOpen(false)}>Cancel</Button>
+                <Button data-testid='save-color' variant='outlined' onClick={() => {
                     saveColor(color)
                     setOpen(false)
                 }}>Save</Button>
@@ -58,7 +62,7 @@ const ColorWheel = ({currentColor, saveColor, setOpen}) => {
 
 const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, enableColorWheel=true }) => {
     const [open, setOpen] = useState("")
-    
+
     const colorButton = {
         border: '1px solid #000000',
         padding: '8px 16px',
@@ -82,35 +86,44 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, ena
     return (
         <div>
             <div>
-                <InputLabel htmlFor="selector">Color: </InputLabel>
+                <InputLabel htmlFor="selector" data-testid='color-title'>Color: </InputLabel>
                 <div >
-                    <Tooltip title={leftColor} placement='top'>
-                        <input 
-                            id="selector"
-                            style={{...colorButton, backgroundColor: leftColor, color: leftColor}}
-                            type="button"
-                            onClick={() => setOpen("left")}
-                            />
-                    </Tooltip>
                     {
-                        setRightColor 
-                        ? <div style={{float: 'right'}}>
-                            <input 
+                        leftColor 
+                            ? <Tooltip title={leftColor} placement='top'>
+                                <input
+                                    data-testid='pick-left'
+                                    id="selector"
+                                    style={{...colorButton, backgroundColor: leftColor, color: leftColor}}
+                                    type="button"
+                                    onClick={() => setLeftColor ? setOpen("left") : null}
+                                    />
+                            </Tooltip>
+                            : null
+                    }
+                    {
+                        rightColor && leftColor && setLeftColor && setRightColor
+                            ? <input
+                                data-testid='color-switcher'
                                 style={arrowButton}
                                 type="button"
                                 value="⇆"
                                 onClick={handleSwitch}
                                 />
-                            <Tooltip title={rightColor} placement='top'>
-                                <input 
+                            : null
+                    }
+                    {
+                        rightColor 
+                            ? <Tooltip title={rightColor} placement='top'>
+                                <input
+                                    data-testid='pick-right'
                                     style={{...colorButton, backgroundColor: rightColor, color: rightColor }}
                                     className="colorButton"
                                     type="button"
-                                    onClick={() => setOpen("right")}
+                                    onClick={() => setRightColor ? setOpen("right") : null}
                                     />
                             </Tooltip>
-                        </div>
-                        : null
+                            : null
                     }
                 </div>
             </div>

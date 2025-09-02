@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import store from '../store'
@@ -77,9 +77,11 @@ describe('Manual options is functional.', () => {
         render(<Provider store={store}><ManualOptions width={0} height={100} setWidth={() => {}} setHeight={() => {}} setReady={mockedSetReady}/></Provider>)
         expect(mockedSetReady.mock.calls.at(-1)[0]).toBe(false)
         mockedSetReady.mockClear()
+        cleanup()
         render(<Provider store={store}><ManualOptions width={-1} height={100} setWidth={() => {}} setHeight={() => {}} setReady={mockedSetReady}/></Provider>)
         expect(mockedSetReady.mock.calls.at(-1)[0]).toBe(false)
         mockedSetReady.mockClear()
+        cleanup()
         render(<Provider store={store}><ManualOptions width={-1000000} height={100} setWidth={() => {}} setHeight={() => {}} setReady={mockedSetReady}/></Provider>)
         expect(mockedSetReady.mock.calls.at(-1)[0]).toBe(false)
     })
@@ -88,9 +90,11 @@ describe('Manual options is functional.', () => {
         render(<Provider store={store}><ManualOptions width={100} height={0} setWidth={() => {}} setHeight={() => {}} setReady={mockedSetReady}/></Provider>)
         expect(mockedSetReady.mock.calls.at(-1)[0]).toBe(false)
         mockedSetReady.mockClear()
+        cleanup()
         render(<Provider store={store}><ManualOptions width={100} height={-1} setWidth={() => {}} setHeight={() => {}} setReady={mockedSetReady}/></Provider>)
         expect(mockedSetReady.mock.calls.at(-1)[0]).toBe(false)
         mockedSetReady.mockClear()
+        cleanup()
         render(<Provider store={store}><ManualOptions width={100} height={-1000000} setWidth={() => {}} setHeight={() => {}} setReady={mockedSetReady}/></Provider>)
         expect(mockedSetReady.mock.calls.at(-1)[0]).toBe(false)
     })
