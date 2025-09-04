@@ -31,15 +31,12 @@ const ColorWheel = ({currentColor, saveColor, setOpen}) => {
         const {offsetX:x, offsetY:y} = event.nativeEvent
         const ctx = canvasRef.current.getContext('2d', { willReadFrequently: true })
         const raw_data = ctx.getImageData(x,y,1,1).data
-        console.log(x,y)
-
         const red = raw_data[0].toString(16)
         const green = raw_data[1].toString(16)
         const blue = raw_data[2].toString(16)
         const hex = `#${red.length===1?`0${red}`:red}${green.length===1?`0${green}`:green}${blue.length===1?`0${blue}`:blue}`
         setColor(hex)
     }
-        console.log('here')
     return (
         <div style={{textAlign: 'center'}} data-testid='color-wheel'>
             <canvas data-testid='color-wheel-canvas' style={{border: '2px solid', cursor: `url('${pipette}') 0 32, auto`}} ref={canvasRef} onMouseDown={getColor}/>

@@ -6,7 +6,7 @@ import Button from '@mui/material/Button'
 import LightPlot from './LightPlot'
 import Vector3 from "../utils/Vector3"
 
-const LightDirSelector = ({ index, files, handleChange }) => {
+const LightDirSelector = ({ index, files, setFiles }) => {
     const [open, setOpen] = useState(false)
     const [lightDir, setLightDir] = useState(new Vector3(0,0,0))
 
@@ -16,7 +16,7 @@ const LightDirSelector = ({ index, files, handleChange }) => {
         
         const new_files = [...files]
         new_files[index].light = [lightDir.x, lightDir.y, lightDir.z]
-        handleChange(new_files)
+        setFiles(new_files)
     }
 
     useEffect(() => {

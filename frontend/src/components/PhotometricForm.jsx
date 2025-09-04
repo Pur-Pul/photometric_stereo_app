@@ -9,41 +9,43 @@ import Mask from "./Mask"
 import { useLocation } from "react-router-dom"
 import { Button, Grid, TextField, InputLabel, FormControl} from '@mui/material'
 
-const ImageUploadForm = () => {
+const PhotometricForm = () => {
     const location = useLocation()
     const dispatch = useDispatch()
     const [files, setFiles] = useState([])
     const [mask, setMask] = useState(null)
     const [nameFormOpen, setNameFormOpen] = useState(false)
     const [name, setName] = useState('')
-    const notification = useSelector((state) => { return state.notification })
+    const notification = useSelector(state => state.notification)
 
     useEffect(() => {
-        if (files.length == 0 && notification.text !== 'No images selected') {
-            dispatch(notificationSet({ text: 'No images selected', type: 'warning' }))
-        }
-    }, [location, files])
-
-    const handleFileSelect = (event) => {
-        setFiles(Array.from(event.target.files).map((file, index) => {
-            return { 
-                image : URL.createObjectURL(file),
-                src: file,
-                light : [0,0,1],
-                width : 0,
-                height : 0
-            }
-        }))
-    }
-    const handleChange = useCallback((new_files) => {
-        setFiles([...new_files])
-        let status = new_files.length > 0 ? '' : 'No images selected'
-        new_files.forEach(file => {
+        let status = files.length > 0 ? '' : 'No images selected'
+        files.forEach(file => {
             status = file.width == files[0].width && file.height == files[0].height ? status : 'The images must have equal dimensions.'
             status = file.src.type == files[0].src.type ? status : 'The images must be of the same format.'
         })
         status !== '' ? dispatch(notificationSet({ text: status, type: 'warning' })) : dispatch(notificationRemove())
-    }, [files])
+    }, [location, files])
+
+    const handleFileSelect = (event) => {
+        const fileArray = Array.from(event.target.files)
+        const files = []
+        for (var i = 0; i < fileArray.length; i++) {
+            const file = fileArray[i]
+            const image = new Image()
+            image.onload = function () {
+                files.push({ 
+                    image : this.src,
+                    src: file,
+                    light : [0,0,1],
+                    width : this.width,
+                    height : this.height
+                })
+                if (files.length === fileArray.length) { setFiles(files) }
+            }
+            image.src = URL.createObjectURL(file)
+        }
+    }
 
     const submitImages = (event) => {
         event.preventDefault()
@@ -68,7 +70,7 @@ const ImageUploadForm = () => {
     }
     return (
         <div>
-            <h2>Select images:</h2>
+            <h2 data-testid='photometric-title'>Select images:</h2>
             <form onSubmit={notification.type !== 'warning' ? submitImages : (e) => {
                 e.preventDefault()
                 false
@@ -76,27 +78,28 @@ const ImageUploadForm = () => {
                 <Button component='label' variant="outlined">
                     Upload files
                     <input
+                        data-testid='photometric-file-upload'
                         style={{ display: 'none' }}
                         type="file"
                         onChange={handleFileSelect}
                         multiple
                     />
                 </Button>
-                <Button type="submit" color="success" variant="outlined" disabled={notification.type === 'warning'}>Submit</Button>
+                <Button data-testid='photometric-submit' type="submit" color="success" variant="outlined" disabled={notification.type === 'warning'}>Submit</Button>
             </form>
             <div>
                 <Grid 
                     container
                     spacing={2}
                     direction='columns'
-                    > {files.map((file, index) =>
-                    <SourceImage key={index} files={files} index={index} handleChange={handleChange} />
-
-                )}
+                    > 
+                    {
+                        files.map((file, index) => <SourceImage key={index} files={files} setFiles={setFiles} index={index} />)
+                    }
                 </Grid>
             </div>
             <Mask images={files} setMask={setMask}/>
-            <NameForm 
+            <NameForm
                 open={nameFormOpen}
                 handleCancel={handleCancel}
                 handleSave={handleSave}
@@ -105,4 +108,4 @@ const ImageUploadForm = () => {
     )
 }
 
-export default ImageUploadForm
+export default PhotometricForm

@@ -7,7 +7,7 @@ import Notification from './components/Notification'
 import LoginForm from './components/Login'
 import UserList from './components/UserList'
 import User from './components/User'
-import ImageUploadForm from './components/ImageUpload'
+import PhotometricForm from './components/PhotometricForm'
 import NormalMapList from './components/NormalMapList'
 import NormalMap from './components/NormalMap'
 import NavBar from './components/NavBar'
@@ -54,7 +54,7 @@ const App = () => {
 							<Route path="/users/:id" element={<User />} />
 							<Route path="/normal_map" element={<NormalMapList />} />
 							<Route path="/normal_map/manual/:width/:height" element={<ManualCreation />} />
-							<Route path="/normal_map/photostereo" element={<ImageUploadForm />} />
+							<Route path="/normal_map/photostereo" element={<PhotometricForm />} />
 							<Route path="/normal_map/:id" element={<NormalMap />} />
 						</Routes>
 					</div>
