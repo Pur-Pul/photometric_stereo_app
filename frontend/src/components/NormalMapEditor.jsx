@@ -24,7 +24,7 @@ import eraser from '../static/eraser32.png'
 import ToolButton from './ToolButton'
 import ShapeTool from "./ShapeTool"
 import NameForm from "./NameForm"
-
+import imageService from '../services/images'
 
 const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [pencilSize, setPencilSize] = useState(10)
@@ -37,25 +37,34 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     
     const canvasRefs = Array(5).fill(null).map(() => useRef(null))
     const emptyCanvasRef = useRef(null)
-    const iconCanvasRef = useRef(null)
-    const initialLayers = [...layers]
+    const [initialLayers,setInitialLayers] = useState(null)
 
-    const [editorState, setEditorState] = useState([initialLayers.map(layer => { return { ...layer, visible: true }})])
+    const [editorState, setEditorState] = useState(null)
     const [editorCursor, setEditorCursor] = useState(0)
     const dispatch = useDispatch()
     const navigate = useNavigate()
     
+    useEffect(() => { //Fetch the layers from the backend.
+        const getLayers = async () => {
+            const initialLayers = layers.map(layer => ({...layer}))
+            for (var i = 0; i < initialLayers.length; i++) {
+                if (initialLayers.src) { continue }
+                const blob = await imageService.getFile(id, initialLayers[i].id)
+                initialLayers[i].src = URL.createObjectURL(blob)
+            }
+            setInitialLayers(initialLayers)
+        }
+        getLayers()
+    }, [])
+    
+    useEffect(() => { //initialize editor state
+        if (initialLayers === null) { return }
+        const editorState = [initialLayers.map(layer => { return { ...layer, visible: true }})]
+        setEditorState(editorState)
 
-    useEffect(() => {
         emptyCanvasRef.current = document.createElement('canvas')
         emptyCanvasRef.current.width = size[0]
         emptyCanvasRef.current.height = size[1]
-        
-        const aspect = size[0] / size[1]
-
-        iconCanvasRef.current = document.createElement('canvas')
-        iconCanvasRef.current.width = aspect * 64
-        iconCanvasRef.current.height = 64
         
         const ctx = emptyCanvasRef.current.getContext('2d')
         ctx.fillStyle = 'rgba(0, 0, 0, 0)'
@@ -65,35 +74,27 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         }
         setEditorState([initialLayers.map(layer => { return { ...layer, visible: true }})])
         setEditorCursor(0)
-    }, [])
+    }, [initialLayers])
 
     const editorToBlobs = async () => {
         const blobs = []
-        const canvas = iconCanvasRef.current
-        const ctx = canvas.getContext('2d', { willReadFrequently: true })
         for (var i = 0; i < editorState[editorCursor].length; i++) {
             const blob = await new Promise(resolve => canvasRefs[i].current.toBlob(resolve))
             blobs.push(blob)
-            const image = new Image()
-            image.src = canvasRefs[i].current.toDataURL()
-            await image.decode()
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
         }
-        const iconBlob = await new Promise(resolve => iconCanvasRef.current.toBlob(resolve))
-        return [blobs, iconBlob]
+        return blobs
     }
 
     const handleSave = async () => {
-        const [blobs, iconBlob] = await editorToBlobs()
-        console.log(blobs)
-        dispatch(performLayerUpdate(blobs, iconBlob, editorState[editorCursor], id))
+        const blobs = await editorToBlobs()
+        dispatch(performLayerUpdate(blobs, editorState[editorCursor], id))
     }
 
     const handleCreate = async (e) => {
         e.preventDefault()
         const name = e.target.name.value
-        const [blobs, iconBlob] = await editorToBlobs()
-        dispatch(performCreate(blobs, name, iconBlob, navigate))
+        const blobs = await editorToBlobs()
+        dispatch(performCreate(blobs, name, navigate))
     }
 
     const addLayer = () => {
@@ -130,6 +131,8 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         setEditorState([...currentState, newState])
         setEditorCursor(editorCursor+1)
     }
+
+    if (editorState === null) return 'loading'
     
     return (
         <div style={{ margin: 'auto' }}>

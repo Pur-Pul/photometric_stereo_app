@@ -48,8 +48,6 @@ services:
   front-dev:
     build:
       context: frontend
-      args:
-        BACKEND_URL: http://localhost:${PORT}/api
       dockerfile: dev.Dockerfile
     volumes:
       - ./frontend/src:/usr/src/app/src

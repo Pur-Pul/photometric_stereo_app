@@ -25,74 +25,60 @@ const NormalMap = () => {
     const [open, setOpen ] = useState(false)
     const [edit, setEdit] = useState(false)
     const [size, setSize] = useState(null)
-    const [layers, setLayers] = useState([]) 
     const navigate = useNavigate()
-    const canvasRef = useRef(null)
     const [flatImage, setFlatImage] = useState(null)
     const [visibiliy, setVisibility] = useState(normalMap ? normalMap.visibility : 'private')
     const [visAlertOpen, setVisAlertOpen] = useState(false)
 
     useEffect(() => {
         const getNormalMap = async () => {
+            //get latest version of normal map
             const newNormalMap = await imageService.get(id)
-            newNormalMap.layers = newNormalMap.layers.map(id => {return{id}})
+            newNormalMap.flatImage = { id: newNormalMap.flatImage }
+            newNormalMap.layers = newNormalMap.layers.map(id => ({id}))
+
+            //Check if normal map is newer than the stored one.
+            if (newNormalMap.updatedAt === normalMap.updatedAt) { return }
+
+            //fetch icon
             if (newNormalMap.icon) {
                 const iconBlob = await imageService.getFile(id, newNormalMap.icon)
                 newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
             }
             
-            if (newNormalMap.layers.length != normalMap.layers.length || newNormalMap.status != normalMap.status) {
-                dispatch(updateNormalMap(newNormalMap))
-            }
+            dispatch(updateNormalMap(newNormalMap))
         }
-		const getLayers = async () => {
-            const updatedLayers = []
-            for (var i = 0; i < normalMap.layers.length; i++) {
-                const blob = await imageService.getFile(id, normalMap.layers[i].id)
-                updatedLayers.push({...normalMap.layers[i], src:URL.createObjectURL(blob)})
-            }
-            
-            dispatch(updateNormalMap({ ...normalMap, layers: updatedLayers }))
+
+        const getFlatImage = async () => {
+            const blob = await imageService.getFile(id, normalMap.flatImage.id)
+            dispatch(updateNormalMap({ ...normalMap, flatImage: {...normalMap.flatImage, src:URL.createObjectURL(blob)} }))
         }
+
         if (!normalMap) { return }
-        if (normalMap.status == 'done' && normalMap.layers[0].src == undefined) {
-            getLayers()
+        if (normalMap.status == 'done' && normalMap.flatImage.src === undefined) {
+            getFlatImage()
         } else {
             getNormalMap()
         }
-        if (normalMap.layers && normalMap.layers.length) {
-            setLayers(normalMap.layers)
+        if (normalMap.flatImage && normalMap.flatImage.src) {
+            
+            const flatImage = new Image()
+            flatImage.onload = function () {
+                const canvas =  document.createElement('canvas')
+                if (!canvas) { return }
+                const size = [this.width, this.height]
+                setSize(size)
+                canvas.width = size[0]
+                canvas.height = size[1]
+                
+                const ctx = canvas.getContext('2d', { willReadFrequently: true })
+                ctx.drawImage(this, 0, 0, this.width, this.height)
+                setFlatImage(this)
+            }
+            flatImage.src = normalMap.flatImage.src
         }
         setVisibility(normalMap.visibility)
 	}, [normalMap])
-
-    useEffect(() => {
-        for (var i = 0; i < layers.length; i++) {
-            const layer = layers[i]
-            if (!layer.src) { continue }
-            const image = new Image()
-            image.onload = function () {
-                const canvas = canvasRef.current
-                if (!canvas) { return }
-                if (this.i === 0) {
-                    const size = [this.width, this.height]
-                    setSize(size)
-                    canvas.width = size[0]
-                    canvas.height = size[1]
-                }
-                const ctx = canvas.getContext('2d', { willReadFrequently: true })
-                ctx.drawImage(this, 0, 0, this.width, this.height)
-                if (this.i === layers.length-1) {
-                    const flatImage = new Image()
-                    flatImage.onload = function() { setFlatImage(this) }
-                    flatImage.src = canvas.toDataURL()
-                }
-            }
-            image.i = i
-            image.src = layer.src
-        }
-        
-    }, [layers, edit])
  
     const deleteHandler = async (event) => {
         dispatch(performRemove(id))
@@ -105,14 +91,22 @@ const NormalMap = () => {
     }
 
     if (size && edit) return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
-
+    if (!flatImage) return 'Loading'
     return <div>
-                <canvas ref={canvasRef} style={{ border: '1px solid', width: '100%', height:'100%', imageRendering: 'pixelated' }}/>
-                
+                <div>
+                    <img src={flatImage.src} style={{
+                        width: '100%',
+                        maxWidth: '720px',
+                        height: '100%',
+                        objectFit: 'cover',
+                        border: '1px solid rgba(0,0,0,1)',
+                        imageRendering: 'pixelated',
+                    }}/>
+                </div>
                 <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
                 <Button type='label' variant='outlined' onClick={() => {
                     const link = document.createElement("a")
-                    link.href = canvasRef.current.toDataURL()
+                    link.href = flatImage.src
                     link.download = 'normalmap.png'
                     link.click()
                 }}>Download</Button>

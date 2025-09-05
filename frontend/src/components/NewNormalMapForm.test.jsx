@@ -16,10 +16,9 @@ vi.mock('./ManualOptions', () => {
 })
 
 vi.mock('./UploadOptions', () => {
-    return { default: vi.fn(({setReady, setIconBlob}) => {
+    return { default: vi.fn(({setReady}) => {
         useEffect(() => {
             setReady(true)
-            setIconBlob('iconBlob')
         }, [])
         
         return <mock-UploadOptions data-testid='mocked-upload-options' />
@@ -171,7 +170,7 @@ describe('New normal map form is functional.', () => {
         await user.click(screen.getByTestId('form-continue'))
         expect(mockedNavigate).toHaveBeenCalledWith('/normal_map/manual/100/100')
     })
-    test('Clicking continue after uploading calls performCreate with file, name, iconBlob and navigate', async () => {
+    test('Clicking continue after uploading calls performCreate with file, name and navigate', async () => {
         const user = userEvent.setup()
         render(<Provider store={store}><NewNormalMapForm open={true} setOpen={() => {}}/></Provider>)
         const fileUpload = screen.getByTestId('file-upload')
@@ -181,7 +180,6 @@ describe('New normal map form is functional.', () => {
         const normalMapReducer = await import('../reducers/normalMapReducer')
         expect(normalMapReducer.performCreate.mock.calls.at(-1)[0][0]).toBe(file)
         expect(normalMapReducer.performCreate.mock.calls.at(-1)[1]).toBe('test')
-        expect(normalMapReducer.performCreate.mock.calls.at(-1)[2]).toBe('iconBlob')
-        expect(normalMapReducer.performCreate.mock.calls.at(-1)[3]).toBe(mockedNavigate)
+        expect(normalMapReducer.performCreate.mock.calls.at(-1)[2]).toBe(mockedNavigate)
     })
 })

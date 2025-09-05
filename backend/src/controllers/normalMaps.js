@@ -10,6 +10,42 @@ const { PHOTOSTEREO_URI } = require('../utils/config')
 const { ValidationError } = require('../utils/errors')
 const logger = require('../utils/logger')
 const { expireNormalMap } = require('../utils/expiration_manager')
+const { createCanvas, loadImage } = require('canvas')
+
+const flattenLayers = async (layers, file) => {
+    let canvas
+    for (var i = 0; i < layers.length; i++) {
+        const image = await loadImage(layers[i].file)
+        canvas = canvas === undefined ? createCanvas(image.width, image.height) : canvas
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(image, 0, 0, image.width, image.height)
+        
+    }
+    fs.writeFileSync(file, canvas.toBuffer('image/png'))
+    const flatImage = new Image({
+        file,
+        creator : layers[0].creator
+    })
+    flatImage.save()
+    return flatImage
+}
+
+const createIcon = async (flatImage, file) => {
+    const canvas = createCanvas(64,64)
+    const ctx = canvas.getContext('2d')
+    const image  = await loadImage(flatImage.file)
+
+    ctx.drawImage(image, 0, 0, 64, 64)
+    fs.writeFileSync(file, canvas.toBuffer('image/png'))
+
+    const icon = new Image({
+        file,
+        creator: flatImage.creator
+    })
+
+    await icon.save()
+    return icon
+}
 
 normalMapsRouter.get('/', middleware.userExtractor, async (request, response) => {
     const user = request.user
@@ -36,6 +72,7 @@ normalMapsRouter.get('/:normalId/layers/:id', middleware.userExtractor, async (r
         const user = request.user
         const normalMap = await NormalMap.findById(normalId)
         const image = await Image.findById(id).populate('creator')
+        console.log(image)
         if (normalMap && image) {
             if (user.id !== image.creator.id && normalMap.visibility !== 'public') {
                 return response.status(403).json({ error: 'incorrect user' })
@@ -58,14 +95,19 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
             try {
                 if (!request.body || !request.body.name) { throw new ValidationError('Name is required')}
                 const name = request.body.name
-
-                const normalMapName = `${request.user.id}-${request.timestamp}`
                 const layers = []
-                let icon = null
                 const number_of_files = request.filenames ? request.filenames.length : 0
+                const normalMap = new NormalMap({
+                    name,
+                    status: 'done',
+                    creator: request.user.id
+                })
+                //normalMap.save()
+
                 for (var i = 0; i < number_of_files; i++) {
                     const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
-                    const newfile = path.join(process.cwd(), `../output/${name}-${request.originalFilenames[i]}`)
+                    const newfile = path.join(process.cwd(), `../output/${normalMap.id}-${request.originalFilenames[i]}`)
+                    console.log(newfile)
                     fs.copyFileSync(oldfile, newfile)
                     fs.unlinkSync(oldfile)
                     const image = new Image({
@@ -73,23 +115,16 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                         creator: request.user.id
                     })
                     await image.save()
-
-                    if (request.originalFilenames[i] === 'icon.png') {
-                        icon = image.id
-                    } else {
-                        layers.push(image.id)
-                    }
+                    layers.push(image)
                 }
-
-                const normalMap = new NormalMap({
-                    name,
-                    status: 'done',
-                    layers,
-                    icon,
-                    creator: request.user.id
-                })
-                const saved_normalMap = await normalMap.save()
-                response.status(201).json(saved_normalMap)
+                const flatImage = number_of_files > 0 ? await flattenLayers(layers, path.join(process.cwd(), `../output/${normalMap.id}-flat.png`)) : { id: null }
+                const icon = flatImage.id !== null ? await createIcon(flatImage, path.join(process.cwd(), `../output/${normalMap.id}-icon.png`)) : { id: null }
+                
+                normalMap.layers = layers.map(layer => layer.id)
+                normalMap.flatImage = flatImage.id
+                normalMap.icon = icon.id
+                await normalMap.save()
+                response.status(201).json(normalMap)
             } catch (exception) {
                 next(exception)
             }
@@ -113,31 +148,31 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                 if (request.filenames) {
                     for (var i = 0; i < request.filenames.length; i++) {
                         const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
-                        const newfile = path.join(process.cwd(), `../output/${normalMap.name}-${request.originalFilenames[i]}`)
+                        const newfile = path.join(process.cwd(), `../output/${normalMap.id}-${request.originalFilenames[i]}`)
                         fs.copyFileSync(oldfile, newfile)
                         fs.unlinkSync(oldfile)
-                        if (request.originalFilenames[i] === 'icon.png' && !normalMap.icon) {
-                            const icon = new Image({
+                        let layer = normalMap.layers.find((layer) => layer.file === newfile)
+                        if (!layer) {
+                            layer = new Image({
                                 file: newfile,
                                 creator: request.user.id
                             })
-                            icon.save()
-                            normalMap.icon = icon.id
-                        } else if (request.originalFilenames[i] !== 'icon.png') {
-                            let layer = normalMap.layers.find((layer) => layer.file === newfile)
-                            if (!layer) {
-                                layer = new Image({
-                                    file: newfile,
-                                    creator: request.user.id
-                                })
-                            }
-                            await layer.save()
-                            layers.push(layer.id)
                         }
+                        await layer.save()
+                        layers.push(layer)
+                        
                     }
-                    normalMap.layers = layers
+                    
+                    const flatImage = await flattenLayers(layers, path.join(process.cwd(), `../output/${normalMap.id}-flat.png`))
+                    const icon = await createIcon(flatImage, path.join(process.cwd(), `../output/${normalMap.id}-icon.png`))
+                    normalMap.layers = layers.map(layer => layer.id)
+                    normalMap.flatImage = flatImage.id
+                    normalMap.icon = icon.id
+                    
                 }
-                
+               
+
+            
                 normalMap.visibility = visibility ? visibility : normalMap.visibility
                 const saved_normalMap = await normalMap.save()
                 response.status(201).json(saved_normalMap)

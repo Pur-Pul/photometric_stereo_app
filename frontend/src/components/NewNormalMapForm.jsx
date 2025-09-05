@@ -27,7 +27,6 @@ const NewNormalMapForm = ({ open, setOpen }) => {
     const [normalMap, setNormalMap] = useState(null)
     const [name, setName] = useState(null)
     const [ready, setReady] = useState(false)
-    const [iconBlob, setIconBlob] = useState(null)
     const handleContinue = () => {
         switch (method) {
             case 'photometric':
@@ -39,8 +38,7 @@ const NewNormalMapForm = ({ open, setOpen }) => {
                 navigate(`/normal_map/manual/${width}/${height}`)
                 break
             case 'upload':
-                dispatch(performCreate([normalMap.file], name, iconBlob, navigate))
-                //console.log('Upload function not yet implemented.')
+                dispatch(performCreate([normalMap.file], name, navigate))
                 break
             default:
                 dispatch(notificationSet({ text: 'Method not implemented', type:'error' }, 5))
@@ -109,7 +107,7 @@ const NewNormalMapForm = ({ open, setOpen }) => {
                         }
                         {
                             method === 'upload' && normalMap
-                                ? <UploadOptions normalMap={normalMap} name={name} setName={setName} setReady={setReady} iconBlob={iconBlob} setIconBlob={setIconBlob}/>
+                                ? <UploadOptions normalMap={normalMap} name={name} setName={setName} setReady={setReady} />
                                 : null
                         }
                     </Grid>

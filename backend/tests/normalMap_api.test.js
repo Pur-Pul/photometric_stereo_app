@@ -81,6 +81,12 @@ afterEach(async () => {
     await Session.deleteMany({ userId: initialUsers[1].id })
     for (var i = 0; i < initialUsers.length; i++) {
         await NormalMap.deleteMany({ creator: initialUsers[i].id })
+        const images = await Image.find({ creator: initialUsers[i].id })
+        images.forEach(image => {
+            if (fs.existsSync(image.file)) {
+                fs.unlinkSync(image.file)
+            }
+        })
         await User.findByIdAndDelete(initialUsers[i].id)
     }
     for (var i = 0; i < initialImages.length; i++) {
@@ -300,7 +306,7 @@ describe('normal map post', () => {
     beforeEach(async () => {
         const img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC"
         const data = img.replace(/^data:image\/\w+;base64,/, "")
-        fs.writeFileSync(newFile, Buffer.from(data.replace()))
+        fs.writeFileSync(newFile, Buffer.from(data, 'base64'))
     })
     after(() => {
         fs.unlinkSync(newFile)
@@ -466,9 +472,6 @@ describe('layer get one', () => {
         const img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC"
         const data = img.replace(/^data:image\/\w+;base64,/, "")
         fs.writeFileSync(initialImages[0].file, Buffer.from(data.replace()))
-    })
-    after(() => {
-        fs.unlinkSync(initialImages[0].file)
     })
 
     test('layer request is successfull with correct authorization', async () => {
@@ -719,13 +722,10 @@ describe('normal map put', () => {
         'base64'
     )
     const testlayer = path.join(process.cwd(), 'tests/testlayer.png')
-    const testicon = path.join(process.cwd(), 'tests/icon.png')
     fs.writeFileSync(testlayer, buffer)
-    fs.writeFileSync(testicon, buffer)
 
     after(() => {
         fs.unlinkSync(testlayer)
-        fs.unlinkSync(testicon)
     })
     test('normal map put is successful with correct authorization', async () => {
         await api
@@ -750,42 +750,32 @@ describe('normal map put', () => {
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(403)
     })
-    test('layer and icon included in normal map are appended to the returned object', async () => {
+    test('layer included in normal map are appended to the returned object', async () => {
         const response = await api
             .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .attach('files', testlayer)
-            .attach('files', testicon)
             .expect(201)
         assert(response.body.layers)
         assert.equal(response.body.layers.length, 1)
-        assert(response.body.icon)
     })
-    test('layer and icon included in normal map are id only', async () => {
+    test('layer included in normal map are id only', async () => {
         const response = await api
             .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .attach('files', testlayer)
-            .attach('files', testicon)
             .expect(201)
         assert.equal(typeof response.body.layers[0], 'string')
-        assert.equal(typeof response.body.icon, 'string')
     })
-    test('new layer and icon can be fetched with layer get', async () => {
+    test('new layer can be fetched with layer get', async () => {
         const response = await api
             .put(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .attach('files', testlayer)
-            .attach('files', testicon)
             .expect(201)
         console.log(response.body)
         await api
             .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${response.body.layers[0]}`)
-            .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .expect(200)
-            .expect('Content-Type', /image\/png/)
-        await api
-            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${response.body.icon}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)

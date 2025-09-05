@@ -9,6 +9,8 @@ const requestLogger = (request, response, next) => {
     request.timestamp = Date.now()
     logger.info('Method:', request.method)
     logger.info('Path:  ', request.path)
+    logger.info('Origin:  ', request.headers.origin)
+    logger.info('Referer:  ', request.headers.referer)
     logger.info('Body:  ', request.body)
     logger.info('Timestamp:	', request.timestamp)
     logger.info('---')

@@ -4,7 +4,7 @@ import {
     Grid
 } from '@mui/material'
 
-const UploadOptions = ({normalMap, name, setName, setReady, iconBlob, setIconBlob}) => {
+const UploadOptions = ({normalMap, name, setName, setReady }) => {
     const img = {
         width: '100%',
         minWidth: '100%',
@@ -13,24 +13,9 @@ const UploadOptions = ({normalMap, name, setName, setReady, iconBlob, setIconBlo
         border: '1px solid rgba(0,0,0,1)',
         imageRendering: 'pixelated',
     }
-    const iconCanvas = document.createElement('canvas')
-    iconCanvas.width = 64
-    iconCanvas.height = 64
+ 
 
-    useEffect(() => {
-        const image = new Image()
-        image.onload = () => {
-            const aspect = image.width / image.height
-            iconCanvas.width = aspect * 64
-            iconCanvas.height = 64
-            ctx.drawImage(image, 0, 0, iconCanvas.width, iconCanvas.height)
-            iconCanvas.toBlob(blob => setIconBlob(blob))
-        }
-        image.src = normalMap.src
-        const ctx = iconCanvas.getContext('2d', { willReadFrequently: true })
-    }, [normalMap])
-
-    useEffect(() => { setReady(name.length > 0 && iconBlob !== undefined && iconBlob !== null) }, [name, iconBlob])
+    useEffect(() => { setReady(name.length > 0) }, [name])
     
     return <Grid container spacing={2}>
         <Grid size={12}>

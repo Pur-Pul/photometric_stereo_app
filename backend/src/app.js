@@ -28,7 +28,16 @@ expireSessions()
 //expireNormalMaps()
 
 app.use(express.static('dist'))
-app.use(cors())
+app.use(cors((req, callback) => {
+    //console.log(req)
+    let options
+    if (req.path.startsWith('/internal')) {
+        options = { origin: config.PHOTOSTEREO_URI }
+    } else {
+        options = { origin: config.FRONTEND_URL }
+    }
+    callback(null, options)
+}))
 app.use(express.json())
 app.use(middleware.requestLogger)
 app.use(middleware.tokenExtractor)
