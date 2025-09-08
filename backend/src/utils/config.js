@@ -2,7 +2,6 @@ require('dotenv').config()
 const {error, info} = require('./logger')
 const path = require('path')
 
-
 const getMongoURI = (node_env, uri) => {
     const parts = uri.split('?')
     const tail = parts.length > 1 ? `?${parts[1]}` : ''
@@ -18,17 +17,13 @@ const getMongoURI = (node_env, uri) => {
     }
 }
 
-const PORT = process.env.BACK_PORT
-const PHOTOSTEREO_URI = process.env.PHOTOSTEREO_URI
+const { BACK_PORT: PORT, PHOTOSTEREO_URI, EXPIRE_DELAY, UPLOADS_DIR, OUTPUT_DIR, FRONTEND_URL, ADMIN_PASS } = process.env
 const MONGODB_URI = getMongoURI(process.env.NODE_ENV, process.env.MONGODB_URI)
-const EXPIRE_DELAY = process.env.EXPIRE_DELAY
-const UPLOADS_DIR = process.env.UPLOADS_DIR
-const OUTPUT_DIR = process.env.OUTPUT_DIR
-const FRONTEND_URL = process.env.FRONTEND_URL
-if (FRONTEND_URL === undefined) { error('Warning: Frontend URL is undefined') }
-if (MONGODB_URI === undefined) { error('Warning: Mongodb URI is undefined') }
-if (PHOTOSTEREO_URI === undefined) { error('Warning: Photostereo URI is undefined') }
 
+if (FRONTEND_URL === undefined) { error('Warning: Frontend URL is undefined.') }
+if (MONGODB_URI === undefined) { error('Warning: Mongodb URI is undefined.') }
+if (PHOTOSTEREO_URI === undefined) { error('Warning: Photostereo URI is undefined.') }
+if (ADMIN_PASS === undefined) { error('Warning: Admin password is undefined. Default admin can not be created.') }
 
 module.exports = {
     PORT: PORT ? PORT : 3001,
@@ -37,5 +32,6 @@ module.exports = {
     EXPIRE_DELAY: EXPIRE_DELAY ? EXPIRE_DELAY : 30,
     UPLOADS_DIR: UPLOADS_DIR ? UPLOADS_DIR : path.join(process.cwd(), '../uploads/'),
     OUTPUT_DIR: OUTPUT_DIR ? OUTPUT_DIR : path.join(process.cwd(), '../output/'),
-    FRONTEND_URL: FRONTEND_URL
+    FRONTEND_URL: FRONTEND_URL,
+    ADMIN_PASS,
 }

@@ -1,4 +1,5 @@
 const config = require('./utils/config')
+const { initDatabase } = require('./utils/tools')
 const { expireSessions, expireNormalMaps } = require('./utils/expiration_manager')
 const express = require('express')
 const app = express()
@@ -23,7 +24,7 @@ mongoose
     .catch((error) => {
         logger.error('error connecting to MongoDB:', error.message)
     })
-
+initDatabase()
 expireSessions()
 //expireNormalMaps()
 

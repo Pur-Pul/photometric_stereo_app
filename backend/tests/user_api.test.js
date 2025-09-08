@@ -19,7 +19,7 @@ let initialUsers = [
         role: 'user'
     },
     {
-      	username: 'test2',
+      	username: 'admin',
       	name: 'Test2 Person2',
       	passwordHash: null,
         role: 'admin'
@@ -28,7 +28,7 @@ let initialUsers = [
 
 beforeEach(async () => {
     await User.deleteMany({ username: 'test1' })
-    await User.deleteMany({ username: 'test2' })
+    await User.deleteMany({ username: 'admin' })
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         let userObject = new User(initialUsers[i])
@@ -55,6 +55,7 @@ describe('user get', () => {
             .expect(200)
             .expect('Content-Type', /application\/json/)
     })
+    test('intial ')
     test(`there are ${initialUsers.length} users`, async () => {
         const response = await api
             .get('/api/users')

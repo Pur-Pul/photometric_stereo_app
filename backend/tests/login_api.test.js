@@ -104,6 +104,18 @@ describe('login post', () => {
         assert(response.body.id)
     })
 
+    test('Successful login response includes user role.', async () => {
+        const credentials = {
+            username: 'test1',
+            password: 'pass'
+        }
+        const response = await api
+            .post('/api/login')
+            .send(credentials)
+
+        assert(response.body.role)
+    })
+
     test('Successful login response does not include password or passwordhash.', async () => {
         const credentials = {
             username: 'test1',
