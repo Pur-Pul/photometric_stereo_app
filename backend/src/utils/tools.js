@@ -6,7 +6,6 @@ const { info, error } = require('./logger')
 const initDatabase = async () => {
     try {
         const admin = await User.findOne({ role: 'admin', username: 'admin' })
-        console.log(`admin: ${admin}`)
         if (admin === null && config.ADMIN_PASS !== undefined) {
             const passwordHash = await bcrypt.hash(config.ADMIN_PASS, 10)
             const user = new User({

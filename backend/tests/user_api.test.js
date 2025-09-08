@@ -55,7 +55,6 @@ describe('user get', () => {
             .expect(200)
             .expect('Content-Type', /application\/json/)
     })
-    test('intial ')
     test(`there are ${initialUsers.length} users`, async () => {
         const response = await api
             .get('/api/users')
@@ -89,6 +88,20 @@ describe('user get', () => {
             .get('/api/users')
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
         assert('normalMaps' in response.body[0])
+    })
+
+    test('User object contains \'name\' field only if authorized as the requested user.', async () => {
+        const response = await api
+            .get('/api/users')
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+        
+        response.body.forEach(user => {
+            if (user.id === initialUsers[1].id) {
+                assert('name' in user)
+            } else {
+                assert(!('name' in user))
+            }
+        })        
     })
 })
 

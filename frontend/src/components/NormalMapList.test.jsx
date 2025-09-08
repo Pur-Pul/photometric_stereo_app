@@ -10,7 +10,16 @@ vi.mock('./NewNormalMapForm', () => {
 const normalMaps = []
 vi.mock(import('react-redux'), async (importOriginal) => {
     const actual = await importOriginal()
-    return {...actual, useSelector: () => normalMaps }
+    return {...actual, useSelector: (selector) => {
+        switch (selector({normalMaps: 'normalMaps', login: 'login'})) {
+            case 'normalMaps':
+                return normalMaps
+            case 'login':
+                return { username: 'testuser', id:'testuserid' }
+            default:
+                return undefined
+        } 
+    }}
 })
 
 const mockedNavigate = vi.fn()
@@ -26,19 +35,37 @@ describe('Normal map list renders.', () => {
         vi.clearAllMocks()
         normalMaps.length = 0
     })
-    test('If no normal maps are found the normal map list is not rendered.', () => {
+    test('If no normal maps are found neither of the normal map lists are rendered.', () => {
         render(<Provider store={store}><NormalMapList /></Provider>)
-        const list = screen.queryByTestId('normal-map-list')
-        expect(list).not.toBeInTheDocument()
+        const userList = screen.queryByTestId('user-normal-map-list')
+        const publicList = screen.queryByTestId('public-normal-map-list')
+        expect(userList).not.toBeInTheDocument()
+        expect(publicList).not.toBeInTheDocument()
     })
-    test('If one normal map is found the normal map list is rendered.', () => {
-        normalMaps.push({id: 'foo'})
+    test('If one user normal map is found the user normal map list is rendered.', () => {
+        normalMaps.push({id: 'foo', creator: {id: 'testuserid', username: 'testuser'}})
         render(<Provider store={store}><NormalMapList /></Provider>)
-        const list = screen.queryByTestId('normal-map-list')
+        const list = screen.queryByTestId('user-normal-map-list')
         expect(list).toBeInTheDocument()
     })
+    test('If one public normal map is found the public normal map list is rendered.', () => {
+        normalMaps.push({id: 'foo', creator: {id: 'otheruserid', username: 'otheruser'}})
+        render(<Provider store={store}><NormalMapList /></Provider>)
+        const list = screen.queryByTestId('public-normal-map-list')
+        expect(list).toBeInTheDocument()
+    })
+    test('If both public and user normal maps are found both normal map lists are rendered.', () => {
+        normalMaps.push({id: 'foo', creator: {id: 'otheruserid', username: 'otheruser'}})
+        normalMaps.push({id: 'foo', creator: {id: 'testuserid', username: 'testuser'}})
+
+        render(<Provider store={store}><NormalMapList /></Provider>)
+        const userList = screen.queryByTestId('public-normal-map-list')
+        const publicList = screen.queryByTestId('public-normal-map-list')
+        expect(userList).toBeInTheDocument()
+        expect(publicList).toBeInTheDocument()
+    })
     test('If one normal map is found a normal map link button is rendered.', () => {
-        normalMaps.push({id: 'foo'})
+        normalMaps.push({id: 'foo', creator: {id: 'testuserid', username: 'testuser'}})
         render(<Provider store={store}><NormalMapList /></Provider>)
         const button = screen.queryByTestId('normal-map-foo')
         expect(button).toBeInTheDocument()
@@ -66,7 +93,7 @@ describe('Normal map list is functional.', () => {
         normalMaps.length = 0
     })
     test('If a normal map link is clicked the navigate function is called with \'/normal_map/{id}\'', async () => {
-        normalMaps.push({id: 'foo'})
+        normalMaps.push({id: 'foo', creator: {id: 'testuserid', username: 'testuser'}})
         const user = userEvent.setup()
         render(<Provider store={store}><NormalMapList /></Provider>)
         const button = screen.getByTestId('normal-map-foo')

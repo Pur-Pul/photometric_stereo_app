@@ -7,20 +7,20 @@ const user = require('../models/user')
 
 usersRouter.get('/', middleware.userExtractor, async (request, response) => {
     const users = request.user.role !== 'admin' ? [request.user] : await User.find({})
-    response.json(users)
+    response.json(users.map(user => {
+        return user.id === request.user.id
+            ? { id: user.id, name: user.name, username: user.username, role: user.role, normalMaps: user.normalMaps }
+            : { id: user.id, username: user.username, role: user.role, normalMaps: user.normalMaps }
+            
+    }))
 })
 
 usersRouter.post('/', async (request, response, next) => {
     const { username, name, password } = request.body
 
     try {
-        if (password === undefined) {
-            throw new ValidationError('password is required.')
-        }
-
-        if (password.length < 3) {
-            throw new ValidationError('password needs to be atleast 3 characters long.')
-        }
+        if (password === undefined) { throw new ValidationError('password is required.') }
+        if (password.length < 3) { throw new ValidationError('password needs to be atleast 3 characters long.') }
 
         const passwordHash = await bcrypt.hash(password, 10)
 
@@ -31,9 +31,8 @@ usersRouter.post('/', async (request, response, next) => {
         })
 
         const existing_user = await User.findOne({ username })
-        if (existing_user) {
-            throw new ValidationError('username already exists.')
-        }
+        if (existing_user) { throw new ValidationError('username already exists.') }
+
         const savedUser = await user.save()
         response.status(201).json(savedUser)
     } catch (exception) {

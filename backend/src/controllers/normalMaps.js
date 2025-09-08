@@ -95,12 +95,13 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
             try {
                 if (!request.body || !request.body.name) { throw new ValidationError('Name is required')}
                 const name = request.body.name
+                const creator = request.user
                 const layers = []
                 const number_of_files = request.filenames ? request.filenames.length : 0
                 const normalMap = new NormalMap({
                     name,
                     status: 'done',
-                    creator: request.user.id
+                    creator: creator.id
                 })
                 //normalMap.save()
 
@@ -112,7 +113,7 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                     fs.unlinkSync(oldfile)
                     const image = new Image({
                         file: newfile,
-                        creator: request.user.id
+                        creator: creator.id
                     })
                     await image.save()
                     layers.push(image)
@@ -124,7 +125,11 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                 normalMap.flatImage = flatImage.id
                 normalMap.icon = icon.id
                 await normalMap.save()
-                response.status(201).json(normalMap)
+                const savedNormalMap = await normalMap.populate('creator')
+                
+                creator.normalMaps = [...creator.normalMaps, normalMap.id]
+                await creator.save()
+                response.status(201).json(savedNormalMap)
             } catch (exception) {
                 next(exception)
             }
@@ -168,14 +173,15 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                     normalMap.layers = layers.map(layer => layer.id)
                     normalMap.flatImage = flatImage.id
                     normalMap.icon = icon.id
-                    
                 }
                
 
             
                 normalMap.visibility = visibility ? visibility : normalMap.visibility
-                const saved_normalMap = await normalMap.save()
-                response.status(201).json(saved_normalMap)
+                await normalMap.save()
+                
+                const savedNormalMap = await normalMap.populate('creator')
+                response.status(201).json(savedNormalMap)
             } catch (exception) {
                 next(exception)
             }
@@ -214,8 +220,10 @@ normalMapsRouter.post('/:id/layers/', middleware.userExtractor, async (request, 
                     })
                     await layer.save()
                     normalMap.layers = [...normalMap.layers, layer]
-                    const saved_normalMap = await normalMap.save()
-                    response.status(201).json(saved_normalMap)
+                    await normalMap.save()
+
+                    const savedNormalMap = await normalMap.populate('creator')
+                    response.status(201).json(savedNormalMap)
                 }
             } catch (exception) {
                 next(exception)
@@ -229,7 +237,9 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
         if (exception) { next(exception) }
         else {
             try {
-                const file_name = `${request.user.id}-${request.timestamp}`
+                const creator = request.user
+                const file_name = `${creator.id}-${request.timestamp}`
+                
 
                 if (!request.body || !request.body.name) { throw new ValidationError('Name is required')}
                 const name = request.body.name
@@ -260,13 +270,15 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
                 const normalMap = new NormalMap({
                     name,
                     status: 'pending',
-                    creator: request.user.id
+                    creator: creator.id
                 })
-                const saved_map = await (await normalMap.save()).populate('creator')
-                await axios.post(`${PHOTOSTEREO_URI}/${saved_map.id}`, { file_name, format })
-                request.user.normalMaps = request.user.normalMaps.concat(saved_map._id)
-                await request.user.save()
-                response.status(201).json(saved_map)
+                const savedNormalMap = await (await normalMap.save()).populate('creator')
+                await axios.post(`${PHOTOSTEREO_URI}/${savedNormalMap.id}`, { file_name, format })
+                
+                creator.normalMaps = creator.normalMaps.concat(savedNormalMap._id)
+                await creator.save()
+
+                response.status(201).json(savedNormalMap)
             } catch (exception) {
                 next(exception)
             }
