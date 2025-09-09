@@ -55,7 +55,9 @@ const NewNormalMapForm = ({ open, setOpen }) => {
     const handleUpload = (e) => {
         const file = e.target.files[0]
         setNormalMap({ src: URL.createObjectURL(file), file })
-        setName(file.name.split('.')[0])
+        let name = file.name.split('.')
+        name.pop()
+        setName(name.join('.'))
         setMethod('upload')
     }
     

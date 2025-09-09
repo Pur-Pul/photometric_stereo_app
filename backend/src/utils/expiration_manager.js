@@ -33,7 +33,10 @@ const expireNormalMap = async (id, force=false) => {
     if (normalMap) {
         const expiration_time = normalMap.updatedAt - new Date() + EXPIRE_DELAY * 60 * 1000
         if (force || expiration_time <= 0) {
-            const images = normalMap.icon ? [...normalMap.layers, normalMap.icon] : normalMap.layers
+            const images = [...normalMap.layers]
+            normalMap.icon ? images.push(normalMap.icon) : null
+            normalMap.flatImage ? images.push(normalMap.flatImage) : null
+            
             for (var i=0; i < images.length; i++) {
                 const image = await Image.findById(images[i])
                 if (!image) { continue }

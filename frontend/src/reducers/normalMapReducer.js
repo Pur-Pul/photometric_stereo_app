@@ -3,13 +3,31 @@ import imageService from '../services/images'
 import { notificationSet } from './notificationReducer'
 import { useNavigate } from 'react-router-dom'
 
+const reformatNormalMaps = async (uninitalizedNormalMaps) => {
+	const normalMaps = [...uninitalizedNormalMaps]
+	for (var i = 0; i < normalMaps.length; i++) {
+		const normalMap = normalMaps[i]
+		normalMap.layers = normalMap.layers.map((id) => { return {id} })
+
+		if (!normalMaps[i].icon) { continue }
+		const blob = await imageService.getFile(normalMaps[i].id, normalMaps[i].icon)
+		normalMaps[i].icon = { id: normalMaps[i].icon, src: URL.createObjectURL(blob)}
+		normalMaps[i].flatImage = { id:normalMaps[i].flatImage }
+	}
+	return normalMaps
+}
 
 const normalMapSlice = createSlice({
 	name: 'normalMap',
 	initialState: [],
 	reducers: {
 		appendNormalMap(state, action) {
-			return [...state, ...action.payload]
+			const newState = [...state]
+			action.payload.forEach(newNormalMap => {
+				if (state.some(normalMap => normalMap.id === newNormalMap.id)) { return }
+				newState.push(newNormalMap)
+			})
+			return newState
 		},
 		setNormalMaps(state, action) {
 			return action.payload
@@ -50,18 +68,16 @@ export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap,
 export const initializeNormalMaps = () => {
 	return async (dispatch) => {
 		let normalMaps = await imageService.getAll()
-		
-		for (var i = 0; i < normalMaps.length; i++) {
-			const normalMap = normalMaps[i]
-			normalMap.layers = normalMap.layers.map((id) => { return {id} })
-
-			if (!normalMaps[i].icon) { continue }
-			const blob = await imageService.getFile(normalMaps[i].id, normalMaps[i].icon)
-			normalMaps[i].icon = { id: normalMaps[i].icon, src: URL.createObjectURL(blob)}
-			normalMaps[i].flatImage = { id:normalMaps[i].flatImage }
-		}
-
+		normalMaps = await reformatNormalMaps(normalMaps)
 		dispatch(setNormalMaps(normalMaps))
+	}
+}
+
+export const fetchPage = (page, category) => {
+	return async (dispatch) => {
+		let normalMaps = await imageService.getPage(page, category)
+		normalMaps = await reformatNormalMaps(normalMaps)
+		dispatch(appendNormalMap(normalMaps))
 	}
 }
 
@@ -160,10 +176,8 @@ export const performLayerUpdate = (blobs, layers, id) => {
 
 export const performRemove = (id) => {
 	return async (dispatch) => {
-	
 		await imageService.remove(id)
 		dispatch(deleteNormalMap(id))
-		
 	}
 }
 

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { loginUser, performReLog } from './reducers/loginReducer'
 import { initializeUsers } from './reducers/userReducer'
-import { initializeNormalMaps } from './reducers/normalMapReducer'
+import { fetchPage, initializeNormalMaps } from './reducers/normalMapReducer'
 import Notification from './components/Notification'
 import LoginForm from './components/Login'
 import UserList from './components/UserList'
@@ -20,7 +20,8 @@ const App = () => {
 	const location = useLocation()
 	
 	useEffect(() => { if (user) { dispatch(initializeUsers()) }}, [dispatch, user])
-	useEffect(() => { if (user) { dispatch(initializeNormalMaps()) }}, [dispatch, user])
+	useEffect(() => { if (user) { dispatch(fetchPage(1, 'private')) }}, [dispatch, user])
+	useEffect(() => { if (user) { dispatch(fetchPage(1, 'public')) }}, [dispatch, user])
 	useEffect(() => {
 		const loggedUserJSON = window.localStorage.getItem('loggedUser')
 		if (loggedUserJSON) {

@@ -5,6 +5,7 @@ import ToolButton from './ToolButton'
 import normal_sphere from '../static/normal_sphere.png'
 import normal_sphere32 from '../static/normal_sphere32.png'
 import imageService from '../services/images'
+import { fetchPage } from '../reducers/normalMapReducer'
 
 const blackToTransparent = async (src, maxHeight) => {
     const canvas = document.createElement('canvas')
@@ -79,8 +80,6 @@ const Shape = ({shape, selectedShape, setSelectedShape, loading, setLoading, max
     )
 }
 
-
-
 const ShapeTool = ({currentTool, setTool, maxHeight}) => {
     const [open, setOpen] = useState(false)
     const [selectedShape, setSelectedShape] = useState(null)
@@ -88,6 +87,8 @@ const ShapeTool = ({currentTool, setTool, maxHeight}) => {
     const [shapes, setShapes] = useState([])
     const [loading, setLoading] = useState(true)
     const normalMaps = useSelector((state) => state.normalMaps)
+    const loggedUser = useSelector((state) => state.login)
+    const dispatch = useDispatch()
     useEffect(() => {
         const shapes = [...defaultShapes]
         for (var i = 0; i < normalMaps.length; i++) {
@@ -96,12 +97,15 @@ const ShapeTool = ({currentTool, setTool, maxHeight}) => {
         }
         setShapes(shapes)
         setLoading(false)
-    }, [currentTool])
+    }, [currentTool, normalMaps])
 
     const handleSelect = () => {
         setTool({name: 'shape', shape: selectedShape})
-        setOpen(false)
-        
+        setOpen(false)   
+    }
+    const handleLoad = () => {
+        dispatch(fetchPage(Math.floor(normalMaps.filter(normalMap => normalMap.creator.id === loggedUser.id).length/10) + 1, 'private'))
+        dispatch(fetchPage(Math.floor(normalMaps.filter(normalMap => normalMap.creator.id !== loggedUser.id).length/10) + 1, 'public'))
     }
     return (
         <div>
@@ -126,10 +130,11 @@ const ShapeTool = ({currentTool, setTool, maxHeight}) => {
                         maxHeight={maxHeight}
                         />
                         )}
+                    <Grid size={12}><Button variant='outlined' onClick={handleLoad}>Load more</Button></Grid>
                 </Grid>
                 <DialogActions>
-                    <Button onClick={() => setOpen(false)} color='error' sx={loading ? {cursor: 'wait' } : {}} disabled={loading}>Cancel</Button>
-                    <Button onClick={handleSelect} sx={loading ? {cursor: 'wait' } : {}} disabled={loading}>Select</Button>
+                    <Button variant='outlined' onClick={() => setOpen(false)} color='error' sx={loading ? {cursor: 'wait' } : {}} disabled={loading}>Cancel</Button>
+                    <Button variant='outlined' onClick={handleSelect} sx={loading ? {cursor: 'wait' } : {}} disabled={loading}>Select</Button>
                 </DialogActions>
             </Dialog>
         </div>

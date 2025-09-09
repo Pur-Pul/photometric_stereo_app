@@ -40,12 +40,16 @@ let initialNormalMaps = [
     }
 ]
 
-let initialImages = [
+let initialLayers = [
     {
         file: path.join(process.cwd(), '../output/test2_normal_map.png')
     }
 ]
-
+let initialFlatImages = [
+    {
+        file: path.join(process.cwd(), '../output/test2_flat.png')
+    }
+]
 beforeEach(async () => {
     await User.deleteMany({ username: 'test1'})
     await User.deleteMany({ username: 'test2'})
@@ -59,21 +63,23 @@ beforeEach(async () => {
         initialUsers[i].id = userObject.id
         initialNormalMaps[i].creator = userObject.id
         
-        if (i == 1) {
-            const imageObject = new Image({...initialImages[0], creator: userObject.id})
+        if (i === 1) {
+            const imageObject = new Image({...initialLayers[0], creator: userObject.id})
             await imageObject.save()
-            initialImages[0].id = imageObject.id
-            initialImages[0].creator = imageObject.creator
-            initialNormalMaps[1].layers = [imageObject.id]
+            initialLayers[0].id = imageObject.id
+            initialLayers[0].creator = imageObject.creator
+            initialNormalMaps[i].layers = [imageObject.id]
         }
-
+        const flatImage = new Image({...initialFlatImages[0], creator: userObject.id})
+        await flatImage.save()
+        initialNormalMaps[i].flatImage = flatImage.id
+        
         const normalMapObject = new NormalMap(initialNormalMaps[i])
         userObject.normalMaps = [normalMapObject.id]
         await normalMapObject.save()
         await userObject.save()
         initialNormalMaps[i].id = normalMapObject.id
     }
-
 })
 
 afterEach(async () => {
@@ -89,8 +95,8 @@ afterEach(async () => {
         })
         await User.findByIdAndDelete(initialUsers[i].id)
     }
-    for (var i = 0; i < initialImages.length; i++) {
-        await User.findByIdAndDelete(initialImages[i].id)
+    for (var i = 0; i < initialLayers.length; i++) {
+        await User.findByIdAndDelete(initialLayers[i].id)
     }
     for (var i = 0; i < initialNormalMaps.length; i++) {
         await User.findByIdAndDelete(initialNormalMaps[i].id)
@@ -196,9 +202,14 @@ describe('normalmap get all', () => {
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
             .expect('Content-Type', /application\/json/)
-        assert(result.body[0].layers)
-        assert.equal(result.body[0].layers.length, 1)
-        assert.equal(typeof result.body[0].layers[0], 'string')
+        console.log(result.body)
+        assert.equal(result.body.length, 2)
+
+        const returnedMap = result.body.find(normalMap => normalMap.id === initialNormalMaps[1].id)
+        assert(returnedMap)
+        assert(returnedMap.layers)
+        assert.equal(returnedMap.layers.length, 1)
+        assert.equal(typeof returnedMap.layers[0], 'string')
     })
 })
 
@@ -471,32 +482,32 @@ describe('layer get one', () => {
     beforeEach(async () => {
         const img = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC"
         const data = img.replace(/^data:image\/\w+;base64,/, "")
-        fs.writeFileSync(initialImages[0].file, Buffer.from(data.replace()))
+        fs.writeFileSync(initialLayers[0].file, Buffer.from(data.replace()))
     })
 
     test('layer request is successfull with correct authorization', async () => {
         await api
-            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialLayers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
     })
 
     test('layer request is rejected with missing authorization', async () => {
         await api
-            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialLayers[0].id}`)
             .expect(401)
     })
 
     test('layer request is rejected with invalid authorization', async () => {
         await api
-            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialLayers[0].id}`)
             .set('Authorization', `Bearer invalidtoken`)
             .expect(401)
     })
 
     test('layer request is rejected with incorrect authorization', async () => {
         await api
-            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialLayers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(403)
     })
@@ -510,14 +521,14 @@ describe('layer get one', () => {
 
     test('layer request returns 404 if normal map is not found.', async () => {
         await api
-            .get(`/api/normalMaps/aaaaaaaaaaaaaaaaaaaaaaaa/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/aaaaaaaaaaaaaaaaaaaaaaaa/layers/${initialLayers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(404)
     })
 
     test('layer is returned as image/png', async () => {
         await api
-            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialImages[0].id}`)
+            .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialLayers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .expect(200)
             .expect('Content-Type', /image\/png/)
@@ -695,13 +706,41 @@ describe('normal map delete', () => {
            
     })
 
+    test('normal map delete removes flat image from database', async () => {
+        await api
+            .delete(`/api/normalMaps/${initialNormalMaps[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(204)
+            const result = await Image.findById(initialNormalMaps[0].flatImage)
+            assert(!result)
+    })
+
     test('normal map delete removes all layer image files', async () => {
+        const buffer = Buffer.from(
+            'iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC',
+            'base64'
+        )
+        fs.writeFileSync(initialLayers[0].file, buffer)
+        await api
+            .delete(`/api/normalMaps/${initialNormalMaps[1].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(204)
+
+            assert(!fs.existsSync(initialLayers[0].file))
+    })
+
+    test('normal map delete removes flat image file', async () => {
+        const buffer = Buffer.from(
+            'iVBORw0KGgoAAAANSUhEUgAAA+gAAABkCAYAAAAVORraAAACH0lEQVR42u3XQQ0AAAgEIE1u9LOEmx9oQVcyBQAAALxqQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQBR0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAEDQAQAAQNABAAAAQQcAAABBBwAAAAQdAAAABB0AAAAQdAAAABB0AAAAQNABAABA0AEAAABBBwAAAEEHAAAABB0AAAAEHQAAABB0AAAAEHQAAABA0AEAAEDQAQAAAEEHAAAAQQcAAAAEHQAAAAQdAAAAEHQAAAAQdAAAAODCAr+K+TlJsloqAAAAAElFTkSuQmCC',
+            'base64'
+        )
+        fs.writeFileSync(initialFlatImages[0].file, buffer)
         await api
             .delete(`/api/normalMaps/${initialNormalMaps[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
             .expect(204)
 
-            assert(!fs.existsSync(initialImages[0].file))
+            assert(!fs.existsSync(initialFlatImages[0].file))
            
     })
 

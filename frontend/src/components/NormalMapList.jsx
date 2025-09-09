@@ -1,41 +1,67 @@
-import { useSelector } from 'react-redux'
-import { useState } from 'react'
+import { useSelector, useDispatch } from 'react-redux'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-    Button
+    Button,
+    Grid
 } from '@mui/material'
 import NewNormalMapForm from './NewNormalMapForm'
 import { Alert } from '@mui/material'
+import { fetchPage } from '../reducers/normalMapReducer'
 
 
 const NormalMapLink = ({ normalMap }) => {
     const navigate = useNavigate()
-    return <Button onClick={() => navigate(`/normal_map/${normalMap.id}`)} data-testid={`normal-map-${normalMap.id}`}>{
-        <div style={{ border: '1px solid', borderRadius: 10}}>
-            { normalMap.icon ? <img src={normalMap.icon.src}/> : null }
-            <div>{ normalMap.name }</div>
-        </div>
-    }</Button>
+    return (
+        <Button 
+            onClick={() => navigate(`/normal_map/${normalMap.id}`)}
+            data-testid={`normal-map-${normalMap.id}`}
+            variant='outlined'
+            >
+            <div>
+                { normalMap.icon ? <img src={normalMap.icon.src}/> : null }
+                <div>{ normalMap.name }</div>
+            </div>
+        </Button>
+    )
 }
 
-const NormalMapCategory = ({normalMaps, title, placeholder, ...rest}) => {
+const NormalMapCategory = ({normalMaps, title, placeholder, category, children, ...rest}) => {
+    const dispatch = useDispatch()
+
     if (normalMaps.length === 0) { 
         return placeholder !== undefined 
             ? (
                 <div>
                     <h2>{title}</h2>
                     <Alert severity='info'>{placeholder}</Alert>
+                    {children}
                 </div>
             )
             : null
     }
+
+    const handleLoad = () => { dispatch(fetchPage(Math.floor(normalMaps.length/10)+1, category)) }
+
     return (
-        <div data-testid={rest['data-testid']}>
-            <h2>{title}</h2>
-            <ul>
+        <Grid 
+            data-testid={rest['data-testid']}
+            container spacing={2}
+            direction='columns'
+            sx={{alignItems: 'center',
+            border: 'solid 2px #2196f3 ',
+            margin: '2%',
+            padding: '2%',
+            borderRadius: 5}}
+            >
+            <Grid size={12}><h2>{title}</h2></Grid>
                 { normalMaps.map((normalMap) => <NormalMapLink key={normalMap.id} normalMap={normalMap} />) }
-            </ul> 
-        </div>
+            <Grid container size={12}>
+                <Button variant='outlined' onClick={handleLoad}>Load more</Button>
+                {children}
+            </Grid>
+            
+        </Grid>
     )
 }
 
@@ -52,13 +78,18 @@ const NormalMapList = ({ user }) => {
                 normalMaps={userNormalMaps}
                 title={user === undefined || user.id === loggedUser.id ? 'Your normal maps' : `${user.username}'s normal maps`}
                 placeholder={user === undefined || user.id === loggedUser.id ? 'You have not created any normal maps yet.' : `${user.username} has not created any normal maps yet.`}
-                />
+                category='private'
+                >
+                { user === undefined || user.id === loggedUser.id ?  <Button variant='outlined' onClick={() => setOpen(true)} data-testid='create-new-button'>Create new</Button> : null }
+            </NormalMapCategory>
+            
             <NormalMapCategory
                 data-testid='public-normal-map-list'
                 normalMaps={publicNormalMaps}
                 title={'Public normal maps'}
+                category='public'
                 />
-            { user === undefined || user.id === loggedUser.id ?  <Button variant='outlined' onClick={() => setOpen(true)} data-testid='create-new-button'>Create new</Button> : null }
+            
             <NewNormalMapForm open={open} setOpen={setOpen} />
         </div>
     )

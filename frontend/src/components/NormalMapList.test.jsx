@@ -28,7 +28,13 @@ vi.mock(import('react-router-dom'), async (importOriginal) => {
     return {...actual, useNavigate: () => mockedNavigate }
 })
 
+vi.mock(import('../reducers/normalMapReducer'), async (importOriginal) => {
+    const actual = await importOriginal()
+    return {...actual, fetchPage: () => () => {} }
+})
+
 import NormalMapList from './NormalMapList'
+
 
 describe('Normal map list renders.', () => {
     afterEach(() => {

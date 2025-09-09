@@ -48,9 +48,26 @@ const createIcon = async (flatImage, file) => {
 }
 
 normalMapsRouter.get('/', middleware.userExtractor, async (request, response) => {
+    const { page, category} = request.query
     const user = request.user
+    console.log(page, category)
+    if (page && isNaN(page)) { return response.status(400).end() }
+
+    const offset = page ? (page-1) * 10 : 0
+    let filter = {}
+    switch (category) {
+        case 'private':
+            filter = { creator: user }
+            break
+        case 'public':
+            filter = { visibility: 'public'}
+            break
+        default:
+    }
+
+    
     if (user) {
-        const normalMaps = await NormalMap.find({ $or: [{ creator: user }, { visibility: 'public' }] }).populate('creator')
+        const normalMaps = await NormalMap.find(filter).sort({ createdAt: 1 }).skip(offset).limit(10).populate('creator')
         response.json(normalMaps)
     }
 })
@@ -72,7 +89,6 @@ normalMapsRouter.get('/:normalId/layers/:id', middleware.userExtractor, async (r
         const user = request.user
         const normalMap = await NormalMap.findById(normalId)
         const image = await Image.findById(id).populate('creator')
-        console.log(image)
         if (normalMap && image) {
             if (user.id !== image.creator.id && normalMap.visibility !== 'public') {
                 return response.status(403).json({ error: 'incorrect user' })

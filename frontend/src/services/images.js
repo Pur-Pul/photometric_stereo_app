@@ -17,6 +17,11 @@ const getAll = async () => {
 	return response.data
 }
 
+const getPage = async (page, category) => {
+	const response = await axios.get(`${baseUrl}?page=${page}&category=${category}`, getConfig())
+	return response.data
+}
+
 const getFile = async (normalId, id) => {
 	const response = await axios.get(`${baseUrl}/${normalId}/layers/${id}`, { ...getConfig(), responseType: 'blob' })
 	return response.data
@@ -54,6 +59,7 @@ const setToken = (new_token) => {
 export default { 
 	get,
 	getAll,
+	getPage,
 	getFile,
 	post,
 	put,
