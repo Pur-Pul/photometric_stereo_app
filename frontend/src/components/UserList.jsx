@@ -11,7 +11,8 @@ import {
 	TableHead,
 	TableRow,
 	TablePagination,
-	TableSortLabel
+	TableSortLabel,
+	Box
 } from '@mui/material'
 
 const UserList = () => {
@@ -20,7 +21,22 @@ const UserList = () => {
 	const users = useSelector(state => state.users)
 	const [page, setPage] = useState(0)
 	const [rowsPerPage, setRowsPerPage] = useState(10)
-	console.log(users)
+	const [sort, setSort] = useState('asc')
+	const [sortBy, setSortBy] = useState('username')
+	const [sortedUsers, setSortedUsers] = useState([])
+
+	useEffect(() => {
+		let sortedUsers = [...users.map(user => ({...user, numberOfMaps: user.normalMaps.length}))]
+		sortedUsers.sort((a, b) => {
+			console.log(a, b, sort, sortBy)
+			return sort === 'asc' 
+				? (a[sortBy] < b[sortBy] ? -1 : 1)
+				: (a[sortBy] < b[sortBy] ? 1 : -1)
+		})
+		sortedUsers = sortedUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+		setSortedUsers(sortedUsers)
+	}, [users, sort, sortBy, page, rowsPerPage])
+
 
 	const handleChangePage = (event, newPage) => {
 		setPage(newPage)
@@ -31,6 +47,19 @@ const UserList = () => {
 		setPage(0)
 	}
 
+	const handleSetSort = (e) => {
+		if (sortBy === e.target.id) {
+			setSort(sort === 'asc' ? 'desc' : 'asc')
+		}
+		setSortBy(e.target.id)
+	}
+	console.log(sortBy, sort)
+	const headers = {
+		username: 'Username',
+		role: 'Role',
+		numberOfMaps: 'Number of maps',
+		createdAt: 'User created',
+		updatedAt: 'Last online'}
 	return (
 		<div>
 			<h1>users</h1>
@@ -38,15 +67,22 @@ const UserList = () => {
 				<Table stickyHeader>
 					<TableHead>
 						<TableRow>
-							<TableCell>Username</TableCell>
-							<TableCell>Role</TableCell>
-							<TableCell>Number of maps</TableCell>
-							<TableCell>User created</TableCell>
-							<TableCell>Last online</TableCell>
+							{Object.keys(headers).map(header => (
+								<TableCell key={header} sortDirection={sortBy === header ? sort : false}>
+									<TableSortLabel
+										id={header}
+										active={sortBy === header}
+										direction={sortBy === header ? sort : 'asc'}
+										onClick={handleSetSort}
+										>
+										{headers[header]}
+									</TableSortLabel>
+								</TableCell>
+							))}
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{users.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(user => {
+						{sortedUsers.map(user => {
 							const createdDate = new Date(user.createdAt)
 							const lastOnlineDate = new Date(user.updatedAt)
 							return (
