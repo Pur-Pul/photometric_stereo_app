@@ -3,16 +3,26 @@ const usersRouter = require('express').Router()
 const User = require('../models/user')
 const { ValidationError } = require('../utils/errors')
 const middleware = require('../utils/middleware')
-const user = require('../models/user')
 
 usersRouter.get('/', middleware.userExtractor, async (request, response) => {
     const users = request.user.role !== 'admin' ? [request.user] : await User.find({})
-    response.json(users.map(user => {
-        return user.id === request.user.id
-            ? { id: user.id, name: user.name, username: user.username, role: user.role, normalMaps: user.normalMaps }
-            : { id: user.id, username: user.username, role: user.role, normalMaps: user.normalMaps }
-            
-    }))
+    const mappedUsers = Array(users.length)
+
+    for (var i = 0; i < users.length; i++) {
+        const user = users[i]
+        const mappedUser = {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+            normalMaps: user.normalMaps,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        }
+        if (user.id === request.user.id) { mappedUser.name = user.name }
+        mappedUsers[i] = mappedUser
+    }
+
+    response.json(mappedUsers)
 })
 
 usersRouter.post('/', async (request, response, next) => {

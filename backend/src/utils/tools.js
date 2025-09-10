@@ -1,7 +1,7 @@
 const User = require('../models/user')
 const config = require('./config')
 const bcrypt = require('bcrypt')
-const { info, error } = require('./logger')
+const logger = require('./logger')
 
 const initDatabase = async () => {
     try {
@@ -15,7 +15,7 @@ const initDatabase = async () => {
                 role: 'admin'
             })
             user.save()
-            info('Default admin created.')
+            logger.info('Default admin created.')
         }
     } catch (error) {
         logger.error('Error: Failed to initialize database.', error.name, error.message)

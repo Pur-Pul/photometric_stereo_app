@@ -51,7 +51,7 @@ const App = () => {
 						<Notification />
 						<Routes >
 							<Route path="/" element={<h1>Welcome</h1>} />
-							{ user.role === 'admin' ? <Route path="/users" element={<UserList />} /> : null }
+							<Route path="/users" element={user.role === 'admin' ? <UserList /> : null } />
 							<Route path="/users/:id" element={<User />} />
 							<Route path="/normal_map" element={<NormalMapList />} />
 							<Route path="/normal_map/manual/:width/:height" element={<ManualCreation />} />

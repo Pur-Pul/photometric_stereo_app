@@ -62,9 +62,13 @@ const userExtractor = async (request, response, next) => {
         const session = await Session.findOne({ token: request.token })
         const user = await User.findById(decodedToken.id)
         if (session && user.id) {
-            request.user = user
             session.updatedAt = new Date()
             await session.save()
+
+            user.updatedAt = new Date()
+            await user.save()
+
+            request.user = user
         } else {
             return response.status(401).json({ error: 'token expired' })
         }
