@@ -44,6 +44,7 @@ beforeEach(async () => {
         initialUsers[i].token = jwt.sign({ username: userObject.username, id: userObject.id }, process.env.SECRET)
         initialUsers[i].session = new Session({ userId: userObject.id, token: initialUsers[i].token })
         initialUsers[i].session.save()
+        initialUsers[i].updatedAt = userObject.updatedAt.toString()
     }
 })
 
@@ -339,5 +340,212 @@ describe('user delete', () => {
 
         const sessions = await Session.find({ userId: initialUsers[0].id} )
         assert.equal(sessions.length, 1)
+    })
+})
+
+describe('user put', () => {
+    test('user can make a PUT request to their own account if they are re-authorized', async () => {
+        let newUser = {
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'Test1 Person1')
+    })
+    test('user can not make a PUT request to their own account if they are not re-authorized', async () => {
+        let newUser = {
+            //password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(401)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'Test1 Person1')
+    })
+    test('user can not make a PUT request to another account even if re-authorized', async () => {
+        let newUser = {
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[2].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(403)
+
+        const user = await User.findById(initialUsers[2].id)
+        assert(user)
+        assert.equal(user.username, 'test2')
+        assert.equal(user.name, 'Test2 Person2')
+    })
+    test('admin can make a PUT request to another account if they are re-authorized', async () => {
+        let newUser = {
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'Test1 Person1')
+    })
+    test('admin can not make a PUT request to another account if they are not re-authorized', async () => {
+        let newUser = {
+            //password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .send(newUser)
+            .expect(401)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'Test1 Person1')
+    })
+    test('successful put request updates username', async () => {
+        let newUser = {
+            newUsername: 'updateduser',
+            //newName: 'updated user',
+            //newPassword: '',
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'updateduser')
+        assert.equal(user.name, 'Test1 Person1')
+        assert.equal(user.role, 'user')
+    })
+    test('successful put request updates name', async () => {
+        let newUser = {
+            //newUsername: 'updateduser',
+            newName: 'updated user',
+            //newPassword: '',
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'updated user')
+        assert.equal(user.role, 'user')
+    })
+    test('successful put request updates role', async () => {
+        let newUser = {
+            //newUsername: 'updateduser',
+            //newName: 'updated user',
+            newRole: 'admin',
+            //newPassword: '',
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'Test1 Person1')
+        assert.equal(user.role, 'admin')
+    })
+    test('successful put request updates password', async () => {
+        let newUser = {
+            //newUsername: 'updateduser',
+            //newName: 'updated user',
+            //newRole: 'admin',
+            newPassword: 'newpass',
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        const passwordCorrect = await bcrypt.compare('newpass', user.passwordHash)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'Test1 Person1')
+        assert.equal(user.role, 'user')
+        assert(passwordCorrect)
+    })
+    test('sucessful put requests updates multiple included elements.', async () => {
+        let newUser = {
+            newUsername: 'updateduser',
+            newName: 'updated user',
+            newRole: 'admin',
+            newPassword: 'newpass',
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        const passwordCorrect = await bcrypt.compare('newpass', user.passwordHash)
+        assert(user)
+        assert.equal(user.username, 'updateduser')
+        assert.equal(user.name, 'updated user')
+        assert.equal(user.role, 'admin')
+        assert(passwordCorrect)
+    })
+    test('sucessful put requests do not update id', async () => {
+        let newUser = {
+            id: 'test',
+            password: 'pass',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'Test1 Person1')
+        assert.equal(user.role, 'user')
     })
 })

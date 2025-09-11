@@ -25,8 +25,8 @@ class Cube {
             new Polygon(this.vertices[0], this.vertices[5], this.vertices[4]),
 
             //front
-            new Polygon(this.vertices[7], this.vertices[6], this.vertices[2]),
-            new Polygon(this.vertices[7], this.vertices[2], this.vertices[3]),
+            new Polygon(this.vertices[3], this.vertices[2], this.vertices[6]), //7 6 2
+            new Polygon(this.vertices[3], this.vertices[6], this.vertices[7]), //7 2 3
 
             //left
             new Polygon(this.vertices[0], this.vertices[3], this.vertices[7]),
@@ -81,7 +81,7 @@ class Cube {
             let tangent = (index < 2 || index > 9) 
                 ? normal.cross(new Vector3(0, -1, 0))
                 : normal.cross(new Vector3(0, 0, -1)).normalize()
-            tangent = (index === 4 || index === 5 || index > 9) ? tangent.normalize(-1) : tangent
+            tangent = (index > 9) ? tangent.normalize(-1) : tangent
             return [
                 tangent,
                 tangent,

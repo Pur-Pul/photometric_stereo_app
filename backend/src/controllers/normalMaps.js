@@ -176,7 +176,7 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                         if (!layer) {
                             layer = new Image({
                                 file: newfile,
-                                creator: request.user.id
+                                creator: normalMap.creator
                             })
                         }
                         await layer.save()
@@ -205,48 +205,7 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
     })
 })
 
-normalMapsRouter.post('/:id/layers/', middleware.userExtractor, async (request, response, next) => {
-    middleware.imageUpload(request, response, async (exception) => {
-        if (exception) { next(exception) }
-        else {
-            try {
-                const normalMap = await NormalMap.findById(request.params.id)
-                if (!normalMap) { return response.status(404).json({message: 'Normal map not found.'}) }
-                if (normalMap.creator.toString() !== request.user.id.toString()) {
-                    return response.status(403).end()
-                }
 
-
-                const number_of_files = request.filenames ? request.filenames.length : 0
-                if (number_of_files !== 1) {
-                    for (var i = 0; i < number_of_files; i++) {
-                        const file = path.join(process.cwd(), `../uploads/${request.filenames[i]}`)
-                        if (fs.existsSync(file)) { fs.unlinkSync(file) }
-                    }
-                    throw new ValidationError('Invalid number of files.')
-                } else {
-                    const oldfile = path.join(process.cwd(), `../uploads/${request.filenames[0]}`)
-                    const newfile = path.join(process.cwd(), `../output/${request.filenames[0]}`)
-                    fs.copyFileSync(oldfile, newfile)
-                    fs.unlinkSync(oldfile)
-
-                    const layer = new Image({
-                        file: newfile,
-                        creator: request.user.id
-                    })
-                    await layer.save()
-                    normalMap.layers = [...normalMap.layers, layer]
-                    await normalMap.save()
-
-                    const savedNormalMap = await normalMap.populate('creator')
-                    response.status(201).json(savedNormalMap)
-                }
-            } catch (exception) {
-                next(exception)
-            }
-        }
-    })
-})
 
 normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request, response, next) => {
     middleware.imageUpload(request, response, async (exception) => {

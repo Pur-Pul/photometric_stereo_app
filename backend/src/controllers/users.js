@@ -75,19 +75,28 @@ usersRouter.put('/:id', middleware.userExtractor, async (request, response, next
         }
 
         if (!password) { return response.status(401).json({ error: 're-authentication required'}) }
-
         const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
         if (!passwordCorrect) { return response.status(401).json({ error: 'invalid password' }) }
 
-        const newPasswordHash = await bcrypt.hash(newPassword, 10)
+        const newPasswordHash = newPassword ? await bcrypt.hash(newPassword, 10) : null
 
         userToUpdate.username       = newUsername       ? newUsername       : userToUpdate.username,
         userToUpdate.name           = newName           ? newName           : userToUpdate.name,
         userToUpdate.role           = newRole           ? newRole           : userToUpdate.role,
         userToUpdate.normalMaps     = newNormalMaps     ? newNormalMaps     : userToUpdate.normalMaps
         userToUpdate.passwordHash   = newPasswordHash   ? newPasswordHash   : userToUpdate.passwordHash
+        userToUpdate.updatedAt = new Date()
 
-        const { passwordHash, ...updatedUser } = await userToUpdate.save()
+        await userToUpdate.save()
+        const updatedUser = {
+            id: userToUpdate.id,
+            username: userToUpdate.username,
+            role: userToUpdate.role,
+            normalMaps: userToUpdate.normalMaps,
+            updatedAt: userToUpdate.updatedAt,
+            createdAt: userToUpdate.createdAt
+        }
+        if (userToUpdate.id === request.user.id) { updatedUser.name = userToUpdate.name }
         response.status(201).json(updatedUser)
 
     } catch (excpetion) {
