@@ -23,8 +23,8 @@ let initialUsers = [
     }
 ]
 beforeEach(async () => {
-    await User.deleteMany({ username: 'test1'})
-    await User.deleteMany({ username: 'test2'})
+    await User.deleteMany({})
+    await Session.deleteMany({})
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         let userObject = new User(initialUsers[i])
@@ -34,16 +34,11 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-    for (var i = 0; i < initialUsers.length; i++) {
-        await User.findByIdAndDelete(initialUsers[i].id)
-    }
+    await User.deleteMany({})
+    await Session.deleteMany({})
 })
 
 describe('login post', () => {
-    afterEach(async () => {
-        await Session.deleteMany({ userId: initialUsers[0].id })
-        await Session.deleteMany({ userId: initialUsers[1].id })
-    })
     test('login request succeeds with correct credentials.', async () => {
         const credentials = {
             username: 'test1',

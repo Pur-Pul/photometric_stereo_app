@@ -163,7 +163,7 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
 
                 const normalMap = await NormalMap.findById(request.params.id).populate('layers')                
                 if (!normalMap) { response.status(404).json({ message: 'Normal map not found.' }) }
-                if (request.user.id.toString() !== normalMap.creator.toString()) { return response.status(403).json({ error: 'incorrect user' }) }
+                if (!request.user.normalMaps.includes(normalMap.id)) { return response.status(403).json({ error: 'incorrect user' }) }
 
                 const layers = []
                 if (request.filenames) {

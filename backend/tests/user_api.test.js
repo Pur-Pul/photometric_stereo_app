@@ -8,6 +8,7 @@ const app = require('../src/app')
 
 const api = supertest(app)
 const User = require('../src/models/user')
+const NormalMap = require('../src/models/normalMap')
 const Image = require('../src/models/image')
 const Session = require('../src/models/session')
 
@@ -19,16 +20,22 @@ let initialUsers = [
         role: 'user'
     },
     {
-      	username: 'admin',
-      	name: 'Test2 Person2',
+      	username: 'testadmin',
+      	name: 'admin',
       	passwordHash: null,
         role: 'admin'
-    }
+    },
+    {
+      	username: 'test2',
+      	name: 'Test2 Person2',
+      	passwordHash: null,
+        role: 'user'
+    },
 ]
 
 beforeEach(async () => {
-    await User.deleteMany({ username: 'test1' })
-    await User.deleteMany({ username: 'admin' })
+    await User.deleteMany({})
+    await Session.deleteMany({})
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         let userObject = new User(initialUsers[i])
@@ -41,10 +48,13 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
-    for (var i = 0; i < initialUsers.length; i++) {
-        await User.findByIdAndDelete(initialUsers[i].id)
-        await Session.findByIdAndDelete(initialUsers[i].session.id)
-    }
+    await User.deleteMany({})
+    await Session.deleteMany({})
+})
+
+after(async () => {
+    await mongoose.connection.close()
+    process.exit()
 })
 
 describe('user get', () => {
@@ -209,7 +219,125 @@ describe('user post', () => {
     })
 })
 
-after(async () => {
-    await mongoose.connection.close()
-    process.exit()
+describe('user delete', () => {
+    
+    beforeEach(async () => {
+        await NormalMap.deleteMany({})
+        const user1 = await User.findById(initialUsers[0].id)
+        const user2 = await User.findById(initialUsers[2].id)
+        const normalMap = new NormalMap({
+            name: 'test map',
+            status: 'done',
+            creator: user1.id
+        })
+        normalMap.save()
+        user1.normalMaps = [normalMap.id]
+        await user1.save()
+        user2.normalMaps = [normalMap.id]
+        await user2.save()
+    })
+    afterEach(async() => {
+        await NormalMap.deleteMany({})
+    })
+    test('User can delete self when re-authenticated.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send({ password: 'pass' })
+            .expect(204)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(!user)
+    })
+    test('User can not delete self if not re-authenticated.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(401)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+    })
+    test('User delete re-authentication fails due to wrong password.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send({ password: 'wrongpass' })
+            .expect(401)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+    })
+    test('User can not delete another user despite being re-authenticated.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[2].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send({ password: 'pass' })
+            .expect(403)
+
+        const user = await User.findById(initialUsers[2].id)
+        assert(user)
+    })
+    test('Admin can delete another user when re-authenticated.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .send({ password: 'pass' })
+            .expect(204)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(!user)
+    })
+    test('Admin can not delete another user when not re-authenticated.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .expect(401)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+    })
+    test('A successful delete also deletes all realted sessions.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send({ password: 'pass' })
+            .expect(204)
+
+        const sessions = await Session.find({userId: initialUsers[0].id})
+        assert.equal(sessions.length, 0)
+    })
+    test('A successful delete also deletes all normalmaps that the deleted user is listed as creator for.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .send({ password: 'pass' })
+            .expect(204)
+
+        const normalmaps = await NormalMap.find({creator: initialUsers[0].id})
+        assert.equal(normalmaps.length, 0)
+    })
+    test('A successful delete does not delete normalmaps that the deleted user has access to, but is not creator of.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[2].id}`)
+            .set('Authorization', `Bearer ${initialUsers[2].token}`)
+            .send({ password: 'pass' })
+            .expect(204)
+
+        const normalmaps = await NormalMap.find({ creator: initialUsers[0].id })
+        assert.equal(normalmaps.length, 1)
+    })
+    test('An unsuccessful delete does not delete related normalmaps or sessions.', async () => {
+        await api
+            .delete(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .expect(401)
+
+        const normalmaps = await NormalMap.find({ creator: initialUsers[0].id })
+        assert.equal(normalmaps.length, 1)
+        assert.equal(normalmaps[0].name, 'test map')
+
+        const sessions = await Session.find({ userId: initialUsers[0].id} )
+        assert.equal(sessions.length, 1)
+    })
 })

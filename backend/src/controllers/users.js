@@ -1,8 +1,11 @@
 const bcrypt = require('bcrypt')
 const usersRouter = require('express').Router()
 const User = require('../models/user')
+const Session = require('../models/session')
+const NormalMap = require('../models/normalMap')
 const { ValidationError } = require('../utils/errors')
 const middleware = require('../utils/middleware')
+const { expireNormalMap, expireSession } = require('../utils/expiration_manager')
 
 usersRouter.get('/', middleware.userExtractor, async (request, response) => {
     const users = request.user.role !== 'admin' ? [request.user] : await User.find({})
@@ -27,7 +30,6 @@ usersRouter.get('/', middleware.userExtractor, async (request, response) => {
 
 usersRouter.post('/', async (request, response, next) => {
     const { username, name, password } = request.body
-
     try {
         if (password === undefined) { throw new ValidationError('password is required.') }
         if (password.length < 3) { throw new ValidationError('password needs to be atleast 3 characters long.') }
@@ -45,6 +47,76 @@ usersRouter.post('/', async (request, response, next) => {
 
         const savedUser = await user.save()
         response.status(201).json(savedUser)
+    } catch (exception) {
+        next(exception)
+    }
+})
+
+usersRouter.put('/:id', middleware.userExtractor, async (request, response, next) => {
+    try {
+        const userToUpdate = await User.findById(request.params.id)
+        if (!userToUpdate) { return response.status(404).end() }
+        if (userToUpdate.id !== request.user.id && request.user.role !== 'admin') { return response.status(403).end() }
+
+        const { 
+            newUsername,
+            newName,
+            newRole,
+            newNormalMaps,
+            newPassword,
+            password
+        } = request.body ? request.body : { 
+            newUsername: null,
+            newName: null,
+            newRole: null,
+            newNormalMaps: null,
+            newPassword: null,
+            password: null
+        }
+
+        if (!password) { return response.status(401).json({ error: 're-authentication required'}) }
+
+        const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
+        if (!passwordCorrect) { return response.status(401).json({ error: 'invalid password' }) }
+
+        const newPasswordHash = await bcrypt.hash(newPassword, 10)
+
+        userToUpdate.username       = newUsername       ? newUsername       : userToUpdate.username,
+        userToUpdate.name           = newName           ? newName           : userToUpdate.name,
+        userToUpdate.role           = newRole           ? newRole           : userToUpdate.role,
+        userToUpdate.normalMaps     = newNormalMaps     ? newNormalMaps     : userToUpdate.normalMaps
+        userToUpdate.passwordHash   = newPasswordHash   ? newPasswordHash   : userToUpdate.passwordHash
+
+        const { passwordHash, ...updatedUser } = await userToUpdate.save()
+        response.status(201).json(updatedUser)
+
+    } catch (excpetion) {
+        next(excpetion)
+    }
+})
+
+usersRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {
+    try {
+        const userToDelete = await User.findById(request.params.id)
+        if (!userToDelete) { return response.status(404).end() }
+        if (userToDelete.id !== request.user.id && request.user.role !== 'admin') { return response.status(403).end() }
+
+        const { password } = request.body ? request.body : { password: null }
+        if (!password) { return response.status(401).json({ error: 're-authentication required'}) }
+
+        const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
+        if (!passwordCorrect) { return response.status(401).json({ error: 'invalid password' }) }
+
+        //Delete all normal maps of the user
+        const normalMapsToDelete = await NormalMap.find({ creator: userToDelete.id })
+        for (var i = 0; i < normalMapsToDelete.length; i++) { await expireNormalMap(normalMapsToDelete[i].id, true) }
+
+        //Delete all sessions of the user
+        await Session.deleteMany({ userId: userToDelete.id })
+        
+        //Delete the user
+        await User.findByIdAndDelete(userToDelete.id)
+        response.status(204).end()
     } catch (exception) {
         next(exception)
     }

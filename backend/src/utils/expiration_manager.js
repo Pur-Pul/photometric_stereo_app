@@ -7,11 +7,11 @@ const { info, error } = require('./logger')
 const fs = require('fs')
 const path = require('path')
 
-const expireSession = async (id) => {
+const expireSession = async (id, force=false) => {
     const session = await Session.findById(id)
     if (session) {
         const expiration_time = session.updatedAt - new Date() + EXPIRE_DELAY * 60 * 1000
-        if (expiration_time <= 0) {
+        if (force || expiration_time <= 0) {
             await Session.findByIdAndDelete(id)
             info('Session', id, 'expired')
         } else {
@@ -46,8 +46,8 @@ const expireNormalMap = async (id, force=false) => {
                 }
                 await Image.findByIdAndDelete(images[i])
             }
-            await User.updateOne(
-                { _id: normalMap.creator },
+            await User.updateMany(
+                { normalMaps: id },
                 { $pull: { normalMaps: id } }
             )
             await NormalMap.findByIdAndDelete(id)

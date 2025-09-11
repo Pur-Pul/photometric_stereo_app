@@ -51,8 +51,10 @@ let initialFlatImages = [
     }
 ]
 beforeEach(async () => {
-    await User.deleteMany({ username: 'test1'})
-    await User.deleteMany({ username: 'test2'})
+    await User.deleteMany({})
+    await Session.deleteMany({})
+    await NormalMap.deleteMany({})
+    await Image.deleteMany({})
     for (let i = 0; i < initialUsers.length; i++) {
         initialUsers[i].passwordHash = await bcrypt.hash('pass', 10)
         const userObject = new User(initialUsers[i])
@@ -83,24 +85,22 @@ beforeEach(async () => {
 })
 
 afterEach(async () => {
+    await User.deleteMany({})
+    await Session.deleteMany({})
+    await NormalMap.deleteMany({})
+    
+
     await Session.deleteMany({ userId: initialUsers[0].id })
     await Session.deleteMany({ userId: initialUsers[1].id })
     for (var i = 0; i < initialUsers.length; i++) {
-        await NormalMap.deleteMany({ creator: initialUsers[i].id })
         const images = await Image.find({ creator: initialUsers[i].id })
         images.forEach(image => {
             if (fs.existsSync(image.file)) {
                 fs.unlinkSync(image.file)
             }
         })
-        await User.findByIdAndDelete(initialUsers[i].id)
     }
-    for (var i = 0; i < initialLayers.length; i++) {
-        await User.findByIdAndDelete(initialLayers[i].id)
-    }
-    for (var i = 0; i < initialNormalMaps.length; i++) {
-        await User.findByIdAndDelete(initialNormalMaps[i].id)
-    }
+    await Image.deleteMany({})
 })
 
 after(async () => {
