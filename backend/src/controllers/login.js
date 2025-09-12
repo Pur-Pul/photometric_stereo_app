@@ -36,6 +36,16 @@ loginRouter.post('/', async (request, response, next) => {
     }
 })
 
+loginRouter.post('/relog', middleware.userExtractor, async (request, response, next) => {
+    const { password } = request.body ? request.body : { password: null }
+    if (!password) { return response.status(401).json({ error: 'Password is required to re-authenticate.'}) }
+
+    const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
+    if (!passwordCorrect) { return response.status(401).json({ error: 'Re-authentication failed.' }) }
+
+    response.status(200).end()
+})
+
 loginRouter.get('/', middleware.userExtractor, async (request, response, next) => {
     if (request.user) {
         response.status(200).end()

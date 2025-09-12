@@ -21,7 +21,7 @@ usersRouter.get('/', middleware.userExtractor, async (request, response) => {
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         }
-        if (user.id === request.user.id) { mappedUser.name = user.name }
+        if (user.id.toString() === request.user.id.toString()) { mappedUser.name = user.name }
         mappedUsers[i] = mappedUser
     }
 
@@ -56,35 +56,30 @@ usersRouter.put('/:id', middleware.userExtractor, async (request, response, next
     try {
         const userToUpdate = await User.findById(request.params.id)
         if (!userToUpdate) { return response.status(404).end() }
-        if (userToUpdate.id !== request.user.id && request.user.role !== 'admin') { return response.status(403).end() }
+        const isAdmin = request.user.role === 'admin'
+        if (userToUpdate.id !== request.user.id && !isAdmin) { return response.status(403).end() }
 
         const { 
-            newUsername,
-            newName,
-            newRole,
-            newNormalMaps,
-            newPassword,
+            username,
+            name,
+            role,
+            normalMaps,
             password
         } = request.body ? request.body : { 
-            newUsername: null,
-            newName: null,
-            newRole: null,
-            newNormalMaps: null,
-            newPassword: null,
+            username: null,
+            name: null,
+            role: null,
+            normalMaps: null,
             password: null
         }
 
-        if (!password) { return response.status(401).json({ error: 're-authentication required'}) }
-        const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
-        if (!passwordCorrect) { return response.status(401).json({ error: 'invalid password' }) }
+        const passwordHash = password ? await bcrypt.hash(password, 10) : null
 
-        const newPasswordHash = newPassword ? await bcrypt.hash(newPassword, 10) : null
-
-        userToUpdate.username       = newUsername       ? newUsername       : userToUpdate.username,
-        userToUpdate.name           = newName           ? newName           : userToUpdate.name,
-        userToUpdate.role           = newRole           ? newRole           : userToUpdate.role,
-        userToUpdate.normalMaps     = newNormalMaps     ? newNormalMaps     : userToUpdate.normalMaps
-        userToUpdate.passwordHash   = newPasswordHash   ? newPasswordHash   : userToUpdate.passwordHash
+        userToUpdate.username       = username          ? username       : userToUpdate.username,
+        userToUpdate.name           = name              ? name           : userToUpdate.name,
+        userToUpdate.role           = role && isAdmin   ? role           : userToUpdate.role,
+        userToUpdate.normalMaps     = normalMaps        ? normalMaps     : userToUpdate.normalMaps
+        userToUpdate.passwordHash   = passwordHash      ? passwordHash   : userToUpdate.passwordHash
         userToUpdate.updatedAt = new Date()
 
         await userToUpdate.save()
@@ -110,11 +105,11 @@ usersRouter.delete('/:id', middleware.userExtractor, async (request, response, n
         if (!userToDelete) { return response.status(404).end() }
         if (userToDelete.id !== request.user.id && request.user.role !== 'admin') { return response.status(403).end() }
 
-        const { password } = request.body ? request.body : { password: null }
-        if (!password) { return response.status(401).json({ error: 're-authentication required'}) }
+        //const { password } = request.body ? request.body : { password: null }
+        //if (!password) { return response.status(401).json({ error: 're-authentication required'}) }
 
-        const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
-        if (!passwordCorrect) { return response.status(401).json({ error: 'invalid password' }) }
+        //const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
+        //if (!passwordCorrect) { return response.status(401).json({ error: 'invalid password' }) }
 
         //Delete all normal maps of the user
         const normalMapsToDelete = await NormalMap.find({ creator: userToDelete.id })

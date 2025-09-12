@@ -90,8 +90,8 @@ const UserList = () => {
 									<TableCell><Button onClick={() => navigate(`/users/${user.id}`)}>{user.username}</Button></TableCell>
 									<TableCell>{user.role}</TableCell>
 									<TableCell>{user.normalMaps.length}</TableCell>
-									<TableCell>{createdDate.toLocaleTimeString('en-GB')} | {createdDate.toLocaleDateString('fi')}</TableCell>
-									<TableCell>{lastOnlineDate.toLocaleTimeString('en-GB')} | {lastOnlineDate.toLocaleDateString('fi')}</TableCell>
+									<TableCell>{createdDate.toLocaleTimeString('en-GB', { hour: "2-digit", minute: "2-digit" })} | {createdDate.toLocaleDateString('fi')}</TableCell>
+									<TableCell>{lastOnlineDate.toLocaleTimeString('en-GB', { hour: "2-digit", minute: "2-digit" })} | {lastOnlineDate.toLocaleDateString('fi')}</TableCell>
 								</TableRow>
 							)
 						})}

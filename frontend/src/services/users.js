@@ -16,4 +16,14 @@ const getAll = async () => {
 	return response.data
 }
 
-export default { getAll, setToken }
+const remove = async (id) => {
+	const response = await axios.delete(`${baseUrl}/${id}`, getConfig())
+	return response.data
+}
+
+const update = async (user) => {
+	const response = await axios.put(`${baseUrl}/${user.id}`, user, getConfig())
+	return response.data
+}
+
+export default { getAll, setToken, remove, update }

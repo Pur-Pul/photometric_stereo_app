@@ -240,69 +240,37 @@ describe('user delete', () => {
     afterEach(async() => {
         await NormalMap.deleteMany({})
     })
-    test('User can delete self when re-authenticated.', async () => {
+    test('User can delete self.', async () => {
         await api
             .delete(`/api/users/${initialUsers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .send({ password: 'pass' })
             .expect(204)
 
         const user = await User.findById(initialUsers[0].id)
         assert(!user)
     })
-    test('User can not delete self if not re-authenticated.', async () => {
-        await api
-            .delete(`/api/users/${initialUsers[0].id}`)
-            .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .expect(401)
-
-        const user = await User.findById(initialUsers[0].id)
-        assert(user)
-    })
-    test('User delete re-authentication fails due to wrong password.', async () => {
-        await api
-            .delete(`/api/users/${initialUsers[0].id}`)
-            .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .send({ password: 'wrongpass' })
-            .expect(401)
-
-        const user = await User.findById(initialUsers[0].id)
-        assert(user)
-    })
-    test('User can not delete another user despite being re-authenticated.', async () => {
+    test('User can not delete another user.', async () => {
         await api
             .delete(`/api/users/${initialUsers[2].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .send({ password: 'pass' })
             .expect(403)
 
         const user = await User.findById(initialUsers[2].id)
         assert(user)
     })
-    test('Admin can delete another user when re-authenticated.', async () => {
+    test('Admin can delete another user.', async () => {
         await api
             .delete(`/api/users/${initialUsers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
-            .send({ password: 'pass' })
             .expect(204)
 
         const user = await User.findById(initialUsers[0].id)
         assert(!user)
     })
-    test('Admin can not delete another user when not re-authenticated.', async () => {
-        await api
-            .delete(`/api/users/${initialUsers[0].id}`)
-            .set('Authorization', `Bearer ${initialUsers[1].token}`)
-            .expect(401)
-
-        const user = await User.findById(initialUsers[0].id)
-        assert(user)
-    })
     test('A successful delete also deletes all realted sessions.', async () => {
         await api
             .delete(`/api/users/${initialUsers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .send({ password: 'pass' })
             .expect(204)
 
         const sessions = await Session.find({userId: initialUsers[0].id})
@@ -312,7 +280,6 @@ describe('user delete', () => {
         await api
             .delete(`/api/users/${initialUsers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .send({ password: 'pass' })
             .expect(204)
 
         const normalmaps = await NormalMap.find({creator: initialUsers[0].id})
@@ -322,7 +289,6 @@ describe('user delete', () => {
         await api
             .delete(`/api/users/${initialUsers[2].id}`)
             .set('Authorization', `Bearer ${initialUsers[2].token}`)
-            .send({ password: 'pass' })
             .expect(204)
 
         const normalmaps = await NormalMap.find({ creator: initialUsers[0].id })
@@ -331,8 +297,8 @@ describe('user delete', () => {
     test('An unsuccessful delete does not delete related normalmaps or sessions.', async () => {
         await api
             .delete(`/api/users/${initialUsers[0].id}`)
-            .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .expect(401)
+            .set('Authorization', `Bearer ${initialUsers[2].token}`)
+            .expect(403)
 
         const normalmaps = await NormalMap.find({ creator: initialUsers[0].id })
         assert.equal(normalmaps.length, 1)
@@ -344,14 +310,11 @@ describe('user delete', () => {
 })
 
 describe('user put', () => {
-    test('user can make a PUT request to their own account if they are re-authorized', async () => {
-        let newUser = {
-            password: 'pass',
-        }
+    test('user can make a PUT request to their own account.', async () => {
+
         await api
             .put(`/api/users/${initialUsers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .send(newUser)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
@@ -360,30 +323,10 @@ describe('user put', () => {
         assert.equal(user.username, 'test1')
         assert.equal(user.name, 'Test1 Person1')
     })
-    test('user can not make a PUT request to their own account if they are not re-authorized', async () => {
-        let newUser = {
-            //password: 'pass',
-        }
-        await api
-            .put(`/api/users/${initialUsers[0].id}`)
-            .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .send(newUser)
-            .expect(401)
-            .expect('Content-Type', /application\/json/)
-
-        const user = await User.findById(initialUsers[0].id)
-        assert(user)
-        assert.equal(user.username, 'test1')
-        assert.equal(user.name, 'Test1 Person1')
-    })
-    test('user can not make a PUT request to another account even if re-authorized', async () => {
-        let newUser = {
-            password: 'pass',
-        }
+    test('user can not make a PUT request to another account', async () => {
         await api
             .put(`/api/users/${initialUsers[2].id}`)
             .set('Authorization', `Bearer ${initialUsers[0].token}`)
-            .send(newUser)
             .expect(403)
 
         const user = await User.findById(initialUsers[2].id)
@@ -391,31 +334,11 @@ describe('user put', () => {
         assert.equal(user.username, 'test2')
         assert.equal(user.name, 'Test2 Person2')
     })
-    test('admin can make a PUT request to another account if they are re-authorized', async () => {
-        let newUser = {
-            password: 'pass',
-        }
+    test('admin can make a PUT request to another account', async () => {
         await api
             .put(`/api/users/${initialUsers[0].id}`)
             .set('Authorization', `Bearer ${initialUsers[1].token}`)
-            .send(newUser)
             .expect(201)
-            .expect('Content-Type', /application\/json/)
-
-        const user = await User.findById(initialUsers[0].id)
-        assert(user)
-        assert.equal(user.username, 'test1')
-        assert.equal(user.name, 'Test1 Person1')
-    })
-    test('admin can not make a PUT request to another account if they are not re-authorized', async () => {
-        let newUser = {
-            //password: 'pass',
-        }
-        await api
-            .put(`/api/users/${initialUsers[0].id}`)
-            .set('Authorization', `Bearer ${initialUsers[1].token}`)
-            .send(newUser)
-            .expect(401)
             .expect('Content-Type', /application\/json/)
 
         const user = await User.findById(initialUsers[0].id)
@@ -425,10 +348,9 @@ describe('user put', () => {
     })
     test('successful put request updates username', async () => {
         let newUser = {
-            newUsername: 'updateduser',
-            //newName: 'updated user',
-            //newPassword: '',
-            password: 'pass',
+            username: 'updateduser',
+            //name: 'updated user',
+            //password: '',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
@@ -445,10 +367,9 @@ describe('user put', () => {
     })
     test('successful put request updates name', async () => {
         let newUser = {
-            //newUsername: 'updateduser',
-            newName: 'updated user',
-            //newPassword: '',
-            password: 'pass',
+            //username: 'updateduser',
+            name: 'updated user',
+            //password: '',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
@@ -463,13 +384,32 @@ describe('user put', () => {
         assert.equal(user.name, 'updated user')
         assert.equal(user.role, 'user')
     })
-    test('successful put request updates role', async () => {
+    test('successful put request updates role if requester is admin.', async () => {
         let newUser = {
-            //newUsername: 'updateduser',
-            //newName: 'updated user',
-            newRole: 'admin',
-            //newPassword: '',
-            password: 'pass',
+            //username: 'updateduser',
+            //name: 'updated user',
+            role: 'admin',
+            //password: '',
+        }
+        await api
+            .put(`/api/users/${initialUsers[0].id}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const user = await User.findById(initialUsers[0].id)
+        assert(user)
+        assert.equal(user.username, 'test1')
+        assert.equal(user.name, 'Test1 Person1')
+        assert.equal(user.role, 'admin')
+    })
+    test('successful put request does not update role if requester is not admin.', async () => {
+        let newUser = {
+            //username: 'updateduser',
+            //name: 'updated user',
+            role: 'admin',
+            //password: '',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
@@ -482,15 +422,14 @@ describe('user put', () => {
         assert(user)
         assert.equal(user.username, 'test1')
         assert.equal(user.name, 'Test1 Person1')
-        assert.equal(user.role, 'admin')
+        assert.equal(user.role, 'user')
     })
     test('successful put request updates password', async () => {
         let newUser = {
-            //newUsername: 'updateduser',
-            //newName: 'updated user',
-            //newRole: 'admin',
-            newPassword: 'newpass',
-            password: 'pass',
+            //username: 'updateduser',
+            //name: 'updated user',
+            //role: 'admin',
+            password: 'newpass',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
@@ -509,15 +448,14 @@ describe('user put', () => {
     })
     test('sucessful put requests updates multiple included elements.', async () => {
         let newUser = {
-            newUsername: 'updateduser',
-            newName: 'updated user',
-            newRole: 'admin',
-            newPassword: 'newpass',
-            password: 'pass',
+            username: 'updateduser',
+            name: 'updated user',
+            role: 'admin',
+            password: 'newpass',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
-            .set('Authorization', `Bearer ${initialUsers[0].token}`)
+            .set('Authorization', `Bearer ${initialUsers[1].token}`)
             .send(newUser)
             .expect(201)
             .expect('Content-Type', /application\/json/)
@@ -530,10 +468,9 @@ describe('user put', () => {
         assert.equal(user.role, 'admin')
         assert(passwordCorrect)
     })
-    test('sucessful put requests do not update id', async () => {
+    test('sucessful put requests do not update the id', async () => {
         let newUser = {
-            id: 'test',
-            password: 'pass',
+            id: 'test'
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)

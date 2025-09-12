@@ -16,6 +16,11 @@ const login = async (user) => {
 	return response.data
 }
 
+const relog = async (password) => {
+	const response = await axios.post(`${baseUrl}/relog`, { password }, getConfig())
+	return response.data
+}
+
 const logout = async () => {
 	const response = await axios.delete('/api/logout', getConfig())
 	return response.data
@@ -26,4 +31,4 @@ const get = async (user) => {
 	return response.data
 }
 
-export default { login, logout, setToken, get }
+export default { login, relog, logout, setToken, get }
