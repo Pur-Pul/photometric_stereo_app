@@ -16,17 +16,20 @@ const Session = require('../src/models/session')
 
 let initialUsers = [
     {
-      	username: 'test1',
-      	name: 'Test1 Person1',
-      	passwordHash: null
+        username: 'test1',
+        email: 'test1@test.com',
+        name: 'Test1 Person1',
+        passwordHash: null,
+        verified: true
     },
     {
-      	username: 'test2',
-      	name: 'Test2 Person2',
-      	passwordHash: null
+        username: 'test2',
+        email: 'test2@test.com',
+        name: 'Test2 Person2',
+        passwordHash: null,
+        verified: true
     }
 ]
-
 let initialNormalMaps = [
     {
         name: 'test1',

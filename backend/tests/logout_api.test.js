@@ -14,13 +14,17 @@ const Session = require('../src/models/session')
 let initialUsers = [
     {
         username: 'test1',
+        email: 'test1@test.com',
         name: 'Test1 Person1',
-        passwordHash: null
+        passwordHash: null,
+        verified: true
     },
     {
         username: 'test2',
+        email: 'test2@test.com',
         name: 'Test2 Person2',
-        passwordHash: null
+        passwordHash: null,
+        verified: true
     }
 ]
 beforeEach(async () => {

@@ -14,23 +14,27 @@ const Session = require('../src/models/session')
 
 let initialUsers = [
     {
-      	username: 'test1',
-      	name: 'Test1 Person1',
-      	passwordHash: null,
-        role: 'user'
+        username: 'test1',
+        email: 'test1@test.com',
+        name: 'Test1 Person1',
+        passwordHash: null,
+        verified: true
     },
     {
       	username: 'testadmin',
+        email: 'testadmin@test.com',
       	name: 'admin',
       	passwordHash: null,
-        role: 'admin'
+        role: 'admin',
+        verified: true
     },
     {
-      	username: 'test2',
-      	name: 'Test2 Person2',
-      	passwordHash: null,
-        role: 'user'
-    },
+        username: 'test2',
+        email: 'test2@test.com',
+        name: 'Test2 Person2',
+        passwordHash: null,
+        verified: true
+    }
 ]
 
 beforeEach(async () => {
@@ -127,6 +131,7 @@ describe('user post', () => {
         
         let newUser = {
             username: 'newuser',
+            email: 'newuser@test.com',
             name: 'new user',
             password: 'sekret'
         }
@@ -147,6 +152,7 @@ describe('user post', () => {
         
         let newUser = {
             username: 'newuser',
+            email: 'newuser@test.com',
             name: 'new user',
             password: 'sekret'
         }
@@ -163,6 +169,7 @@ describe('user post', () => {
 
     test('username is required', async () => {
         let newUser = {
+            email: 'newuser@test.com',
             name: 'new user',
             password: 'sekret'
         }
@@ -175,6 +182,7 @@ describe('user post', () => {
     test('username has to be atleast 3 characters long', async () => {
         let newUser = {
             username: 'ne',
+            email: 'newuser@test.com',
             name: 'new user',
             password: 'sekret'
         }
@@ -187,6 +195,7 @@ describe('user post', () => {
     test('username has to be unique', async () => {
         let newUser = {
             username: 'test1',
+            email: 'newuser@test.com',
             name: 'new user',
             password: 'sekret'
         }
@@ -199,6 +208,7 @@ describe('user post', () => {
     test('password is required', async () => {
         let newUser = {
             username: 'newuser',
+            email: 'newuser@test.com',
             name: 'new user'
         }
         await api
@@ -210,6 +220,7 @@ describe('user post', () => {
     test('password has to be atleast 3 characters long', async () => {
         let newUser = {
             username: 'newuser',
+            email: 'newuser@test.com',
             name: 'new user',
             password: 'se'
         }
