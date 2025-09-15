@@ -17,7 +17,6 @@ import {
 	MenuItem,
 	List,
 	ListItem
-
 } from '@mui/material'
 import { useState, useEffect } from 'react'
 import pencil from '../static/pencil32.png'
@@ -32,7 +31,7 @@ const DeleteForm = ({ owner, user }) => {
 		setOpenDeleteForm(false)
 	}
 	const handleDelete = () => {
-		dispatch(performUserDelete(user.id, password))
+		dispatch(performUserDelete(user, password))
 	}
 
 	return (

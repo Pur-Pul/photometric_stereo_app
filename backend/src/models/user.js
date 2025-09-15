@@ -1,17 +1,28 @@
 const mongoose = require('mongoose')
+const validator = require('validator')
 const userSchema = new mongoose.Schema(
     {
         username: {
             type: String,
             minLength: 3,
-            required: true,
+            required: [true, 'Username is required'],
             unique: true,
+        },
+        email: {
+            type: String,
+            required: [true, 'Email is required'],
+            validate: {
+                validator: (email) => {
+                    return validator.isEmail(email)
+                },
+                message: props => `${props.value} is not a valid email address.`
+            }
         },
         name: String,
         passwordHash: {
             type: String,
             minLength: 3,
-            required: true,
+            required: [true, 'Password is required'],
         },
         normalMaps: [
             {
@@ -25,6 +36,11 @@ const userSchema = new mongoose.Schema(
             default: 'user',
             required: true
         },
+        verified: {
+            type: Boolean,
+            default: false,
+            required: true
+        }
     }, {
         timestamps: true
     }

@@ -6,6 +6,7 @@ const NormalMap = require('../models/normalMap')
 const { ValidationError } = require('../utils/errors')
 const middleware = require('../utils/middleware')
 const { expireNormalMap, expireSession } = require('../utils/expiration_manager')
+const jwt = require('jsonwebtoken')
 
 usersRouter.get('/', middleware.userExtractor, async (request, response) => {
     const users = request.user.role !== 'admin' ? [request.user] : await User.find({})
@@ -28,8 +29,33 @@ usersRouter.get('/', middleware.userExtractor, async (request, response) => {
     response.json(mappedUsers)
 })
 
+usersRouter.put('/verify-email/:token', async (request, response, next) => {
+    try {
+        const token = request.params.token
+        if (!token) { return response.status(401).json({ error: 'token missing' }) }
+        const decodedToken = jwt.verify(token, process.env.SECRET)
+        if (!decodedToken.id) { return response.status(401).json({ error: 'token invalid' }) }
+        const session = await Session.findOne({ token })
+        const user = await User.findById(decodedToken.id)
+        if (!session || !user.id) { return response.status(401).json({ error: 'token expired' }) }
+        
+        session.updatedAt = new Date()
+        await session.save()
+
+        user.updatedAt = new Date()
+        user.verified = true
+        await user.save()
+
+        await expireSession(session.id, true)
+        
+        response.status(200).end()
+    } catch (exception) {
+        next(exception)
+    }
+})
+
 usersRouter.post('/', async (request, response, next) => {
-    const { username, name, password } = request.body
+    const { username, email, name, password } = request.body
     try {
         if (password === undefined) { throw new ValidationError('password is required.') }
         if (password.length < 3) { throw new ValidationError('password needs to be atleast 3 characters long.') }
@@ -38,12 +64,19 @@ usersRouter.post('/', async (request, response, next) => {
 
         const user = new User({
             username,
+            email,
             name,
             passwordHash,
         })
 
         const existing_user = await User.findOne({ username })
         if (existing_user) { throw new ValidationError('username already exists.') }
+        const userForToken = { username: user.username, id: user.id }
+        const token = jwt.sign(userForToken, process.env.SECRET)
+        const session = new Session({ userId: user.id, token})
+        session.save()
+        expireSession(session.id)
+        console.log(token)
 
         const savedUser = await user.save()
         response.status(201).json(savedUser)

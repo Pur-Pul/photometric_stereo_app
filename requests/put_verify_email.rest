@@ -1,0 +1,2 @@
+PUT http://localhost:8080/api/users/verify-email/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3QxIiwiaWQiOiI2OGM3ZTczZDdmZDJlNjE2ZWJhMmM4ZWMiLCJpYXQiOjE3NTc5MzEzMjV9.lwzbBliGrglDL2-rZsOvqMdNal5bHDrRtvhcLz_AfXQ
+content-type: application/json

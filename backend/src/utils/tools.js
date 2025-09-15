@@ -10,9 +10,11 @@ const initDatabase = async () => {
             const passwordHash = await bcrypt.hash(config.ADMIN_PASS, 10)
             const user = new User({
                 username: 'admin',
+                email: 'admin@test.com',
                 name: 'admin',
                 passwordHash,
-                role: 'admin'
+                role: 'admin',
+                verified: true
             })
             user.save()
             logger.info('Default admin created.')

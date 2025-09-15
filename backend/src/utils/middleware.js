@@ -62,6 +62,7 @@ const userExtractor = async (request, response, next) => {
         const session = await Session.findOne({ token: request.token })
         const user = await User.findById(decodedToken.id)
         if (session && user.id) {
+            if (!user.verified) { return response.status(403).json({ error: 'User is not verified' }) }
             session.updatedAt = new Date()
             await session.save()
 

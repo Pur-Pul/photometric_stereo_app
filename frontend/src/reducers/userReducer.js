@@ -45,9 +45,10 @@ export const performUserDelete = (user, password) => {
 	return async (dispatch) => {
 		try {
 			await loginService.relog(password)
-			await userService.remove(id)
+			await userService.remove(user.id)
 			dispatch(deleteUser(user))
 		} catch (exception) {
+			console.log(exception)
 			dispatch(notificationSet({ text: exception.response && exception.response.data.error ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
 		}
 	}
