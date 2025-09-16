@@ -93,6 +93,7 @@ export const generateNormalMap = (sourceNormalMaps, mask, name) => {
 		data.set('name', name)
 
 		const newNormalMap = await imageService.postPhotostereo(data)
+		console.log(newNormalMap)
 		const iconBlob = await imageService.getFile(newNormalMap.id, newNormalMap.icon)
 		newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
 		newNormalMap.flatImage = { id:newNormalMap.flatImage }

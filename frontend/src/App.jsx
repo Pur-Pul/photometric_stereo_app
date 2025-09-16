@@ -14,6 +14,7 @@ import NavBar from './components/NavBar'
 import { Routes, Route, useLocation, useNavigate} from 'react-router-dom'
 import ManualCreation from './components/ManualCreation'
 import CreateUser from './components/CreateUser'
+import VerifyUser from './components/VerifyUser'
 
 const App = () => {
 	const dispatch = useDispatch()
@@ -46,6 +47,7 @@ const App = () => {
 					<Routes>
 						<Route path="/" element={ <LoginForm /> } />
 						<Route path="/create-user" element={<CreateUser />} />	
+						<Route path="/verify-user/:token" element={<VerifyUser />} />
 					</Routes>
 					
 				</div>

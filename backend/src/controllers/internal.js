@@ -10,7 +10,7 @@ internalRouter.put('/images/:id', async (request, response, next) => {
     try {
         
         const normalMap = await NormalMap.findById(request.params.id)
-        const imageFile = path.join(process.cwd(), `../output/${normalMap.id}-layer-0.png`)
+        const imageFile = path.join(process.cwd(), `../output/${normalMap.id}-flat.png`)
         const iconFile = path.join(process.cwd(), `../output/${normalMap.id}-icon.png`)
         fs.copyFileSync(request.body.file, imageFile)
         fs.unlinkSync(request.body.file)

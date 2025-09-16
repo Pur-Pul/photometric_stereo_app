@@ -26,8 +26,8 @@ const update = async (user) => {
 	return response.data
 }
 
-const verifyEmail = async (email) => {
-	const response = await axios.post(`${baseUrl}/verify-email`, email)
+const verify = async (token) => {
+	const response = await axios.get(`${baseUrl}/verify-email`, { headers: { Authorization: `Bearer ${token}` }})
 }
 
-export default { getAll, setToken, remove, update }
+export default { getAll, setToken, remove, update, verify }

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import notFound from '../static/normal_sphere.png'
 const baseUrl = '/api/normalMaps'
 
 let token = null
@@ -23,8 +24,20 @@ const getPage = async (page, category) => {
 }
 
 const getFile = async (normalId, id) => {
-	const response = await axios.get(`${baseUrl}/${normalId}/layers/${id}`, { ...getConfig(), responseType: 'blob' })
-	return response.data
+	try {
+		const response = await axios.get(`${baseUrl}/${normalId}/layers/${id}`, { ...getConfig(), responseType: 'blob' })
+		return response.data
+	} catch(exception) {
+		if (exception.response.status === 404) {
+			const response = await fetch(notFound)
+			const blob = await response.blob()
+			console.log(blob)
+			return blob
+		} else {
+			throw exception
+		}
+	}
+	
 }
 
 const post = async (data) => {

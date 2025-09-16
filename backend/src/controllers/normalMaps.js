@@ -95,7 +95,14 @@ normalMapsRouter.get('/:normalId/layers/:id', middleware.userExtractor, async (r
             }
             if (fs.existsSync(image.file)) {
                 return response.sendFile(image.file)
-            }
+            } 
+            /*else {
+                const layer_i = normalMap.layers.findIndex((layer) => layer.toString() === id)
+                if (layer_i) { normalMap.layers.splice(layer_i, 1) }
+                if (normalMap.icon.toString() === id) { normalMap.icon = null }
+                if (normalMap.flatImage.toString() === id) { normalMap.flatImage = null }
+                await normalMap.save()
+            }*/
         }
         response.status(404).json({message: 'Image not found.'})
     } catch (exception) {

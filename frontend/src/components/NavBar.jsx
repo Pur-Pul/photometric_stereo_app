@@ -5,11 +5,14 @@ import { AppBar, Button, Toolbar, Box} from '@mui/material';
 
 const NavBar = ({ user }) => {
     const dispatch = useDispatch()
+    const navigate = useNavigate()
+
     const logoutHandler = (event) => {
 		event.preventDefault()
 		dispatch(performLogout())
+        navigate('/')
 	}
-    const navigate = useNavigate()
+    
     const paths = {
         "/" : "Home",
         "/users" : user.role === 'admin' ? "Users" : null,

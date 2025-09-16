@@ -7,7 +7,7 @@ import { notificationSet, notificationRemove } from "../reducers/notificationRed
 import { useSelector } from 'react-redux'
 import Mask from "./Mask"
 import { useLocation } from "react-router-dom"
-import { Button, Grid, TextField, InputLabel, FormControl} from '@mui/material'
+import { Button, Grid, TextField, InputLabel, FormControl, Alert } from '@mui/material'
 
 const PhotometricForm = () => {
     const location = useLocation()
@@ -15,16 +15,15 @@ const PhotometricForm = () => {
     const [files, setFiles] = useState([])
     const [mask, setMask] = useState(null)
     const [nameFormOpen, setNameFormOpen] = useState(false)
-    const [name, setName] = useState('')
-    const notification = useSelector(state => state.notification)
+    const [warning, setWarning] = useState('')
 
     useEffect(() => {
-        let status = files.length > 0 ? '' : 'No images selected'
+        let warning = files.length > 0 ? '' : 'No images selected'
         files.forEach(file => {
-            status = file.width == files[0].width && file.height == files[0].height ? status : 'The images must have equal dimensions.'
-            status = file.src.type == files[0].src.type ? status : 'The images must be of the same format.'
+            warning = file.width == files[0].width && file.height == files[0].height ? warning : 'The images must have equal dimensions.'
+            warning = file.src.type == files[0].src.type ? warning : 'The images must be of the same format.'
         })
-        status !== '' ? dispatch(notificationSet({ text: status, type: 'warning' })) : dispatch(notificationRemove())
+        setWarning(warning)
     }, [location, files])
 
     const handleFileSelect = (event) => {
@@ -60,7 +59,7 @@ const PhotometricForm = () => {
             .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'success' }, 5)) })
 			.catch((exception) => {
 				console.log(exception)
-				dispatch(notificationSet({ text: exception.response.data.error, type: 'error' }, 5))
+				dispatch(notificationSet({ text: exception.response && exception.response.data ? exception.response.data.error : 'An error occured', type: 'error' }, 5))
 			})
         setNameFormOpen(false)
     }
@@ -71,7 +70,8 @@ const PhotometricForm = () => {
     return (
         <div>
             <h2 data-testid='photometric-title'>Select images:</h2>
-            <form onSubmit={notification.type !== 'warning' ? submitImages : (e) => {
+            { warning !== '' ? <Alert severity='warning'>{warning}</Alert> : null }
+            <form onSubmit={warning === '' ? submitImages : (e) => {
                 e.preventDefault()
                 false
             }}>
@@ -85,7 +85,7 @@ const PhotometricForm = () => {
                         multiple
                     />
                 </Button>
-                <Button data-testid='photometric-submit' type="submit" color="success" variant="outlined" disabled={notification.type === 'warning'}>Submit</Button>
+                <Button data-testid='photometric-submit' type="submit" color="success" variant="outlined" disabled={warning !== ''}>Submit</Button>
             </form>
             <div>
                 <Grid 

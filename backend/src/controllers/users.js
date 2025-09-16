@@ -29,14 +29,15 @@ usersRouter.get('/', middleware.userExtractor, async (request, response) => {
     response.json(mappedUsers)
 })
 
-usersRouter.put('/verify-email/:token', async (request, response, next) => {
+usersRouter.get('/verify-email', middleware.tokenExtractor, async (request, response, next) => {
     try {
-        const token = request.params.token
+        const token = request.token
         if (!token) { return response.status(401).json({ error: 'token missing' }) }
         const decodedToken = jwt.verify(token, process.env.SECRET)
         if (!decodedToken.id) { return response.status(401).json({ error: 'token invalid' }) }
         const session = await Session.findOne({ token })
         const user = await User.findById(decodedToken.id)
+        console.log(user, session)
         if (!session || !user.id) { return response.status(401).json({ error: 'token expired' }) }
         
         session.updatedAt = new Date()

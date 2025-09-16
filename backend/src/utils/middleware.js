@@ -52,13 +52,10 @@ const tokenExtractor = (request, response, next) => {
 
 const userExtractor = async (request, response, next) => {
     try {
-        if (!request.token) {
-            return response.status(401).json({ error: 'token missing' })
-        }
+        if (!request.token) { return response.status(401).json({ error: 'token missing' }) }
         const decodedToken = jwt.verify(request.token, process.env.SECRET)
-        if (!decodedToken.id) {
-            return response.status(401).json({ error: 'token invalid' })
-        }
+        if (!decodedToken.id) { return response.status(401).json({ error: 'token invalid' }) }
+
         const session = await Session.findOne({ token: request.token })
         const user = await User.findById(decodedToken.id)
         if (session && user.id) {
@@ -76,7 +73,6 @@ const userExtractor = async (request, response, next) => {
     } catch (exception) {
         next(exception)
     }
-
     next()
 }
 const imageUpload = multer({
