@@ -4,7 +4,6 @@ import NameForm from "./NameForm"
 import { useDispatch } from "react-redux"
 import { generateNormalMap } from "../reducers/normalMapReducer"
 import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
-import { useSelector } from 'react-redux'
 import Mask from "./Mask"
 import { useLocation } from "react-router-dom"
 import { Button, Grid, TextField, InputLabel, FormControl, Alert } from '@mui/material'

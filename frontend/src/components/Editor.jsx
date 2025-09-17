@@ -147,7 +147,7 @@ const Editor = ({
             case 'shape':
                 if (drawing) {
                     const image = new Image()
-                    image.src = tool.shape.src
+                    image.src = tool.shape.flatImage.src
                     await image.decode()
                     ctx.cursor.clearRect(0, 0, cursorCanvasRef.current.width, cursorCanvasRef.current.height)
                     ctx.cursor.drawImage(image, drawing[0], drawing[1], x-drawing[0], y-drawing[1])
@@ -224,7 +224,7 @@ const Editor = ({
                 break
             case 'shape':
                 const image = new Image()
-                image.src = tool.shape.src
+                image.src = tool.shape.flatImage.src
                 await image.decode()
                 ctx.picture.drawImage(image, drawing[0], drawing[1], x-drawing[0], y-drawing[1])
                 break

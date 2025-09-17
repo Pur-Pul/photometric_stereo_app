@@ -5,7 +5,7 @@ import ToolButton from './ToolButton'
 import normal_sphere from '../static/normal_sphere.png'
 import normal_sphere32 from '../static/normal_sphere32.png'
 import imageService from '../services/images'
-import { fetchPage } from '../reducers/normalMapReducer'
+import { fetchFlatImage, fetchPage } from '../reducers/normalMapReducer'
 
 const blackToTransparent = async (src, maxHeight) => {
     const canvas = document.createElement('canvas')
@@ -37,40 +37,36 @@ const blackToTransparent = async (src, maxHeight) => {
     return canvas.toDataURL()
 }
 
-const getSource = async (shape) => {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    for (var i = 0; i < shape.layers.length; i++) {
-        const blob = await imageService.getFile(shape.id, shape.layers[i].id)
-        const image = new Image()
-        image.src = URL.createObjectURL(blob)
-        await image.decode()
-        if (i === 0) {
-            canvas.width = image.width
-            canvas.height = image.height
-        }
-        
-        ctx.drawImage(image, 0, 0, image.width, image.height)
-    }
-    return canvas.toDataURL()
-}
-
 const Shape = ({shape, selectedShape, setSelectedShape, loading, setLoading, maxHeight}) => {
+    const [selected, setSelected] = useState(false)
+    const dispatch = useDispatch()
+
+    const loadImage = async () => {
+        const src = await blackToTransparent(shape.flatImage.src, maxHeight)
+        setSelectedShape({...shape, flatImage: {...shape.flatImage, src }})
+        setLoading(false)
+        setSelected(false)
+    }
+
     const handleSelect = async () => {
         setLoading(true)
-        let src
-        if (!shape.src) {
-            const originalSrc = await getSource(shape)
-            src = await blackToTransparent(originalSrc, maxHeight)
+        setSelected(true)
+        if (!shape.flatImage || !shape.flatImage.src) {
+            dispatch(fetchFlatImage(shape))
+            //const originalSrc = await getSource(shape)
+            //src = await blackToTransparent(originalSrc, maxHeight)
         } else {
-            src = await blackToTransparent(shape.src, maxHeight)
+            loadImage()
         }
-        setSelectedShape({...shape, src})
-        setLoading(false)
     }
+    useEffect(() => {
+        if (loading && selected && shape.flatImage && shape.flatImage.src) {
+            loadImage()
+        }
+    }, [loading, selected, shape])
     return (
         <div>
-            <IconButton onClick={handleSelect} sx={loading ? {cursor: 'wait' } : {}}>
+            <IconButton onClick={loading ? null : handleSelect} sx={loading ? {cursor: 'wait' } : {}}>
                 { shape.icon 
                     ? <img src={ shape.icon.src }/>
                     : 'no icon'
@@ -83,12 +79,14 @@ const Shape = ({shape, selectedShape, setSelectedShape, loading, setLoading, max
 const ShapeTool = ({currentTool, setTool, maxHeight}) => {
     const [open, setOpen] = useState(false)
     const [selectedShape, setSelectedShape] = useState(null)
-    const defaultShapes = [{ icon: { src: normal_sphere32 }, src: normal_sphere }]
+    const defaultShapes = [{ icon: { src: normal_sphere32 }, flatImage: { src: normal_sphere }}]
     const [shapes, setShapes] = useState([])
     const [loading, setLoading] = useState(true)
     const normalMaps = useSelector((state) => state.normalMaps)
     const loggedUser = useSelector((state) => state.login)
     const dispatch = useDispatch()
+    useEffect(() => { setLoading(false) }, [currentTool])
+
     useEffect(() => {
         const shapes = [...defaultShapes]
         for (var i = 0; i < normalMaps.length; i++) {
@@ -96,8 +94,8 @@ const ShapeTool = ({currentTool, setTool, maxHeight}) => {
             shapes.push(normalMaps[i])
         }
         setShapes(shapes)
-        setLoading(false)
-    }, [currentTool, normalMaps])
+
+    }, [normalMaps])
 
     const handleSelect = () => {
         setTool({name: 'shape', shape: selectedShape})

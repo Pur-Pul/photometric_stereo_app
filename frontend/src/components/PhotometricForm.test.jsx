@@ -30,14 +30,6 @@ vi.mock(import('react-router-dom'), async (importOriginal) => {
     return {...actual, useLocation: () => mockedLocation }
 })
 
-const state = {
-    notification: {text: 'test notifcation', type: 'warning'}
-}
-
-vi.mock(import('react-redux'), async (importOriginal) => {
-    const actual = await importOriginal()
-    return {...actual, useSelector: (callback) => callback(state) }
-})
 
 import PhotometricForm from './PhotometricForm'
 
@@ -45,7 +37,6 @@ describe('Photometric form renders.', () => {
     window.URL.createObjectURL = vi.fn()
     afterEach(() => {
         vi.clearAllMocks()
-        state.notification =  {text: 'test notifcation', type: 'warning'}
     })
     test('Title is visible.', () => {
         render(<Provider store={store}><PhotometricForm /></Provider>)
@@ -62,16 +53,10 @@ describe('Photometric form renders.', () => {
         const button = screen.queryByTestId('photometric-submit')
         expect(button).toBeInTheDocument()
     })
-    test('Submit button is disabled by when a warning notification is present.', () => {
+    test('Submit button is disabled by default.', () => {
         render(<Provider store={store}><PhotometricForm /></Provider>)
         const button = screen.queryByTestId('photometric-submit')
         expect(button.disabled).toBe(true)
-    })
-    test('Submit button is not disabled by when no warning notification is present.', () => {
-        state.notification = {...state.notification, type: 'info'}
-        render(<Provider store={store}><PhotometricForm /></Provider>)
-        const button = screen.queryByTestId('photometric-submit')
-        expect(button.disabled).toBe(false)
     })
     test('Mask is visible.', () => {
         render(<Provider store={store}><PhotometricForm /></Provider>)
@@ -105,7 +90,6 @@ describe('Photometric form is functional', () => {
     })
     afterEach(() => {
         vi.clearAllMocks()
-        state.notification =  {text: 'test notifcation', type: 'warning'}
         dimensions.length = 0
     })
     test('When a file is uploaded a SourceImage becomes visible.', async () => {
@@ -142,7 +126,7 @@ describe('Photometric form is functional', () => {
         expect(source3).toBeInTheDocument()
         expect(source4).toBeInTheDocument()
     })
-    test('When multiple image files with different resolutions are uploaded, a notificationSet is called with a warning.', async () => {
+    test('When multiple image files with different resolutions are uploaded, the submit button is disabled.', async () => {
         const user = userEvent.setup()
         dimensions.push({width: 200, height: 200})
         dimensions.push({width: 100, height: 100})
@@ -155,11 +139,11 @@ describe('Photometric form is functional', () => {
         vi.clearAllMocks()
         await user.upload(input, files)
         rerender(<Provider store={store}><PhotometricForm /></Provider>)
-        const notificationReducer = await import('../reducers/notificationReducer')
-        expect(notificationReducer.notificationSet).toHaveBeenCalledTimes(1)
-        expect(notificationReducer.notificationSet.mock.calls.at(-1)[0].type).toBe('warning')
+        
+        const button = screen.queryByTestId('photometric-submit')
+        expect(button.disabled).toBe(true)
     })
-    test('When multiple image files of different file formats are uploaded, a notificationSet is called with a warning.', async () => {
+    test('When multiple image files of different file formats are uploaded, the submit button is disabled.', async () => {
         const user = userEvent.setup()
         const { rerender } = render(<Provider store={store}><PhotometricForm /></Provider>)
         const input = screen.getByTestId('photometric-file-upload')
@@ -170,11 +154,10 @@ describe('Photometric form is functional', () => {
         vi.clearAllMocks()
         await user.upload(input, files)
         rerender(<Provider store={store}><PhotometricForm /></Provider>)
-        const notificationReducer = await import('../reducers/notificationReducer')
-        expect(notificationReducer.notificationSet).toHaveBeenCalledTimes(1)
-        expect(notificationReducer.notificationSet.mock.calls.at(-1)[0].type).toBe('warning')
+        const button = screen.queryByTestId('photometric-submit')
+        expect(button.disabled).toBe(true)
     })
-    test('When multiple image files of the same dimensions and fileformat are upload, notificationSet is not called and notificationRemove is called.', async () => {
+    test('When multiple image files of the same dimensions and fileformat are upload, the submit button is enabled', async () => {
         const user = userEvent.setup()
         const { rerender } = render(<Provider store={store}><PhotometricForm /></Provider>)
         const input = screen.getByTestId('photometric-file-upload')
@@ -185,17 +168,25 @@ describe('Photometric form is functional', () => {
         vi.clearAllMocks()
         await user.upload(input, files)
         rerender(<Provider store={store}><PhotometricForm /></Provider>)
-        const notificationReducer = await import('../reducers/notificationReducer')
-        expect(notificationReducer.notificationSet).toHaveBeenCalledTimes(0)
-        expect(notificationReducer.notificationRemove).toHaveBeenCalledTimes(1)
+        const button = screen.queryByTestId('photometric-submit')
+        expect(button.disabled).toBe(false)
     })
     test('Clicking submit after uploading files renders the nameForm with open prop true.', async () => {
         const user = userEvent.setup()
-        state.notification = {...state.notification, type: 'info'}
-        const { rerender } = render(<Provider store={store}><PhotometricForm /></Provider>)
+        
+        render(<Provider store={store}><PhotometricForm /></Provider>)
+        const input = screen.getByTestId('photometric-file-upload')
+        const files = [
+            new File(['test0'], 'test0.png', {type: 'image/png'}),
+            new File(['test1'], 'test1.png', {type: 'image/png'})
+        ]
+        
+        await user.upload(input, files)   
         const button = screen.getByTestId('photometric-submit')
+        vi.clearAllMocks()
         await user.click(button)
         const NameForm = await import('./NameForm')
+        console.log(NameForm.default.mock.calls)
         expect(NameForm.default).toHaveBeenCalledTimes(2)
         expect(NameForm.default.mock.calls.at(-1)[0].open).toBe(true)
     })

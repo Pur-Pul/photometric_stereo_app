@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { 
     Button,
     IconButton,
@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 
-import { performCreate, performLayerUpdate } from "../reducers/normalMapReducer"
+import { fetchLayers, performCreate, performLayerUpdate } from "../reducers/normalMapReducer"
 import ColorSelector from "./ColorSelector"
 import Editor from "./Editor"
 import LayerSelector from "./LayerSelector"
@@ -43,19 +43,18 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [editorCursor, setEditorCursor] = useState(0)
     const dispatch = useDispatch()
     const navigate = useNavigate()
+
+    const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
     
     useEffect(() => { //Fetch the layers from the backend.
-        const getLayers = async () => {
-            const initialLayers = layers.map(layer => ({...layer}))
-            for (var i = 0; i < initialLayers.length; i++) {
-                if (initialLayers.src) { continue }
-                const blob = await imageService.getFile(id, initialLayers[i].id)
-                initialLayers[i].src = URL.createObjectURL(blob)
-            }
-            setInitialLayers(initialLayers)
-        }
-        getLayers()
+        dispatch(fetchLayers(normalMap))
     }, [])
+
+    useEffect(() => {
+        if (normalMap.layers && normalMap.layers.length > 0 && normalMap.layers[0].src) {
+            setInitialLayers(normalMap.layers)
+        }
+    }, [normalMap])
     
     useEffect(() => { //initialize editor state
         if (initialLayers === null) { return }

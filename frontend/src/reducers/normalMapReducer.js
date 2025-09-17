@@ -2,17 +2,33 @@ import { createSlice } from '@reduxjs/toolkit'
 import imageService from '../services/images'
 import { notificationSet } from './notificationReducer'
 import { useNavigate } from 'react-router-dom'
+import notFound from '../static/normal_sphere.png'
+import { AxiosError } from 'axios'
 
 const reformatNormalMaps = async (uninitalizedNormalMaps) => {
 	const normalMaps = [...uninitalizedNormalMaps]
 	for (var i = 0; i < normalMaps.length; i++) {
 		const normalMap = normalMaps[i]
 		normalMap.layers = normalMap.layers.map((id) => { return {id} })
-
+		if (normalMaps[i].icon) { normalMaps[i].icon = { id: normalMaps[i].icon } }
+		if (normalMaps[i].flatImage) { normalMaps[i].flatImage = { id: normalMaps[i].flatImage } }
+		
 		if (!normalMaps[i].icon) { continue }
-		const blob = await imageService.getFile(normalMaps[i].id, normalMaps[i].icon)
-		normalMaps[i].icon = { id: normalMaps[i].icon, src: URL.createObjectURL(blob)}
-		normalMaps[i].flatImage = { id:normalMaps[i].flatImage }
+
+		try {
+			const blob = await imageService.getFile(normalMaps[i].id, normalMaps[i].icon.id)
+			normalMaps[i].icon.src = URL.createObjectURL(blob)
+			
+		} catch (exception) {
+			if (exception instanceof AxiosError && exception.response.status === 404) {
+				const response = await fetch(notFound)
+				const blob = await response.blob()
+				normalMaps[i].icon.src = URL.createObjectURL(blob)
+			} else {
+				throw exception
+			}
+		}
+		
 	}
 	return normalMaps
 }
@@ -65,6 +81,15 @@ const normalMapSlice = createSlice({
 export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap, updateLayers } =
 	normalMapSlice.actions
 
+export const reFetchNormalMap = (normalMap) => {
+	return async (dispatch) => {
+		const rawNormalMap = await imageService.get(normalMap.id)
+		if (normalMap.updatedAt && normalMap.updatedAt === rawNormalMap.updatedAt) { return }
+		const [updatedNormalMap] = await reformatNormalMaps([rawNormalMap])
+		dispatch(updateNormalMap(updatedNormalMap))
+	}
+}
+
 export const initializeNormalMaps = () => {
 	return async (dispatch) => {
 		let normalMaps = await imageService.getAll()
@@ -73,31 +98,89 @@ export const initializeNormalMaps = () => {
 	}
 }
 
+export const fetchFlatImage = (normalMap) => {
+	return async (dispatch) => {
+		let blob
+		try {
+			blob = await imageService.getFile(normalMap.id, normalMap.flatImage.id)
+		} catch (exception) {
+			if (exception instanceof AxiosError && exception.response.status === 404) {
+				console.log(exception)
+				const response = await fetch(notFound)
+				blob = await response.blob()
+			} else {
+				throw exception
+			}
+		}
+		dispatch(updateNormalMap({ ...normalMap, flatImage: {...normalMap.flatImage, src: URL.createObjectURL(blob)} }))
+	}
+}
+
+export const fetchLayers = (normalMap) => {
+	return async (dispatch) => {
+		const updatedLayers = Array(normalMap.layers.length)
+		for (var i = 0; i < updatedLayers.length; i++) {
+			let blob
+			try {
+				blob = await imageService.getFile(normalMap.id, normalMap.layers[i].id)
+			} catch (exception) {
+				if (exception instanceof AxiosError && exception.response.status === 404) {
+					console.log(exception)
+					const response = await fetch(notFound)
+					blob = await response.blob()
+				} else {
+					throw exception
+				}
+			}
+			updatedLayers[i] = {...normalMap.layers[i], src: URL.createObjectURL(blob)}
+		}
+		dispatch(updateNormalMap({ ...normalMap, layers: updatedLayers }))
+	}
+}
+
 export const fetchPage = (page, category) => {
 	return async (dispatch) => {
-		let normalMaps = await imageService.getPage(page, category)
-		normalMaps = await reformatNormalMaps(normalMaps)
-		dispatch(appendNormalMap(normalMaps))
+		try {
+			let normalMaps = await imageService.getPage(page, category)
+			normalMaps = await reformatNormalMaps(normalMaps)
+			dispatch(appendNormalMap(normalMaps))
+		} catch (exception) {
+			if (exception instanceof AxiosError) {
+				console.log(exception)
+				dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+			} else {
+				throw exception
+			}
+		}
 	}
 }
 
 export const generateNormalMap = (sourceNormalMaps, mask, name) => {
 	return async (dispatch) => {
-		const data = new FormData()
-		sourceNormalMaps.forEach((normalMap, index) => {
-			data.append('files', normalMap.src, index.toString() + '.' + normalMap.src.name.split('.').pop())
-			data.append('lights', normalMap.light)
-		})
-		data.append('files', mask, mask.name)
-		data.set('format', sourceNormalMaps[0].src.name.split('.').pop())
-		data.set('name', name)
+		try {
+			const data = new FormData()
+			sourceNormalMaps.forEach((normalMap, index) => {
+				data.append('files', normalMap.src, index.toString() + '.' + normalMap.src.name.split('.').pop())
+				data.append('lights', normalMap.light)
+			})
+			data.append('files', mask, mask.name)
+			data.set('format', sourceNormalMaps[0].src.name.split('.').pop())
+			data.set('name', name)
 
-		const newNormalMap = await imageService.postPhotostereo(data)
-		console.log(newNormalMap)
-		const iconBlob = await imageService.getFile(newNormalMap.id, newNormalMap.icon)
-		newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
-		newNormalMap.flatImage = { id:newNormalMap.flatImage }
-		dispatch(appendNormalMap([newNormalMap]))
+			const newNormalMap = await imageService.postPhotostereo(data)
+			console.log(newNormalMap)
+			const iconBlob = await imageService.getFile(newNormalMap.id, newNormalMap.icon)
+			newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
+			newNormalMap.flatImage = { id:newNormalMap.flatImage }
+			dispatch(appendNormalMap([newNormalMap]))
+		} catch (exception) {
+			if (exception instanceof AxiosError) {
+				console.log(exception)
+				dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+			} else {
+				throw exception
+			}
+		}
 	}
 }
 
@@ -117,11 +200,15 @@ export const performCreate = (blobs, name, navigate) => {
 			newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
 			newNormalMap.flatImage = { id: newNormalMap.flatImage }
 			dispatch(appendNormalMap([newNormalMap]))
-			dispatch(notificationSet({text: 'Normal map created.', type: 'success'}, 5))
+			dispatch(notificationSet({ text: 'Normal map created.', type: 'success' }, 5))
 			navigate(`/normal_map/${newNormalMap.id}`)
-		} catch (error) {
-			console.log(error)
-			dispatch(notificationSet({ text: error.response.data.error ? error.response.data.error : 'An error occurred', type:'error' }, 5))
+		} catch (exception) {
+			if (exception instanceof AxiosError) {
+				console.log(exception)
+				dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+			} else {
+				throw exception
+			}
 		}
 	}
 }
@@ -138,9 +225,13 @@ export const performUpdate = (normalMap) => {
 			newNormalMap.flatImage = { id: newNormalMap.flatImage }
 
 			dispatch(updateNormalMap(newNormalMap))
-		} catch (error) {
-			console.log(error)
-			dispatch(notificationSet({ text: error.response.data.error ? error.response.data.error : 'An error occurred', type:'error' }, 5))
+		} catch (exception) {
+			console.log(exception)
+			if (exception instanceof AxiosError) {
+				dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+			} else {
+				throw exception
+			}
 		}
 	}
 }
@@ -168,17 +259,30 @@ export const performLayerUpdate = (blobs, layers, id) => {
 
 			dispatch(updateLayers({id, layers: updatedLayers, icon: { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }}))
 			dispatch(notificationSet({text: 'Normal map saved.', type: 'success'}, 5))
-		} catch (error) {
-			console.log(error)
-			dispatch(notificationSet({text: error.response.data.error ? error.response.data.error : 'An error occurred', type: 'error'}, 5))
+		} catch (exception) {
+			console.log(exception)
+			if (exception instanceof AxiosError) {
+				dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+			} else {
+				throw exception
+			}
 		}
 	} 
 }
 
 export const performRemove = (id) => {
 	return async (dispatch) => {
-		await imageService.remove(id)
-		dispatch(deleteNormalMap(id))
+		try {
+			await imageService.remove(id)
+			dispatch(deleteNormalMap(id))
+		} catch (exception) {
+			console.log(exception)
+			if (exception instanceof AxiosError) {
+				dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+			} else {
+				throw exception
+			}
+		}
 	}
 }
 

@@ -24,20 +24,8 @@ const getPage = async (page, category) => {
 }
 
 const getFile = async (normalId, id) => {
-	try {
-		const response = await axios.get(`${baseUrl}/${normalId}/layers/${id}`, { ...getConfig(), responseType: 'blob' })
-		return response.data
-	} catch(exception) {
-		if (exception.response.status === 404) {
-			const response = await fetch(notFound)
-			const blob = await response.blob()
-			console.log(blob)
-			return blob
-		} else {
-			throw exception
-		}
-	}
-	
+	const response = await axios.get(`${baseUrl}/${normalId}/layers/${id}`, { ...getConfig(), responseType: 'blob' })
+	return response.data
 }
 
 const post = async (data) => {

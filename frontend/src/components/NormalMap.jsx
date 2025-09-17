@@ -1,8 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
-import { performRemove, updateNormalMap, performUpdate } from "../reducers/normalMapReducer"
-import imageService from '../services/images'
+import { performRemove, updateNormalMap, performUpdate, reFetchNormalMap, fetchFlatImage } from "../reducers/normalMapReducer"
 import { 
     Button,
     Dialog,
@@ -31,34 +30,11 @@ const NormalMap = () => {
     const [visAlertOpen, setVisAlertOpen] = useState(false)
 
     useEffect(() => {
-        const getNormalMap = async () => {
-            //get latest version of normal map
-            const newNormalMap = await imageService.get(id)
-            newNormalMap.flatImage = { id: newNormalMap.flatImage }
-            newNormalMap.layers = newNormalMap.layers.map(id => ({id}))
-
-            //Check if normal map is newer than the stored one.
-            if (newNormalMap.updatedAt === normalMap.updatedAt) { return }
-
-            //fetch icon
-            if (newNormalMap.icon) {
-                const iconBlob = await imageService.getFile(id, newNormalMap.icon)
-                newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
-            }
-            
-            dispatch(updateNormalMap(newNormalMap))
-        }
-
-        const getFlatImage = async () => {
-            const blob = await imageService.getFile(id, normalMap.flatImage.id)
-            dispatch(updateNormalMap({ ...normalMap, flatImage: {...normalMap.flatImage, src:URL.createObjectURL(blob)} }))
-        }
-
         if (!normalMap) { return }
         if (normalMap.status == 'done' && normalMap.flatImage.src === undefined) {
-            getFlatImage()
+            dispatch(fetchFlatImage(normalMap))
         } else {
-            getNormalMap()
+            dispatch(reFetchNormalMap(normalMap))
         }
         if (normalMap.flatImage && normalMap.flatImage.src) {
             
