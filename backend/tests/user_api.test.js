@@ -1,4 +1,4 @@
-const { test, after, afterEach, beforeEach, describe } = require('node:test')
+const { test, after, afterEach, beforeEach, describe, before } = require('node:test')
 const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
@@ -11,6 +11,7 @@ const User = require('../src/models/user')
 const NormalMap = require('../src/models/normalMap')
 const Image = require('../src/models/image')
 const Session = require('../src/models/session')
+const config = require('../src/utils/config')
 
 let initialUsers = [
     {
@@ -37,6 +38,17 @@ let initialUsers = [
     }
 ]
 
+before(async () => {
+    mongoose
+        .connect(config.MONGODB_URI)
+        .then(() => {
+            logger.info('connected to MongoDB')
+        })
+        .catch((error) => {
+            logger.error('error connecting to MongoDB:', error.message)
+        })
+})
+
 beforeEach(async () => {
     await User.deleteMany({})
     await Session.deleteMany({})
@@ -47,7 +59,7 @@ beforeEach(async () => {
         initialUsers[i].id = userObject.id
         initialUsers[i].token = jwt.sign({ username: userObject.username, id: userObject.id }, process.env.SECRET)
         initialUsers[i].session = new Session({ userId: userObject.id, token: initialUsers[i].token })
-        initialUsers[i].session.save()
+        await initialUsers[i].session.save()
         initialUsers[i].updatedAt = userObject.updatedAt.toString()
     }
 })
@@ -59,7 +71,9 @@ afterEach(async () => {
 
 after(async () => {
     await mongoose.connection.close()
-    process.exit()
+    process.exit(0)
+    //await mongoose.connection.close()
+    //process.exit()
 })
 
 describe('user get', () => {
@@ -242,7 +256,7 @@ describe('user delete', () => {
             status: 'done',
             creator: user1.id
         })
-        normalMap.save()
+        await normalMap.save()
         user1.normalMaps = [normalMap.id]
         await user1.save()
         user2.normalMaps = [normalMap.id]

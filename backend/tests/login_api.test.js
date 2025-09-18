@@ -1,4 +1,4 @@
-const { test, after, beforeEach, describe, afterEach } = require('node:test')
+const { test, after, beforeEach, describe, afterEach, before } = require('node:test')
 const mongoose = require('mongoose')
 const assert = require('node:assert')
 const supertest = require('supertest')
@@ -9,6 +9,7 @@ const api = supertest(app)
 const User = require('../src/models/user')
 const Image = require('../src/models/image')
 const Session = require('../src/models/session')
+const config = require('../src/utils/config')
 
 let initialUsers = [
     {
@@ -26,6 +27,23 @@ let initialUsers = [
         verified: true
     }
 ]
+
+before(async () => {
+    mongoose
+        .connect(config.MONGODB_URI)
+        .then(() => {
+            logger.info('connected to MongoDB')
+        })
+        .catch((error) => {
+            logger.error('error connecting to MongoDB:', error.message)
+        })
+})
+
+after(async () => {
+    await mongoose.connection.close()
+    process.exit(0)
+})
+
 beforeEach(async () => {
     await User.deleteMany({})
     await Session.deleteMany({})
@@ -193,9 +211,4 @@ describe('login post', () => {
         assert.deepStrictEqual(pass_response.error, username_response.error)
         assert.deepStrictEqual(pass_response.error, both_response.error)
     })
-})
-
-after(async () => {
-    await mongoose.connection.close()
-    process.exit()
 })

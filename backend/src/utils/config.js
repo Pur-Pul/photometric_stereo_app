@@ -26,9 +26,10 @@ const {
     FRONTEND_URL,
     ADMIN_PASS,
     EMAIL,
-    EMAIL_PASS
+    EMAIL_PASS,
+    NODE_ENV
 } = process.env
-const MONGODB_URI = getMongoURI(process.env.NODE_ENV, process.env.MONGODB_URI)
+const MONGODB_URI = getMongoURI(NODE_ENV, process.env.MONGODB_URI)
 
 if (FRONTEND_URL === undefined) { error('Warning: Frontend URL is undefined.') }
 if (MONGODB_URI === undefined) { error('Warning: Mongodb URI is undefined.') }
@@ -47,5 +48,6 @@ module.exports = {
     FRONTEND_URL: FRONTEND_URL,
     ADMIN_PASS,
     EMAIL,
-    EMAIL_PASS
+    EMAIL_PASS,
+    NODE_ENV
 }

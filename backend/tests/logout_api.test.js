@@ -1,4 +1,4 @@
-const { test, after, afterEach, beforeEach, describe } = require('node:test')
+const { test, after, afterEach, beforeEach, describe, before } = require('node:test')
 const mongoose = require('mongoose')
 const assert = require('node:assert')
 const supertest = require('supertest')
@@ -27,6 +27,24 @@ let initialUsers = [
         verified: true
     }
 ]
+
+before(async () => {
+    mongoose
+        .connect(config.MONGODB_URI)
+        .then(() => {
+            logger.info('connected to MongoDB')
+        })
+        .catch((error) => {
+            logger.error('error connecting to MongoDB:', error.message)
+        })
+})
+
+
+after(async () => {
+    await mongoose.connection.close()
+    process.exit(0)
+})
+
 beforeEach(async () => {
     await User.deleteMany({})
     await Session.deleteMany({})
@@ -86,9 +104,4 @@ describe('logout delete', () => {
         assert.equal(first_result, undefined)
         assert.equal(second_result, undefined)
     })
-})
-
-after(async () => {
-    await mongoose.connection.close()
-    process.exit()
 })
