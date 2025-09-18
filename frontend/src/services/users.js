@@ -26,8 +26,19 @@ const update = async (user) => {
 	return response.data
 }
 
-const verify = async (token) => {
-	const response = await axios.get(`${baseUrl}/verify-email`, { headers: { Authorization: `Bearer ${token}` }})
+const post = async (user) => {
+	const response = await axios.post(`${baseUrl}`, user)
+	return response.data
 }
 
-export default { getAll, setToken, remove, update, verify }
+const verify = async (token) => {
+	const response = await axios.get(`${baseUrl}/verify-email`, { headers: { Authorization: `Bearer ${token}` }})
+	return response.data
+}
+
+const resendVerification = async (user) => {
+	const response = await axios.post(`${baseUrl}/resend-verification`, user)
+	return response.data
+}
+
+export default { getAll, setToken, remove, update, post, verify, resendVerification }

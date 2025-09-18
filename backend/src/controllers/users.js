@@ -7,6 +7,8 @@ const { ValidationError } = require('../utils/errors')
 const middleware = require('../utils/middleware')
 const { expireNormalMap, expireSession } = require('../utils/expiration_manager')
 const jwt = require('jsonwebtoken')
+const { sendEmail } = require('../utils/tools')
+const config = require('../utils/config')
 
 usersRouter.get('/', middleware.userExtractor, async (request, response) => {
     const users = request.user.role !== 'admin' ? [request.user] : await User.find({})
@@ -37,7 +39,6 @@ usersRouter.get('/verify-email', middleware.tokenExtractor, async (request, resp
         if (!decodedToken.id) { return response.status(401).json({ error: 'token invalid' }) }
         const session = await Session.findOne({ token })
         const user = await User.findById(decodedToken.id)
-        console.log(user, session)
         if (!session || !user.id) { return response.status(401).json({ error: 'token expired' }) }
         
         session.updatedAt = new Date()
@@ -72,16 +73,59 @@ usersRouter.post('/', async (request, response, next) => {
 
         const existing_user = await User.findOne({ username })
         if (existing_user) { throw new ValidationError('username already exists.') }
-        const userForToken = { username: user.username, id: user.id }
+        
+        const savedUser = await user.save()
+
+        const userForToken = { username: savedUser.username, id: savedUser.id }
         const token = jwt.sign(userForToken, process.env.SECRET)
         const session = new Session({ userId: user.id, token})
-        session.save()
+        await session.save()
         expireSession(session.id)
+        
+        sendEmail(email, 'Verify email', `
+            Please click the following link to verify your email at the Normal map app.
+            ${new URL(`/verify-user/${token}`, config.FRONTEND_URL)}
+        `)
         console.log(token)
 
-        const savedUser = await user.save()
         response.status(201).json(savedUser)
     } catch (exception) {
+        next(exception)
+    }
+})
+
+usersRouter.post('/resend-verification', async (request, response, next) => {
+    const { username, email, password } = request.body
+    try {
+        const user = await User.findOne({ $or: [{ username }, { email }]})
+        const passwordCorrect = user === null
+            ? false
+            : await bcrypt.compare(password, user.passwordHash)
+
+        if (!(user && passwordCorrect)) {
+            return response.status(401).json({
+                error: 'invalid username or password'
+            })
+        }
+        console.log(user)
+        if (user.verified) { return response.status(409).json({ error: 'User is already verified' }) }
+
+        let session = await Session.findOne({ userId: user.id })
+        if (session && session.updatedAt - new Date() + config.EXPIRE_DELAY * 60 * 1000 > 1000) {
+            session.updatedAt = new Date()
+        } else {
+            const userForToken = { username: user.username, id: user.id }
+            const token = jwt.sign(userForToken, process.env.SECRET)
+            session = new Session({ userId: user.id, token})
+        }
+        await session.save()
+
+        sendEmail(user.email, 'Verify email', `
+            Please click the following link to verify your email at the Normal map app.
+            ${new URL(`/verify-user/${session.token}`, config.FRONTEND_URL)}
+        `)
+        return response.status(201).end()
+    } catch(exception) {
         next(exception)
     }
 })

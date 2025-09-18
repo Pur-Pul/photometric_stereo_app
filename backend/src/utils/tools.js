@@ -2,6 +2,7 @@ const User = require('../models/user')
 const config = require('./config')
 const bcrypt = require('bcrypt')
 const logger = require('./logger')
+const nodemailer = require('nodemailer')
 
 const initDatabase = async () => {
     try {
@@ -24,6 +25,25 @@ const initDatabase = async () => {
     }
 }
 
+const sendEmail = async (address, subject, text) => {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: config.EMAIL,
+            pass: config.EMAIL_PASS
+        }
+    })
+
+    const info = await transporter.sendMail({
+        from: `"Normal map app" <${config.EMAIL}>`,
+        to: address,
+        subject,
+        text,
+    })
+    return info
+}
+
 module.exports = {
-    initDatabase
+    initDatabase,
+    sendEmail
 } 

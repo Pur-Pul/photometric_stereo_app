@@ -12,10 +12,10 @@ const VerifyUser = () => {
         const verify = async () => {
             try {
                 await userService.verify(token)
-                dispatch(notificationSet({ text: 'Verification succeeded', type: 'success'}))
+                dispatch(notificationSet({ text: 'Verification succeeded', type: 'success'}), 5)
             } catch(exception) {
                 console.log(exception)
-                dispatch(notificationSet({ text: exception.response && exception.response.data ? exception.response.data.error : 'An error occoured', type: 'error'}))
+                dispatch(notificationSet({ text: exception.response && exception.response.data ? exception.response.data.error : 'An error occoured', type: 'error'}), 5)
             }
             navigate('/')
         }

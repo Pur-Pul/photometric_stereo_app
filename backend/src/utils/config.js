@@ -17,13 +17,25 @@ const getMongoURI = (node_env, uri) => {
     }
 }
 
-const { BACK_PORT: PORT, PHOTOSTEREO_URI, EXPIRE_DELAY, UPLOADS_DIR, OUTPUT_DIR, FRONTEND_URL, ADMIN_PASS } = process.env
+const { 
+    BACK_PORT: PORT,
+    PHOTOSTEREO_URI,
+    EXPIRE_DELAY,
+    UPLOADS_DIR,
+    OUTPUT_DIR,
+    FRONTEND_URL,
+    ADMIN_PASS,
+    EMAIL,
+    EMAIL_PASS
+} = process.env
 const MONGODB_URI = getMongoURI(process.env.NODE_ENV, process.env.MONGODB_URI)
 
 if (FRONTEND_URL === undefined) { error('Warning: Frontend URL is undefined.') }
 if (MONGODB_URI === undefined) { error('Warning: Mongodb URI is undefined.') }
 if (PHOTOSTEREO_URI === undefined) { error('Warning: Photostereo URI is undefined.') }
 if (ADMIN_PASS === undefined) { error('Warning: Admin password is undefined. Default admin can not be created.') }
+if (EMAIL === undefined) { error('Warning: Email is undefined. Verification emails can not be sent.') }
+if (EMAIL_PASS === undefined) { error('Warning: Email password is undefined. Verification emails can not be sent.') }
 
 module.exports = {
     PORT: PORT ? PORT : 3001,
@@ -34,4 +46,6 @@ module.exports = {
     OUTPUT_DIR: OUTPUT_DIR ? OUTPUT_DIR : path.join(process.cwd(), '../output/'),
     FRONTEND_URL: FRONTEND_URL,
     ADMIN_PASS,
+    EMAIL,
+    EMAIL_PASS
 }
