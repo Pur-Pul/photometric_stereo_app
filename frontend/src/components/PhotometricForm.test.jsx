@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { Provider } from 'react-redux'
 import store from '../store'
 
-vi.mock('./SourceImage',    () => ({ default: vi.fn(({index, files}) => <mock-SourceImage data-testid={`photometric-source-${index}`}/>)}))
+vi.mock('./SourceImage',    () => ({ default: vi.fn(({file, files}) => <mock-SourceImage data-testid={`photometric-source-${file.id}`}/>)}))
 vi.mock('./Mask',           () => ({ default: vi.fn(() => <mock-Mask data-testid='photometric-mask' />)}))
 vi.mock('./NameForm',       () => ({ default: vi.fn(() => <mock-NameForm data-testid='photometric-name-form'/>)}))
 
@@ -184,10 +184,10 @@ describe('Photometric form is functional', () => {
         await user.upload(input, files)   
         const button = screen.getByTestId('photometric-submit')
         vi.clearAllMocks()
-        await user.click(button)
+        
         const NameForm = await import('./NameForm')
-        console.log(NameForm.default.mock.calls)
-        expect(NameForm.default).toHaveBeenCalledTimes(2)
+        await user.click(button)
+        expect(NameForm.default).toHaveBeenCalledTimes(1)
         expect(NameForm.default.mock.calls.at(-1)[0].open).toBe(true)
     })
 })

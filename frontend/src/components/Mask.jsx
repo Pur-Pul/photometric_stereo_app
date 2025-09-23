@@ -7,7 +7,7 @@ import MaskEditor from "./MaskEditor"
 
 
 
-const Mask = ({ images, setMask }) => {
+const Mask = ({ maskOverlay, setMask }) => {
     const img = {
         width: '100%',
         minWidth: '100%',
@@ -21,33 +21,34 @@ const Mask = ({ images, setMask }) => {
     const [open, setOpen] = useState(false)
 
     useEffect(() => {
-        if (images.length > 0) {
+        console.log(maskOverlay)
+        if (maskOverlay) {
             const canvas = canvasRef.current
             const ctx = canvas.getContext('2d', { willReadFrequently: true })
-            const canvasAspect = images[0].width/images[0].height
-            canvas.width = images[0].width
-            canvas.height = images[0].height
+            const canvasAspect = maskOverlay.width/maskOverlay.height
+            canvas.width = maskOverlay.width
+            canvas.height = maskOverlay.height
             ctx.fillStyle = '#ffffff'
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
             ctxRef.current = ctx 
             canvas.toBlob((blob) => { setMask(new File(
                 [blob],
-                `mask.${ images[0].src.name.split('.').pop() }`,
-                { type: images[0].src.type },
-                images[0].src.type
+                `mask.${ maskOverlay.src.name.split('.').pop() }`,
+                { type: maskOverlay.src.type },
+                maskOverlay.src.type
             )) })
         } else { 
             setMask(null)
         }
-    }, [images])
+    }, [maskOverlay])
     
     const handleSave = (editorCanvas) => {
         ctxRef.current.drawImage(editorCanvas, 0, 0, canvasRef.current.width, canvasRef.current.height)
         canvasRef.current.toBlob((blob) => { setMask(new File(
             [blob],
-            `mask.${ images[0].src.name.split('.').pop() }`,
-            { type: images[0].src.type },
-            images[0].src.type
+            `mask.${ maskOverlay.src.name.split('.').pop() }`,
+            { type: maskOverlay.src.type },
+            maskOverlay.src.type
         )) })
         setOpen(false)
     }
@@ -57,8 +58,8 @@ const Mask = ({ images, setMask }) => {
     }
 
     return (
-        images.length > 0 
-            ? <div>
+        maskOverlay
+            ? <div style={{width:'500px', height: '100%'}}>
                 <h3>Mask</h3>
                 <canvas style={img} ref={canvasRef} />
                 {   
@@ -77,7 +78,7 @@ const Mask = ({ images, setMask }) => {
                                 <MaskEditor 
                                     size = { [canvasRef.current.width, canvasRef.current.height] }
                                     maskCanvas = { canvasRef.current }
-                                    image= { images[0].image }
+                                    image= { maskOverlay.image }
                                     handleSave={ handleSave }
                                     handleDiscard={ handleDiscard }/>
                             </Dialog>

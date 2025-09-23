@@ -155,16 +155,16 @@ export const fetchPage = (page, category) => {
 	}
 }
 
-export const generateNormalMap = (sourceNormalMaps, mask, name) => {
+export const generateNormalMap = (sourceFiles, mask, name) => {
 	return async (dispatch) => {
 		try {
 			const data = new FormData()
-			sourceNormalMaps.forEach((normalMap, index) => {
-				data.append('files', normalMap.src, index.toString() + '.' + normalMap.src.name.split('.').pop())
-				data.append('lights', normalMap.light)
+			sourceFiles.forEach((file, index) => {
+				data.append('files', file.src, index.toString() + '.' + file.src.name.split('.').pop())
+				data.append('lights', file.light)
 			})
 			data.append('files', mask, mask.name)
-			data.set('format', sourceNormalMaps[0].src.name.split('.').pop())
+			data.set('format', sourceFiles[0].src.name.split('.').pop())
 			data.set('name', name)
 
 			const newNormalMap = await imageService.postPhotostereo(data)

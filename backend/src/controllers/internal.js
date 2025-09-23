@@ -15,12 +15,19 @@ internalRouter.put('/images/:id', async (request, response, next) => {
         fs.copyFileSync(request.body.file, imageFile)
         fs.unlinkSync(request.body.file)
 
-        const new_image = new Image({
+        const flatImage = new Image({
             file: imageFile,
             creator: normalMap.creator
         })
 
-        await new_image.save()
+        await flatImage.save()
+
+        const layer0 = new Image({
+            file: imageFile,
+            creator: normalMap.creator
+        })
+
+        await layer0.save()
 
         const canvas = createCanvas(64,64)
         const ctx = canvas.getContext('2d')
@@ -36,7 +43,8 @@ internalRouter.put('/images/:id', async (request, response, next) => {
 
         await new_icon.save()
 
-        normalMap.flatImage = new_image.id
+        normalMap.flatImage = flatImage.id
+        normalMap.layers = [ layer0.id ]
         normalMap.icon = new_icon.id
 
         normalMap.status = 'done'

@@ -6,7 +6,7 @@ import Button from '@mui/material/Button'
 import LightPlot from './LightPlot'
 import Vector3 from "../utils/Vector3"
 
-const LightDirSelector = ({ index, files, setFiles }) => {
+const LightDirSelector = ({ file, files, setFiles }) => {
     const [open, setOpen] = useState(false)
     const [lightDir, setLightDir] = useState(new Vector3(0,0,0))
 
@@ -15,17 +15,18 @@ const LightDirSelector = ({ index, files, setFiles }) => {
         setOpen(false)
         
         const new_files = [...files]
+        const index = files.findIndex((foundFile) => foundFile.id === file.id)
         new_files[index].light = [lightDir.x, lightDir.y, lightDir.z]
         setFiles(new_files)
     }
 
     useEffect(() => {
         setLightDir(new Vector3(
-            files[index].light[0],
-            files[index].light[1],
-            files[index].light[2]
+            file.light[0],
+            file.light[1],
+            file.light[2]
         ))
-    }, [files, index])
+    }, [files, file])
 
     const handleLightChange = (event) => {
         let tempLight = lightDir.clone()
@@ -79,7 +80,7 @@ const LightDirSelector = ({ index, files, setFiles }) => {
                     </DialogActions>
                 </form>
                 <LightPlot 
-                    file = { files[index] }
+                    file = { file }
                     lightDir = { lightDir }
                     setLightDir = { setLightDir }
                 />

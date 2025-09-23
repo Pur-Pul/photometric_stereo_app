@@ -53,9 +53,8 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
         setEditorCursor(editorCursor+1)
     }
     return (
-        <div style={{ margin: 'auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr' }}>
-                
+        <div style={{ margin: 'auto', width: '100%'}}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr'}}>
                 <Editor 
                     style={{ gridRowStart: 1, gridColumnStart: 1}}
                     src={editorState[editorCursor][0].src}

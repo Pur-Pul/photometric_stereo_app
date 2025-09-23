@@ -6,15 +6,23 @@ import { generateNormalMap } from "../reducers/normalMapReducer"
 import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
 import Mask from "./Mask"
 import { useLocation } from "react-router-dom"
-import { Button, Grid, TextField, InputLabel, FormControl, Alert } from '@mui/material'
+import {
+    Button,
+    Grid,
+	Select,
+	MenuItem,
+    Alert
+} from '@mui/material'
 
 const PhotometricForm = () => {
     const location = useLocation()
     const dispatch = useDispatch()
     const [files, setFiles] = useState([])
+    const [maskOverlay, setMaskOverlay] = useState(null)
     const [mask, setMask] = useState(null)
     const [nameFormOpen, setNameFormOpen] = useState(false)
     const [warning, setWarning] = useState('')
+    const [sortBy, setSortBy] = useState('')
 
     useEffect(() => {
         let warning = files.length > 0 ? '' : 'No images selected'
@@ -28,6 +36,7 @@ const PhotometricForm = () => {
     const handleFileSelect = (event) => {
         const fileArray = Array.from(event.target.files)
         const files = []
+        setSortBy('')
         for (var i = 0; i < fileArray.length; i++) {
             const file = fileArray[i]
             const image = new Image()
@@ -35,12 +44,22 @@ const PhotometricForm = () => {
                 files.push({ 
                     image : this.src,
                     src: file,
-                    light : [0,0,1],
                     width : this.width,
-                    height : this.height
+                    height : this.height,
+                    light : [0,0,1],
+                    id : this.i
                 })
-                if (files.length === fileArray.length) { setFiles(files) }
+                console.log(file.name, this.i)
+
+                if (files.length === 1) {
+                    setMaskOverlay(files[0])
+                }
+                if (files.length === fileArray.length) {
+                    setFiles(files)
+                    setSortBy('nameDesc')
+                }
             }
+            image.i = i
             image.src = URL.createObjectURL(file)
         }
     }
@@ -66,6 +85,24 @@ const PhotometricForm = () => {
     const handleCancel = () => {
         setNameFormOpen(false)
     }
+
+    useEffect(() => {
+        const sortedFiles = files.toSorted((a, b) => {
+            switch(sortBy) {
+                case 'dateDesc':
+                    return a.src.lastModified < b.src.lastModified ? 1 : -1
+                case 'dateAsc':
+                    return a.src.lastModified > b.src.lastModified ? 1 : -1
+                case 'nameDesc':
+                    return a.src.name > b.src.name ? 1 : -1
+                case 'nameAsc':
+                    return a.src.name < b.src.name ? 1 : -1
+                default:
+                    return a.src.name > b.src.name ? 1 : -1
+            }
+        })
+        setFiles(sortedFiles)
+    }, [sortBy])
     return (
         <div>
             <h2 data-testid='photometric-title'>Select images:</h2>
@@ -87,17 +124,36 @@ const PhotometricForm = () => {
                 <Button data-testid='photometric-submit' type="submit" color="success" variant="outlined" disabled={warning !== ''}>Submit</Button>
             </form>
             <div>
+                { files.length > 0 
+                    ? <Select 
+                        value={sortBy}
+                        variant='standard'
+                        onChange={(e) => setSortBy(e.target.value)}
+                        >
+                            <MenuItem value='dateAsc'>Sort by date: Oldest first</MenuItem>
+                            <MenuItem value='dateDesc'>Sort by date: Newest first</MenuItem>
+                            <MenuItem value='nameDesc'>Sort by name: A-Z</MenuItem>
+                            <MenuItem value='nameAsc'>Sort by name: Z-A</MenuItem>
+                        </Select> 
+                    : null 
+                }
                 <Grid 
                     container
                     spacing={2}
                     direction='columns'
                     > 
-                    {
-                        files.map((file, index) => <SourceImage key={index} files={files} setFiles={setFiles} index={index} />)
-                    }
+                    {files.map((file) => {
+                        return (
+                        <SourceImage 
+                            key={file.id}
+                            files={files}
+                            setFiles={setFiles}
+                            file={file}
+                            />
+                    )})}
                 </Grid>
             </div>
-            <Mask images={files} setMask={setMask}/>
+            <Mask setMask={setMask} maskOverlay={maskOverlay}/>
             <NameForm
                 open={nameFormOpen}
                 handleCancel={handleCancel}

@@ -66,8 +66,10 @@ const NormalMap = () => {
         dispatch(performUpdate({...normalMap, visibility: vis}))
     }
 
-    if (size && edit) return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
-    if (!flatImage) return 'Loading'
+    if (size && edit) { 
+        console.log(size, edit, normalMap)
+        return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/> }
+    if (!flatImage) { return 'Loading' }
     return <div>
                 <div>
                     <img src={flatImage.src} style={{
