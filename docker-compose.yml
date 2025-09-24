@@ -58,8 +58,10 @@ services:
     image: nginx:1.25
     volumes:
       - ./nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+      - ./ssl:/etc/nginx/ssl:ro
     ports:
       - ${PORT}:80
+      - 433:433
     container_name: reverse-proxy
     env_file:
       - .env
