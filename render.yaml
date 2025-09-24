@@ -1,0 +1,88 @@
+services:
+  - type: private_service
+    name: mongo
+    env: docker
+    docker:
+      image: mongo:latest
+      command: ["mongod", "--quiet", "--logpath", "/dev/null"]
+    envVars:
+      - key: MONGO_INITDB_ROOT_USERNAME
+        value: ${MONGO_ROOT_USER}
+      - key: MONGO_INITDB_ROOT_PASSWORD
+        value: ${MONGO_ROOT_PASS}
+      - key: MONGO_USER
+        value: ${MONGO_USER}
+      - key: MONGO_PASS
+        value: ${MONGO_PASS}
+    disk:
+      name: mongo_data
+      mountPath: /data/db
+      sizeGB: 1
+
+  - type: private_service
+    name: photostereo
+    env: docker
+    docker:
+      context: photostereo_server
+      dockerfilePath: Dockerfile
+      buildArgs:
+        PORT: ${PHOTOSTEREO_PORT}
+    envVars:
+      - key: BACKEND_URI
+        value: http://back:${BACK_PORT}/internal
+    disk:
+      name: photostereo_uploads
+      mountPath: /usr/src/uploads
+      sizeGB: 1
+    disk2:
+      name: photostereo_output
+      mountPath: /usr/src/output
+      sizeGB: 1
+
+  - type: private_service
+    name: back
+    env: docker
+    docker:
+      context: backend
+      dockerfilePath: Dockerfile
+    envVars:
+      - key: MONGODB_URI
+        value: mongodb://${MONGO_USER}:${MONGO_PASS}@mongo:27017/
+      - key: PHOTOSTEREO_URI
+        value: http://photostereo:${PHOTOSTEREO_PORT}/normal_map
+    disk:
+      name: back_uploads
+      mountPath: /usr/src/uploads
+      sizeGB: 1
+    disk2:
+      name: back_output
+      mountPath: /usr/src/output
+      sizeGB: 1
+
+  - type: web
+    name: front
+    env: docker
+    docker:
+      context: frontend
+      dockerfilePath: Dockerfile
+    envVars:
+      - fromGroup: default-env
+
+  - type: web
+    name: nginx
+    env: docker
+    docker:
+      image: nginx:1.25
+      command: >
+        /bin/bash -c
+        "envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf &&
+         nginx -g 'daemon off;'"
+    envVars:
+      - fromGroup: default-env
+    disk:
+      name: nginx_conf
+      mountPath: /etc/nginx
+      sizeGB: 1
+    routes:
+      - type: http
+        port: 80
