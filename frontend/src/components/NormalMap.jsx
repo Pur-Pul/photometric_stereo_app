@@ -29,33 +29,42 @@ const NormalMap = () => {
     const [visibiliy, setVisibility] = useState(normalMap ? normalMap.visibility : 'private')
     const [visAlertOpen, setVisAlertOpen] = useState(false)
 
+
     useEffect(() => {
-        if (!normalMap) { return }
-        if (normalMap.status == 'done' && normalMap.flatImage.src === undefined) {
-            dispatch(fetchFlatImage(normalMap))
-        } else {
+        let updateInterval
+        const fetchUpdates = async () => {
+            console.log('fetching updates')
             dispatch(reFetchNormalMap(normalMap))
         }
-        if (normalMap.flatImage && normalMap.flatImage.src) {
+        if (!normalMap) {
+            clearInterval(updateInterval)
             
-            const flatImage = new Image()
-            flatImage.onload = function () {
-                const canvas =  document.createElement('canvas')
-                if (!canvas) { return }
-                const size = [this.width, this.height]
-                setSize(size)
-                canvas.width = size[0]
-                canvas.height = size[1]
-                
-                const ctx = canvas.getContext('2d', { willReadFrequently: true })
-                ctx.drawImage(this, 0, 0, this.width, this.height)
-                setFlatImage(this)
+        } else {
+            if (!flatImage) { updateInterval = setInterval(() => fetchUpdates(), 3000) }
+            if (normalMap.status == 'done' && !normalMap.flatImage.src) { dispatch(fetchFlatImage(normalMap)) }
+            if (normalMap.flatImage && normalMap.flatImage.src) {
+                const flatImage = new Image()
+                flatImage.onload = function () {
+                    const canvas =  document.createElement('canvas')
+                    if (!canvas) { return }
+                    const size = [this.width, this.height]
+                    setSize(size)
+                    canvas.width = size[0]
+                    canvas.height = size[1]
+                    
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+                    ctx.drawImage(this, 0, 0, this.width, this.height)
+                    setFlatImage(this)
+                    clearInterval(updateInterval)
+                }
+                flatImage.src = normalMap.flatImage.src
             }
-            flatImage.src = normalMap.flatImage.src
+            setVisibility(normalMap.visibility)
         }
-        setVisibility(normalMap.visibility)
-	}, [normalMap])
- 
+
+        return () => { clearInterval(updateInterval) }
+    }, [normalMap])
+
     const deleteHandler = async (event) => {
         dispatch(performRemove(id))
         setOpen(false) 
@@ -69,6 +78,7 @@ const NormalMap = () => {
     if (size && edit) { 
         console.log(size, edit, normalMap)
         return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/> }
+    if (!normalMap) { return 'Oops! Normal map does not exist.' }
     if (!flatImage) { return 'Loading' }
     return <div>
                 <div>

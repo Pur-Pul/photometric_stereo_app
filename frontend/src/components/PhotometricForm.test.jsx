@@ -25,9 +25,10 @@ vi.mock(import('../reducers/notificationReducer'), async (importOriginal) => {
 })
 
 const mockedLocation = vi.fn()
+const mockedNavigate = vi.fn()
 vi.mock(import('react-router-dom'), async (importOriginal) => {
     const actual = await importOriginal()
-    return {...actual, useLocation: () => mockedLocation }
+    return {...actual, useLocation: () => mockedLocation, useNavigate: () => mockedNavigate}
 })
 
 

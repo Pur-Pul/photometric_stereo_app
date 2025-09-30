@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux"
 import { generateNormalMap } from "../reducers/normalMapReducer"
 import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
 import Mask from "./Mask"
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import {
     Button,
     Grid,
@@ -17,6 +17,8 @@ import {
 const PhotometricForm = () => {
     const location = useLocation()
     const dispatch = useDispatch()
+    const navigate = useNavigate()
+
     const [files, setFiles] = useState([])
     const [maskOverlay, setMaskOverlay] = useState(null)
     const [mask, setMask] = useState(null)
@@ -73,7 +75,7 @@ const PhotometricForm = () => {
         event.preventDefault()
         const name = event.target.name.value
         
-        dispatch(generateNormalMap(files, mask, name))
+        dispatch(generateNormalMap(files, mask, name, navigate))
             .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'success' }, 5)) })
 			.catch((exception) => {
 				console.log(exception)

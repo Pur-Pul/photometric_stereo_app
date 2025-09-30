@@ -60,13 +60,6 @@ const normalMapSlice = createSlice({
 			)
 			state[normalMap_index] = action.payload
 		},
-		updateNormalMap(state, action) {
-			const normalMap_index = state.findIndex(
-				(normalMap) => normalMap.id === action.payload.id
-			)
-
-			state[normalMap_index] = action.payload
-		},
 		updateLayers(state, action) {
 			const normalMap_index = state.findIndex(
 				(normalMap) => normalMap.id === action.payload.id
@@ -155,7 +148,7 @@ export const fetchPage = (page, category) => {
 	}
 }
 
-export const generateNormalMap = (sourceFiles, mask, name) => {
+export const generateNormalMap = (sourceFiles, mask, name, navigate) => {
 	return async (dispatch) => {
 		try {
 			const data = new FormData()
@@ -168,11 +161,9 @@ export const generateNormalMap = (sourceFiles, mask, name) => {
 			data.set('name', name)
 
 			const newNormalMap = await imageService.postPhotostereo(data)
-			console.log(newNormalMap)
-			const iconBlob = await imageService.getFile(newNormalMap.id, newNormalMap.icon)
-			newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
-			newNormalMap.flatImage = { id:newNormalMap.flatImage }
-			dispatch(appendNormalMap([newNormalMap]))
+			const normalMaps = await reformatNormalMaps([newNormalMap])
+			dispatch(appendNormalMap(normalMaps))
+			navigate(`/normal_map/${normalMaps[0].id}`)
 		} catch (exception) {
 			if (exception instanceof AxiosError) {
 				console.log(exception)
