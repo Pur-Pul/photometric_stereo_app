@@ -60,7 +60,7 @@ services:
     volumes:
       - ./nginx.conf.template:/etc/nginx/nginx.conf.template:ro
       #- ./ssl:/etc/nginx/ssl:ro #bind ssl certificates
-    ports:
+    # ports:
       #- ${PORT}:80 #Expose nginx with assigned port
       #- 443:443 #Expose ssl port
     container_name: reverse-proxy
