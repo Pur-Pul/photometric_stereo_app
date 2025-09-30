@@ -6,3 +6,6 @@ output/*
 .venv
 *pycache*
 ssl
+cloudflared
+cloudflared-credentials.json
+cloudflared-config.yml

@@ -3,16 +3,6 @@ events {}
 http {
   server {
     listen 80;
-    server_name localhost;
-    return 301 https://$host$request_uri;
-  }
-
-  server {
-    listen 443 ssl;
-    server_name localhost;
-
-    ssl_certificate /etc/nginx/ssl/selfsigned.crt;
-    ssl_certificate_key /etc/nginx/ssl/selfsigned.key;
 
     location / {
         proxy_pass http://front:${FRONT_PORT};

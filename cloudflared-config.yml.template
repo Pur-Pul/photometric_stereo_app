@@ -1,0 +1,7 @@
+tunnel: <tunnel-id>
+credentials-file: /cloudflared-credentials.json
+
+ingress:
+  - hostname: <hostname>
+    service: http://nginx:80
+  - service: http_status:404  # Default fallback, required
