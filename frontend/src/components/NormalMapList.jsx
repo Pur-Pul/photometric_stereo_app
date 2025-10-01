@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
     Button,
-    Grid
+    Grid,
+    Typography,
+    Card,
+    CardHeader,
+    CardContent
 } from '@mui/material'
 import NewNormalMapForm from './NewNormalMapForm'
 import { Alert } from '@mui/material'
@@ -26,17 +30,17 @@ const NormalMapLink = ({ normalMap }) => {
     )
 }
 
-const NormalMapCategory = ({normalMaps, title, placeholder, category, children, ...rest}) => {
+const NormalMapCategory = ({ normalMaps, title, placeholder, category, children, ...rest }) => {
     const dispatch = useDispatch()
 
     if (normalMaps.length === 0) { 
         return placeholder !== undefined 
             ? (
-                <div>
-                    <h2>{title}</h2>
+                <Card>
+                    <CardHeader title={title} />
                     <Alert severity='info'>{placeholder}</Alert>
                     {children}
-                </div>
+                </Card>
             )
             : null
     }
@@ -44,24 +48,18 @@ const NormalMapCategory = ({normalMaps, title, placeholder, category, children, 
     const handleLoad = () => { dispatch(fetchPage(Math.floor(normalMaps.length/10)+1, category)) }
 
     return (
-        <Grid 
-            data-testid={rest['data-testid']}
-            container spacing={2}
-            direction='columns'
-            sx={{alignItems: 'center',
-            border: 'solid 2px #2196f3 ',
-            margin: '2%',
-            padding: '2%',
-            borderRadius: 5}}
-            >
-            <Grid size={12}><h2>{title}</h2></Grid>
-                { normalMaps.map((normalMap) => <NormalMapLink key={normalMap.id} normalMap={normalMap} />) }
-            <Grid container size={12}>
-                <Button variant='outlined' onClick={handleLoad}>Load more</Button>
-                {children}
-            </Grid>
-            
-        </Grid>
+        <Card>
+            <CardHeader title={title}/>
+            <CardContent>
+                <Grid data-testid={rest['data-testid']} container spacing={2}>
+                    { normalMaps.map((normalMap) => <NormalMapLink key={normalMap.id} normalMap={normalMap} />) }
+                    <Grid container size={12}>
+                        <Button variant='outlined' onClick={handleLoad}>Load more</Button>
+                        {children}
+                    </Grid>
+                </Grid>
+            </CardContent>
+        </Card>
     )
 }
 

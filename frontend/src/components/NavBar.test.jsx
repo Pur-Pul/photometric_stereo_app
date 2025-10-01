@@ -23,34 +23,35 @@ const userObject = {
     role: 'user'
 }
 
+const paths = {
+    "/" : "Home",
+    '/users/1234567890': 'testUser',
+    "/normal_map" : "Normal Maps"
+}
+
 describe('NavBar renders', () => {
     test('Home button is visible.', () => {
-        render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+        render(<Provider store={store}><NavBar paths={paths}/></Provider>)
         const homeButton = screen.queryByTestId('home-button')
         expect(homeButton).toBeInTheDocument()
     })
     test('Normal maps button is visible.', () => {
-        render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+        render(<Provider store={store}><NavBar paths={paths}/></Provider>)
         const normalMapsButton = screen.queryByTestId('normal-maps-button')
         expect(normalMapsButton).toBeInTheDocument()
     })
     test('Users button is invisible to user role.', () => {
-        render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+        render(<Provider store={store}><NavBar paths={paths}/></Provider>)
         const usersButton = screen.queryByTestId('users-button')
         expect(usersButton).not.toBeInTheDocument()
     })
-    test('Users button is visible to admin role.', () => {
-        render(<Provider store={store}><NavBar user={{...userObject, role: 'admin'}}/></Provider>)
-        const usersButton = screen.queryByTestId('users-button')
-        expect(usersButton).toBeInTheDocument()
-    })
     test('User profile button is visible.', () => {
-        render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+        render(<Provider store={store}><NavBar paths={paths}/></Provider>)
         const profileButton = screen.queryByTestId('testuser-button')
         expect(profileButton).toBeInTheDocument()
     })
     test('Logout button is visible.', () => {
-        render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+        render(<Provider store={store}><NavBar paths={paths}/></Provider>)
         const logoutButton = screen.queryByTestId('logout-button')
         expect(logoutButton).toBeInTheDocument()
     })
@@ -63,14 +64,14 @@ describe('NavBar is functional', () => {
     
     describe('Home button is functional.', () => {
         test('Home button calls navigate function when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+            render(<Provider store={store}><NavBar paths={paths}/></Provider>)
             const user = userEvent.setup()
             const homeButton = screen.queryByTestId('home-button')
             await user.click(homeButton)
             expect(mockedNavigate).toHaveBeenCalledTimes(1)
         })
         test('Home button calls navigate function with \'/\' when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+            render(<Provider store={store}><NavBar paths={paths}/></Provider>)
             const user = userEvent.setup()
             const homeButton = screen.queryByTestId('home-button')
             await user.click(homeButton)
@@ -80,14 +81,14 @@ describe('NavBar is functional', () => {
     
     describe('Normal maps button is functional.', () => {
         test('Normal maps button calls navigate function when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+            render(<Provider store={store}><NavBar paths={paths}/></Provider>)
             const user = userEvent.setup()
             const normalMapsButton = screen.queryByTestId('normal-maps-button')
             await user.click(normalMapsButton)
             expect(mockedNavigate).toHaveBeenCalledTimes(1)
         })
         test('Normal maps button calls navigate function with \'/normal_map\' when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+            render(<Provider store={store}><NavBar paths={paths}/></Provider>)
             const user = userEvent.setup()
             const normalMapsButton = screen.queryByTestId('normal-maps-button')
             await user.click(normalMapsButton)
@@ -95,33 +96,16 @@ describe('NavBar is functional', () => {
         })
     })
 
-    describe('Users button is functional.', () => {
-        test('Users button calls navigate function when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={{...userObject, role: 'admin'}}/></Provider>)
-            const user = userEvent.setup()
-            const usersButton = screen.queryByTestId('users-button')
-            await user.click(usersButton)
-            expect(mockedNavigate).toHaveBeenCalledTimes(1)
-        })
-        test('Users button calls navigate function with \'/users\' when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={{...userObject, role: 'admin'}}/></Provider>)
-            const user = userEvent.setup()
-            const usersButton = screen.queryByTestId('users-button')
-            await user.click(usersButton)
-            expect(mockedNavigate).toHaveBeenCalledWith('/users')
-        })
-    })
-
     describe('User profile button is functional.', () => {
         test('User profile button calls navigate function when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+            render(<Provider store={store}><NavBar paths={paths}/></Provider>)
             const user = userEvent.setup()
             const profileButton = screen.queryByTestId('testuser-button')
             await user.click(profileButton)
             expect(mockedNavigate).toHaveBeenCalledTimes(1)
         })
         test('User profile button calls navigate function with \'/users/{userid}\' when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+            render(<Provider store={store}><NavBar paths={paths}/></Provider>)
             const user = userEvent.setup()
             const profileButton = screen.queryByTestId('testuser-button')
             await user.click(profileButton)
@@ -131,7 +115,7 @@ describe('NavBar is functional', () => {
 
     describe('Logout button is functional.', () => {
         test('Logout button calls performLogout function when clicked.', async () => {
-            render(<Provider store={store}><NavBar user={userObject}/></Provider>)
+            render(<Provider store={store}><NavBar paths={paths}/></Provider>)
             const user = userEvent.setup()
             const logoutButton = screen.queryByTestId('logout-button')
             await user.click(logoutButton)

@@ -2,8 +2,7 @@ import {
     Button,
     TextField,
     Grid,
-    FormControl,
-    InputLabel,
+    Typography,
     Dialog,
     DialogTitle,
     DialogActions,
@@ -14,6 +13,7 @@ import { AxiosError } from 'axios'
 import { notificationSet } from '../reducers/notificationReducer'
 import { useDispatch } from 'react-redux'
 import userService from '../services/users'
+import { Link } from 'react-router-dom'
 
 const EmailVerificationForm = ({open, setOpen, email, handleResend}) => {
     return (
@@ -49,6 +49,7 @@ const CreateUser = () => {
                 email,
                 password: password1
             })
+            setOpenVerification(true)
         } catch (exception) {
             if (exception instanceof AxiosError) {
                 dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occured.', type: 'error'}), 5)
@@ -56,8 +57,6 @@ const CreateUser = () => {
                 throw exception
             }
         }
-        
-        setOpenVerification(true)
     }
     const handleResend = async () => {
         try {
@@ -76,20 +75,27 @@ const CreateUser = () => {
     }
 
     return (
-        <Grid container>
-            <h1>Create an account</h1>
-            <Grid size={12}>
-                <TextField id='username' label='Username' value={username} onChange={(e) => setUsername(e.target.value)}/>
+        <Grid container spacing={2}>
+            <Grid>
+                <Typography variant='h2'>Create an account</Typography>
+                <Typography variant='subtitle1'>An account is required in order to use the application. Your email address will only be visible to yourself.</Typography>
+                <Typography>Do you already have an account? <Link to='/'>Please login</Link></Typography>
             </Grid>
             <Grid size={12}>
-                <TextField id='email' label='Email' value={email} onChange={(e) => setEmail(e.target.value)}/>
+                <Grid>
+                    <TextField id='username' label='Username' value={username} onChange={(e) => setUsername(e.target.value)}/>
+                </Grid>
+                <Grid>
+                    <TextField id='email' label='Email' value={email} onChange={(e) => setEmail(e.target.value)}/>
+                </Grid>
+                <Grid>
+                    <TextField id='password1' label='Password' type='password' value={password1} onChange={(e) => setPassword1(e.target.value)}/>
+                </Grid>
+                <Grid>
+                    <TextField id='password2' label='Re-enter password' type='password' value={password2} onChange={(e) => setPassword2(e.target.value)}/>
+                </Grid>
             </Grid>
-            <Grid size={12}>
-                <TextField id='password1' label='Password' type='password' value={password1} onChange={(e) => setPassword1(e.target.value)}/>
-            </Grid>
-            <Grid size={12}>
-                <TextField id='password2' label='Re-enter password' type='password' value={password2} onChange={(e) => setPassword2(e.target.value)}/>
-            </Grid>
+            
             <Button variant='outlined' onClick={handleCreate}>Create user</Button>
             <EmailVerificationForm open={openVerification} setOpen={setOpenVerification} email={email} handleResend={handleResend}/>
         </Grid>

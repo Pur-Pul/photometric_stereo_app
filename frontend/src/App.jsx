@@ -15,6 +15,7 @@ import { Routes, Route, useLocation, useNavigate} from 'react-router-dom'
 import ManualCreation from './components/ManualCreation'
 import CreateUser from './components/CreateUser'
 import VerifyUser from './components/VerifyUser'
+import FrontPage from './components/FrontPage'
 
 const App = () => {
 	const dispatch = useDispatch()
@@ -43,6 +44,10 @@ const App = () => {
 		<div>
 			{user === null ? (
 				<div>
+					<NavBar user={user} paths={{
+						"/" : "Login",
+						"create-user": "Register",
+						}}/>
 					<Notification />
 					<Routes>
 						<Route path="/" element={ <LoginForm /> } />
@@ -53,11 +58,16 @@ const App = () => {
 				</div>
 			) : (
 				<div>
-					<NavBar user={user}/>
+					<NavBar user={user} paths={{
+						"/" : "Home",
+						"/users" : user.role === 'admin' ? "Users" : null,
+						[`/users/${user.id}`]: user.name,
+						"/normal_map" : "Normal Maps"
+						}}/>
 					<div>
 						<Notification />
 						<Routes >
-							<Route path="/" element={<h1>Welcome</h1>} />
+							<Route path="/" element={<FrontPage />} />
 							
 							<Route path="/users" element={user.role === 'admin' ? <UserList /> : null } />
 							<Route path="/users/:id" element={<User />} />

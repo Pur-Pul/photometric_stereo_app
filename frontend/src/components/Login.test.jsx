@@ -13,6 +13,11 @@ vi.mock(import("../reducers/loginReducer.js"), async (importOriginal) => {
     } ))}
 })
 
+vi.mock(import("react-router-dom"), async (importOriginal) => {
+    const actual = await importOriginal()
+    return {...actual, Link: () => <mockedLink></mockedLink>}
+})
+
 import Login from './Login'
 
 import { Provider } from 'react-redux'
