@@ -58,7 +58,12 @@ const normalMapSlice = createSlice({
 			const normalMap_index = state.findIndex(
 				(normalMap) => normalMap.id === action.payload.id
 			)
-			state[normalMap_index] = action.payload
+			if (normalMap_index !== -1) {
+				state[normalMap_index] = action.payload
+			} else {
+				return [...state, action.payload]
+			}
+			
 		},
 		updateLayers(state, action) {
 			const normalMap_index = state.findIndex(
@@ -77,7 +82,9 @@ export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap,
 export const reFetchNormalMap = (normalMap) => {
 	return async (dispatch) => {
 		const rawNormalMap = await imageService.get(normalMap.id)
+		console.log(rawNormalMap)
 		if (normalMap.updatedAt && normalMap.updatedAt === rawNormalMap.updatedAt) { return }
+		console.log('here')
 		const [updatedNormalMap] = await reformatNormalMaps([rawNormalMap])
 		dispatch(updateNormalMap(updatedNormalMap))
 	}
@@ -207,15 +214,14 @@ export const performCreate = (blobs, name, navigate) => {
 export const performUpdate = (normalMap) => {
 	return async (dispatch) => {
 		try {
+			console.log(normalMap.layers)
 			const data = new FormData()
 			data.set('name', normalMap.name)
 			data.set('visibility', normalMap.visibility)
 			const newNormalMap = await imageService.put(data, normalMap.id)
-			const iconBlob = await imageService.getFile(newNormalMap.id, newNormalMap.icon)
-			newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
-			newNormalMap.flatImage = { id: newNormalMap.flatImage }
-
-			dispatch(updateNormalMap(newNormalMap))
+			const normalMaps = await reformatNormalMaps([newNormalMap])
+			console.log(normalMaps[0].layers)
+			dispatch(updateNormalMap(normalMaps[0]))
 		} catch (exception) {
 			console.log(exception)
 			if (exception instanceof AxiosError) {
@@ -230,25 +236,18 @@ export const performUpdate = (normalMap) => {
 export const performLayerUpdate = (blobs, layers, id) => {
 	return async (dispatch) => {
 		try {
+			console.log(layers)
 			const data = new FormData()
 			blobs.forEach((blob, index) => {
 				const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
 				data.append('files', file, `layer-${index}.png`)
 			})
 			const newNormalMap = await imageService.put(data, id)
+			console.log(newNormalMap.layers)
 
-			let updatedLayers = layers.filter(layer => layer.id)
-			for (var i = 0; i < newNormalMap.layers.length; i++) {
-				const layer = { id: newNormalMap.layers[i] }
-				if (updatedLayers.find(newLayer => newLayer.id === layer.id )) { continue }
-				updatedLayers.push(layer)
-			}
+			const normalMaps = await reformatNormalMaps([newNormalMap])
 
-			const iconBlob = await imageService.getFile(newNormalMap.id, newNormalMap.icon)
-			newNormalMap.icon = { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }
-			newNormalMap.flatImage = { id: newNormalMap.flatImage }
-
-			dispatch(updateLayers({id, layers: updatedLayers, icon: { id: newNormalMap.icon, src: URL.createObjectURL(iconBlob) }}))
+			dispatch(fetchLayers(normalMaps[0]))
 			dispatch(notificationSet({text: 'Normal map saved.', type: 'success'}, 5))
 		} catch (exception) {
 			console.log(exception)

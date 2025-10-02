@@ -8,11 +8,11 @@ const path = require('path')
 const axios = require('axios')
 const { PHOTOSTEREO_URI } = require('../utils/config')
 const { ValidationError } = require('../utils/errors')
-const logger = require('../utils/logger')
+const { info, error } = require('../utils/logger')
 const { expireNormalMap } = require('../utils/expiration_manager')
 const { createCanvas, loadImage } = require('canvas')
 
-const flattenLayers = async (layers, file) => {
+const flattenLayers = async (layers, file, id=undefined) => {
     let canvas
     for (var i = 0; i < layers.length; i++) {
         const image = await loadImage(layers[i].file)
@@ -22,26 +22,41 @@ const flattenLayers = async (layers, file) => {
         
     }
     fs.writeFileSync(file, canvas.toBuffer('image/png'))
-    const flatImage = new Image({
-        file,
-        creator : layers[0].creator
-    })
-    flatImage.save()
+    let flatImage
+    if (id) {
+        flatImage = await Image.findById(id)
+        flatImage.file = file
+        flatImage.updatedAt = Date.now()
+    } else {
+        flatImage = new Image({
+            file,
+            creator : layers[0].creator
+        })
+    }
+    
+    await flatImage.save()
     return flatImage
 }
 
-const createIcon = async (flatImage, file) => {
+const createIcon = async (flatImage, file, id=undefined) => {
     const canvas = createCanvas(64,64)
     const ctx = canvas.getContext('2d')
     const image  = await loadImage(flatImage.file)
 
     ctx.drawImage(image, 0, 0, 64, 64)
     fs.writeFileSync(file, canvas.toBuffer('image/png'))
-
-    const icon = new Image({
-        file,
-        creator: flatImage.creator
-    })
+    let icon
+    if (id) {
+        icon = await Image.findById(id)
+        icon.file = file
+        icon.updatedAt = Date.now()
+    } else {
+        icon = new Image({
+            file,
+            creator: flatImage.creator
+        })
+    }
+    
 
     await icon.save()
     return icon
@@ -50,7 +65,6 @@ const createIcon = async (flatImage, file) => {
 normalMapsRouter.get('/', middleware.userExtractor, async (request, response) => {
     const { page, category} = request.query
     const user = request.user
-    console.log(page, category)
     if (page && isNaN(page)) { return response.status(400).end() }
 
     const offset = page ? (page-1) * 10 : 0
@@ -147,6 +161,7 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
                 normalMap.layers = layers.map(layer => layer.id)
                 normalMap.flatImage = flatImage.id
                 normalMap.icon = icon.id
+                console.log(normalMap)
                 await normalMap.save()
                 const savedNormalMap = await normalMap.populate('creator')
                 
@@ -190,8 +205,16 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
                         layers.push(layer)
                         
                     }
+                    for (var i = 0; i < normalMap.layers.length; i++) {
+                        if (layers.find(layer => layer.id.toString() === normalMap.layers[i].id.toString())) { continue }
+                        if (fs.existsSync(normalMap.layers[i].file)) {
+                            fs.unlinkSync(normalMap.layers[i].file)
+                            info(`Image ${normalMap.layers[i].file} has been deleted.`)
+                        }
+                        await Image.findByIdAndDelete(normalMap.layers[i].id)
+                    }
                     
-                    const flatImage = await flattenLayers(layers, path.join(process.cwd(), `../output/${normalMap.id}-flat.png`))
+                    const flatImage = await flattenLayers(layers, path.join(process.cwd(), `../output/${normalMap.id}-flat.png`), normalMap.flatImage)
                     const icon = await createIcon(flatImage, path.join(process.cwd(), `../output/${normalMap.id}-icon.png`))
                     normalMap.layers = layers.map(layer => layer.id)
                     normalMap.flatImage = flatImage.id

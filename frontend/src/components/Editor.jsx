@@ -3,7 +3,7 @@ import pipette from '../static/pipette32.png'
 import pencil from '../static/pencil32.png'
 import eraser from '../static/eraser32.png'
 
-const SIZE_LIMIT = 1000
+const SIZE_LIMIT = 1920
 
 const Editor = ({ 
     src,

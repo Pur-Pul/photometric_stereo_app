@@ -37,6 +37,7 @@ const NormalMap = () => {
             dispatch(reFetchNormalMap(normalMap))
         }
         if (!normalMap) {
+            dispatch(reFetchNormalMap({id}))
             clearInterval(updateInterval)
             
         } else {
@@ -76,7 +77,6 @@ const NormalMap = () => {
     }
 
     if (size && edit) { 
-        console.log(size, edit, normalMap)
         return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/> }
     if (!normalMap) { return 'Oops! Normal map does not exist.' }
     if (!flatImage) { return 'Loading' }

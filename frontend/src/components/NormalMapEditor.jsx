@@ -47,12 +47,14 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
     
     useEffect(() => { //Fetch the layers from the backend.
-        dispatch(fetchLayers(normalMap))
+        if (normalMap) { dispatch(fetchLayers(normalMap)) }
     }, [])
 
     useEffect(() => {
-        if (normalMap.layers && normalMap.layers.length > 0 && normalMap.layers[0].src) {
+        if (normalMap && normalMap.layers && normalMap.layers.length > 0 && normalMap.layers[0].src) {
             setInitialLayers(normalMap.layers)
+        } else {
+            setInitialLayers([])
         }
     }, [normalMap])
     
