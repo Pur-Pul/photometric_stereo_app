@@ -75,7 +75,7 @@ const CreateUser = () => {
     }
 
     return (
-        <Grid container spacing={2}>
+        <Grid container spacing={2} margin={3}>
             <Grid>
                 <Typography variant='h2'>Create an account</Typography>
                 <Typography variant='subtitle1'>An account is required in order to use the application. Your email address will only be visible to yourself.</Typography>

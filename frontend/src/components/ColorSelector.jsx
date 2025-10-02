@@ -57,21 +57,23 @@ const ColorWheel = ({currentColor, saveColor, setOpen}) => {
     )
 }
 
-const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, enableColorWheel=true }) => {
+const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, enableColorWheel=true, disabled=false }) => {
     const [open, setOpen] = useState("")
 
     const colorButton = {
-        border: '1px solid #000000',
+        border: disabled ? '1px solid #b4b4b4ff' : '1px solid #000000',
         padding: '8px 16px',
-        cursor: 'pointer',
-        borderRadius: '5px'
+        cursor: disabled ? '' : 'pointer',
+        borderRadius: '5px',
+        pointerEvents: disabled ? 'none' : 'auto'
     }
 
     const arrowButton = {
         border: 'none',
         backgroundColor: 'rgba(0,0,0,0)' ,
         fontSize: '16px',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        pointerEvents: disabled ? 'none' : 'auto'
     }
 
     const handleSwitch = () => {
@@ -87,13 +89,14 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, ena
                 <div >
                     {
                         leftColor 
-                            ? <Tooltip title={leftColor} placement='top'>
+                            ? <Tooltip title={leftColor} placement='top' disabled={disabled}>
                                 <input
                                     data-testid='pick-left'
                                     id="selector"
                                     style={{...colorButton, backgroundColor: leftColor, color: leftColor}}
                                     type="button"
                                     onClick={() => setLeftColor ? setOpen("left") : null}
+                                    disabled={disabled}
                                     />
                             </Tooltip>
                             : null
@@ -106,6 +109,7 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, ena
                                 type="button"
                                 value="⇆"
                                 onClick={handleSwitch}
+                                disabled={disabled}
                                 />
                             : null
                     }
@@ -118,6 +122,7 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, ena
                                     className="colorButton"
                                     type="button"
                                     onClick={() => setRightColor ? setOpen("right") : null}
+                                    disabled={disabled}
                                     />
                             </Tooltip>
                             : null

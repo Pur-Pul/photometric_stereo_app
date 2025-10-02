@@ -35,7 +35,7 @@ const LoginForm = () => {
 
 	return (
 		<form onSubmit={loginHandler}>
-			<Grid container spacing={2}>
+			<Grid container spacing={2} margin={3}>
 				<Grid>
 					<Typography variant='h2'>Login</Typography>
 					<Typography variant='subtitle1'>Please login to use the application.</Typography>
