@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect } from 'react'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import LightPlot from './LightPlot'
-import Vector3 from "../utils/Vector3"
+import Vector3 from '../utils/Vector3'
 
 const LightDirSelector = ({ file, files, setFiles }) => {
     const [open, setOpen] = useState(false)
@@ -13,7 +13,7 @@ const LightDirSelector = ({ file, files, setFiles }) => {
     const handleSubmit = (event) => {
         event.preventDefault()
         setOpen(false)
-        
+
         const new_files = [...files]
         const index = files.findIndex((foundFile) => foundFile.id === file.id)
         new_files[index].light = [lightDir.x, lightDir.y, lightDir.z]
@@ -31,28 +31,28 @@ const LightDirSelector = ({ file, files, setFiles }) => {
     const handleLightChange = (event) => {
         let tempLight = lightDir.clone()
         switch(event.target.id) {
-            case "lightX":
-                tempLight.x = Number(event.target.value)
-                break;
-            case "lightY":
-                tempLight.y = Number(event.target.value)
-                break;
-            case "lightZ":
-                tempLight.z = Number(event.target.value)
-                break;
-            default:
-                console.log(`invalid input component ${event.target.id}`)
+        case 'lightX':
+            tempLight.x = Number(event.target.value)
+            break
+        case 'lightY':
+            tempLight.y = Number(event.target.value)
+            break
+        case 'lightZ':
+            tempLight.z = Number(event.target.value)
+            break
+        default:
+            console.log(`invalid input component ${event.target.id}`)
         }
         //tempLight = tempLight.normalize()
         setLightDir(tempLight)
-        
+
     }
 
-    useEffect(()=> {
-        if (document.getElementById("lightX")) { document.getElementById("lightX").value = lightDir.x }
-        if (document.getElementById("lightY")) { document.getElementById("lightY").value = lightDir.y }
-        if (document.getElementById("lightZ")) { document.getElementById("lightZ").value = lightDir.z }
-        
+    useEffect(() => {
+        if (document.getElementById('lightX')) { document.getElementById('lightX').value = lightDir.x }
+        if (document.getElementById('lightY')) { document.getElementById('lightY').value = lightDir.y }
+        if (document.getElementById('lightZ')) { document.getElementById('lightZ').value = lightDir.z }
+
     }, [lightDir])
 
     return (
@@ -73,13 +73,13 @@ const LightDirSelector = ({ file, files, setFiles }) => {
                         onBlur={handleLightChange}
                         defaultValue={lightDir.z}
                     />
-                    
+
                     <DialogActions>
                         <Button onClick={ () => { setOpen(false) } }>Cancel</Button>
                         <Button type="submit">Save</Button>
                     </DialogActions>
                 </form>
-                <LightPlot 
+                <LightPlot
                     file = { file }
                     lightDir = { lightDir }
                     setLightDir = { setLightDir }
@@ -88,7 +88,7 @@ const LightDirSelector = ({ file, files, setFiles }) => {
         </div>
     )
     /*
-    
+
     */
 }
 

@@ -245,15 +245,17 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
                 const creator = request.user
                 const file_name = `${creator.id}-${request.timestamp}`
                 
-
                 if (!request.body || !request.body.name) { throw new ValidationError('Name is required')}
                 const name = request.body.name
 
                 if (!request.body.format) { throw new ValidationError('Format is required')}
                 const format = request.body.format
+                console.log(request.originalFilenames)
+                if (!request.originalFilenames.find(file => file.split('.')[0] === 'mask')) { throw new ValidationError('Mask is required.') }
+                if (request.originalFilenames.length-1 < 2) { throw new ValidationError('At least two images are required.') }
+                if (!request.body instanceof Array || request.originalFilenames.length-1 !== request.body.lights) { throw new ValidationError('Number of images and light directions need to be the same.') }
 
                 let lights = []
-                console.log(request.body.lights)
                 request.body.lights.forEach(light => {
                     lights = lights.concat(light.split(',').map(Number))
                 })
@@ -264,7 +266,6 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
                     data : lights
                 }, { flowLevel: 1 })
                 data = '%YAML:1.0\n' + 'Lights: !!opencv-matrix\n' + data.replace(/^/gm, '   ')
-                console.log(data)
                 const light_matrix_file = path.join(process.cwd(), '../uploads/', `${file_name}_LightMatrix.yml`)
 
                 fs.writeFile(light_matrix_file, data, (err) => {
@@ -285,6 +286,12 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
 
                 response.status(201).json(savedNormalMap)
             } catch (exception) {
+                request.filenames.forEach(file => {
+                    const filePath = path.join(process.cwd(), `../uploads/${file}`)
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath)
+                    }
+                })
                 next(exception)
             }
         }

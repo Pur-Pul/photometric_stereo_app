@@ -1,4 +1,4 @@
-const glsl = x => x;
+const glsl = x => x
 
 const code = glsl`
 precision highp float;

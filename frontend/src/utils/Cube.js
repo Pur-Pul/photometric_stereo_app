@@ -1,5 +1,5 @@
-import Vector3 from "./Vector3"
-import Polygon from "./Polygon"
+import Vector3 from './Vector3'
+import Polygon from './Polygon'
 
 class Cube {
     constructor(width=1) {
@@ -9,7 +9,6 @@ class Cube {
             new Vector3(width/2,    -width/2,   -width/2),
             new Vector3(width/2,    width/2,    -width/2),
             new Vector3(-width/2,   width/2,    -width/2),
-            
             new Vector3(-width/2,   -width/2,   width/2),
             new Vector3(width/2,    -width/2,   width/2),
             new Vector3(width/2,    width/2,    width/2),
@@ -25,13 +24,13 @@ class Cube {
             new Polygon(this.vertices[0], this.vertices[5], this.vertices[4]),
 
             //front
-            new Polygon(this.vertices[3], this.vertices[2], this.vertices[6]), //7 6 2
-            new Polygon(this.vertices[3], this.vertices[6], this.vertices[7]), //7 2 3
+            new Polygon(this.vertices[3], this.vertices[2], this.vertices[6]),
+            new Polygon(this.vertices[3], this.vertices[6], this.vertices[7]),
 
             //left
             new Polygon(this.vertices[0], this.vertices[3], this.vertices[7]),
             new Polygon(this.vertices[0], this.vertices[7], this.vertices[4]),
-            
+
             //right
             new Polygon(this.vertices[2], this.vertices[1], this.vertices[5]),
             new Polygon(this.vertices[2], this.vertices[5], this.vertices[6]),
@@ -39,7 +38,6 @@ class Cube {
             //bottom
             new Polygon(this.vertices[7], this.vertices[6], this.vertices[5]),
             new Polygon(this.vertices[7], this.vertices[5], this.vertices[4]),
-           
         ]
     }
 
@@ -48,13 +46,12 @@ class Cube {
         this.polygons.forEach(polygon => {
             data = Float32Array.of(...data, ...polygon.getVertexData())
         })
-		
-		return data
-	}
+        return data
+    }
 
     getTextureData() {
         const uvArr = this.polygons.map((polygon, index) => {
-            return index % 2 == 0 
+            return index % 2 === 0
                 ? [
                     { x: 0, y:0 },
                     { x: 1, y:0 },
@@ -65,7 +62,6 @@ class Cube {
                     { x: 1, y:1 },
                     { x: 0, y:1 }
                 ]
-
         })
         const normalArr = this.polygons.map((polygon) => {
             const polNormal = polygon.calculateNormal()
@@ -74,11 +70,10 @@ class Cube {
                 polNormal,
                 polNormal
             ]
-            
         })
         const tangentArr = this.polygons.map((polygon, index) => {
             const normal = polygon.calculateNormal()
-            let tangent = (index < 2 || index > 9) 
+            let tangent = (index < 2 || index > 9)
                 ? normal.cross(new Vector3(0, -1, 0))
                 : normal.cross(new Vector3(0, 0, -1)).normalize()
             tangent = (index > 9) ? tangent.normalize(-1) : tangent

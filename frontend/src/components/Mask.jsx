@@ -1,9 +1,9 @@
-import { useRef, useEffect, useState } from "react"
-import Dialog from "@mui/material/Dialog"
-import DialogTitle from "@mui/material/DialogTitle"
-import DialogActions from "@mui/material/DialogActions"
-import Button from "@mui/material/Button"
-import MaskEditor from "./MaskEditor"
+import { useRef, useEffect, useState } from 'react'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogActions from '@mui/material/DialogActions'
+import Button from '@mui/material/Button'
+import MaskEditor from './MaskEditor'
 
 
 
@@ -30,18 +30,18 @@ const Mask = ({ maskOverlay, setMask }) => {
             canvas.height = maskOverlay.height
             ctx.fillStyle = '#ffffff'
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
-            ctxRef.current = ctx 
+            ctxRef.current = ctx
             canvas.toBlob((blob) => { setMask(new File(
                 [blob],
                 `mask.${ maskOverlay.src.name.split('.').pop() }`,
                 { type: maskOverlay.src.type },
                 maskOverlay.src.type
             )) })
-        } else { 
+        } else {
             setMask(null)
         }
     }, [maskOverlay])
-    
+
     const handleSave = (editorCanvas) => {
         ctxRef.current.drawImage(editorCanvas, 0, 0, canvasRef.current.width, canvasRef.current.height)
         canvasRef.current.toBlob((blob) => { setMask(new File(
@@ -59,23 +59,23 @@ const Mask = ({ maskOverlay, setMask }) => {
 
     return (
         maskOverlay
-            ? <div style={{width:'500px', height: '100%'}}>
+            ? <div style={{ width:'500px', height: '100%' }}>
                 <h3>Mask</h3>
                 <canvas style={img} ref={canvasRef} />
-                {   
-                    canvasRef.current 
+                {
+                    canvasRef.current
                         ? <div>
                             <Button onClick={ () => { setOpen(true) } } variant="outlined">Edit mask</Button>
-                            <Dialog 
+                            <Dialog
                                 id='maskEditor'
                                 open={ open }
                                 closeAfterTransition={false}
                                 fullWidth
                                 maxWidth = 'lg'
-                                slotProps={{ paper: { sx: { height: '80%' }}}}
-                                >
+                                slotProps={{ paper: { sx: { height: '80%' } } }}
+                            >
                                 <DialogTitle>Edit the mask</DialogTitle>
-                                <MaskEditor 
+                                <MaskEditor
                                     size = { [canvasRef.current.width, canvasRef.current.height] }
                                     maskCanvas = { canvasRef.current }
                                     image= { maskOverlay.image }
@@ -83,9 +83,9 @@ const Mask = ({ maskOverlay, setMask }) => {
                                     handleDiscard={ handleDiscard }/>
                             </Dialog>
                         </div>
-                        : "loading"
+                        : 'loading'
                 }
-            </div> 
+            </div>
             : null
     )
 }

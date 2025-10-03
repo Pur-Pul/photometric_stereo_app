@@ -1,4 +1,4 @@
-import { 
+import {
     Typography,
     Grid,
     List,
@@ -21,13 +21,13 @@ const PhotometricStereoDescription = () => {
     const [expanded, setExpanded] = useState(false)
     return (
         <Card sx={{ maxWidth: 1080 }}>
-            <CardHeader 
+            <CardHeader
                 title='Photometric stereo'
                 subheader='originally by Robert J. Woodham in 1980'
-                />
+            />
             <CardContent>
                 <Typography>
-                    This application utilizes a photometric stereo algorithm that allows generation of normal maps from a list of images. 
+                    This application utilizes a photometric stereo algorithm that allows generation of normal maps from a list of images.
                     The images are to be taken of the same of the same subject with the same angle, but with varying light directions.
                     By specifying the direction of the light in each image the alogrithm calculates the surface normals for each pixel in the resulting image.
                 </Typography>
@@ -96,14 +96,14 @@ const NormalMapDescription = () => {
 
     return (
         <Card sx={{ maxWidth: 1080 }}>
-            <CardHeader 
+            <CardHeader
                 title='Normal map'
                 subheader='What is it?'
-                />
-            
+            />
+
             <CardContent>
                 <Typography>
-                    In short a normal map is surface normal data encoded in an image. 
+                    In short a normal map is surface normal data encoded in an image.
                     A surface normal is a direction that is tangent to a surface, which means that for a flat surface like a table the surface normal would be pointing straight up.
 
                 </Typography>
@@ -141,7 +141,7 @@ const NormalMapDescription = () => {
                     { normalMap && texture ? <Viewer3D image={normalMap} texture={texture} simple/> : null }
                 </CardContent>
             </Collapse>
-            
+
         </Card>
     )
 }
@@ -150,13 +150,13 @@ const EditorDescription = () => {
     const [expanded, setExpanded] = useState(false)
     return (
         <Card sx={{ maxWidth: 1080 }}>
-            <CardHeader 
+            <CardHeader
                 title='Normal map editor'
                 subheader='Designed for easy creation of new normal maps'
-                />
+            />
             <CardContent>
                 <Typography>
-                    
+
                 </Typography>
             </CardContent>
             <CardActions>
@@ -171,7 +171,7 @@ const EditorDescription = () => {
                     </Typography>
                 </CardContent>
             </Collapse>
-            
+
         </Card>
     )
 }
@@ -179,11 +179,11 @@ const EditorDescription = () => {
 const FrontPage = () => {
     return (
         <Grid margin={3}>
-            <Grid container spacing={2} sx={{ alignItems: "flex-end" }}>
+            <Grid container spacing={2} sx={{ alignItems: 'flex-end' }}>
                 <Typography variant='h2'>Welcome</Typography>
                 <Typography variant='h5'> to the normal map app</Typography>
             </Grid>
-            
+
             <Card sx={{ maxWidth: 1080 }}>
                 <CardHeader title='What is this?' />
                 <CardContent>
