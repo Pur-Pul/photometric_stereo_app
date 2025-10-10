@@ -1,5 +1,5 @@
-import Vector3 from "./Vector3"
-import Polygon from "./Polygon"
+import Vector3 from './Vector3'
+import Polygon from './Polygon'
 
 class Sphere {
     constructor(depth=0, radius=1) {
@@ -10,18 +10,17 @@ class Sphere {
             new Vector3(1,				aspect,		            0).normalize(radius),
             new Vector3(-1,			    -aspect,	            0).normalize(radius),
             new Vector3(1,				-aspect,	            0).normalize(radius),
-                
+
             new Vector3(0,				  -1,				    aspect).normalize(radius),
             new Vector3(0,				  1,				    aspect).normalize(radius),
             new Vector3(0,				  -1,				    -aspect).normalize(radius),
             new Vector3(0,				  1,				    -aspect).normalize(radius),
-                
+
             new Vector3(aspect,		    0,			            -1).normalize(radius),
             new Vector3(aspect,		    0,			            1).normalize(radius),
             new Vector3(-aspect,		0,                      -1).normalize(radius),
             new Vector3(-aspect,		0,			            1).normalize(radius)
         ]
-        
         //let sphere_i = [5,  1,  7,  10, 11, 9,  4,  2,  6,  8,  4,  2,  6,  8,  9,  5,  11, 10, 7,  1]
         //let sphere_j = [11, 5,  1,  7,  10, 5,  11, 10, 7,  1,  9,  4,  2,  6,  8,  9,  4,  2,  6,  8]
         //let sphere_k = [0,  0,  0,  0,  0,  1,  5,  11, 10, 7,  3,  3,  3,  3,  3,  4,  2,  6,  8,  9]
@@ -56,7 +55,7 @@ class Sphere {
             sphere_polygons = _temp
         }
         //console.log(sphere_polygons)
-        let vertex_map = new Map();
+        let vertex_map = new Map()
         let vertices = []
         let sphere_i = []
         let sphere_j = []
@@ -69,12 +68,12 @@ class Sphere {
                 vertices.push(polygon.v1)
                 vertex_map.set(v1_key, vertices.length - 1)
             }
-            
+
             if (!vertex_map.has(v2_key)) {
                 vertices.push(polygon.v2)
                 vertex_map.set(v2_key, vertices.length - 1)
             }
-            
+
             if (!vertex_map.has(v3_key)) {
                 vertices.push(polygon.v3)
                 vertex_map.set(v3_key, vertices.length - 1)
@@ -95,26 +94,21 @@ class Sphere {
         this.sphere_polygons.forEach(polygon => {
             data = Float32Array.of(...data, ...polygon.getVertexData())
         })
-		
-		return data
-	}
+        return data
+    }
 
     getTextureData() {
-        const uvArr = this.sphere_polygons.map(() => 
-            [
-                { x: 0, y:1 },
-                { x: 0, y:0 },
-                { x: 1, y:0 }
-            ]
-            
-        )
+        const uvArr = this.sphere_polygons.map(() => [
+            { x: 0, y:1 },
+            { x: 0, y:0 },
+            { x: 1, y:0 }
+        ])
         const normalArr = this.sphere_polygons.map((polygon) => {
             return [
                 polygon.v1.normalize(),
                 polygon.v2.normalize(),
                 polygon.v3.normalize()
             ]
-            
         })
         const tangentArr = this.sphere_polygons.map((polygon) => {
             const npole = new Vector3(0,0,1)
@@ -122,7 +116,7 @@ class Sphere {
             const vertices = [polygon.v1, polygon.v2, polygon.v3]
             return vertices.map(vert => {
                 const normal = vert.normalize()
-                return normal.compare(npole) || normal.compare(spole) 
+                return normal.compare(npole) || normal.compare(spole)
                     ? polygon.calculateNormal().cross(npole).normalize()
                     : normal.cross(npole).normalize()
             })
@@ -148,7 +142,7 @@ class Sphere {
         const fix_uv_poles = (npole, spole, polygons) => {
             polygons.forEach((polygon, i) => {
                 const verts = [polygon.v1, polygon.v2, polygon.v3]
-                for (var j = 0; j < 3; j++) { 
+                for (var j = 0; j < 3; j++) {
                     if (verts[j].compare(npole) || verts[j].compare(spole)) {
                         uvArr[i][j].x = (uvArr[i][(j+1) % 3].x + uvArr[i][(j+2) % 3].x) / 2
                     }
@@ -161,7 +155,6 @@ class Sphere {
             uvArr[i][0] = normal_to_uv(this.sphere_polygons[i].v1.normalize())
             uvArr[i][1] = normal_to_uv(this.sphere_polygons[i].v2.normalize())
             uvArr[i][2] = normal_to_uv(this.sphere_polygons[i].v3.normalize())
-            
             npole = polygon.v1.z > npole.z ? polygon.v1 : npole
             npole = polygon.v2.z > npole.z ? polygon.v2 : npole
             npole = polygon.v3.z > npole.z ? polygon.v3 : npole
@@ -169,7 +162,7 @@ class Sphere {
             spole = polygon.v2.z < spole.z ? polygon.v2 : spole
             spole = polygon.v3.z < spole.z ? polygon.v3 : spole
         })
-        
+
         fix_uv_seam(this.sphere_polygons)
         fix_uv_poles(npole, spole, this.sphere_polygons)
         let uvData = new Float32Array()

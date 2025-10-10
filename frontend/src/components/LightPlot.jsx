@@ -1,44 +1,44 @@
 import Plot from 'react-plotly.js'
 import { useEffect, useState } from 'react'
-import React from 'react';
+import React from 'react'
 import Sphere from '../utils/Sphere'
-import Vector3 from '../utils/Vector3';
+import Vector3 from '../utils/Vector3'
 
 class PersistPlot extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {data: [], layout: props.layout, frames: props.frames, config: props.config};
-  }
- 
-  render() {
-    return (
-      <Plot
-        data={this.props.data}
-        layout={this.state.layout}
-        frames={this.state.frames}
-        config={this.state.config}
-        onInitialized={(figure) => {this.setState(figure)}}
-        onUpdate={(figure) => {this.setState(figure)}}
-        style={{cursor: 'cell'}}
-        
-        onClick={(e) => {
-            if (this.props.setLightDir) {
-                const dir = new Vector3(
-                    e.points[0].x,
-                    e.points[0].z,
-                    e.points[0].y
-                ).normalize(-1)
-                if (dir.norm() != 0) {
-                    this.props.setLightDir(dir)
-                }
-                //this.props.setPoint(new Vector3(e.points[0].x, e.points[0].y, e.points[0].z))
-                //this.props.setSelection(-1)
-            }
-        }}
-          
-      />
-    );
-  }
+    constructor(props) {
+        super(props)
+        this.state = { data: [], layout: props.layout, frames: props.frames, config: props.config }
+    }
+
+    render() {
+        return (
+            <Plot
+                data={this.props.data}
+                layout={this.state.layout}
+                frames={this.state.frames}
+                config={this.state.config}
+                onInitialized={(figure) => {this.setState(figure)}}
+                onUpdate={(figure) => {this.setState(figure)}}
+                style={{ cursor: 'cell' }}
+
+                onClick={(e) => {
+                    if (this.props.setLightDir) {
+                        const dir = new Vector3(
+                            e.points[0].x,
+                            e.points[0].z,
+                            e.points[0].y
+                        ).normalize(-1)
+                        if (dir.norm() !== 0) {
+                            this.props.setLightDir(dir)
+                        }
+                        //this.props.setPoint(new Vector3(e.points[0].x, e.points[0].y, e.points[0].z))
+                        //this.props.setSelection(-1)
+                    }
+                }}
+
+            />
+        )
+    }
 }
 
 const generateLightLines = (lightDir, width, height) => {
@@ -69,7 +69,7 @@ const generateLightLines = (lightDir, width, height) => {
             hoverinfo: 'none'
         }
     })
-    
+
 }
 
 const getPixels = (url, width, height, canvas, context) => {
@@ -80,7 +80,7 @@ const getPixels = (url, width, height, canvas, context) => {
     context.drawImage(img, 0, 0, width, height)
     const raw_data = context.getImageData(0, 0, width, height).data
     const pixels = (new Array(height).fill(null)).map(() => new Array(width))
-    
+
     for (var i = 0; i < raw_data.length; i+=4) {
         const pixel_i = Math.floor(i/4)
         pixels[Math.floor(pixel_i/width)][pixel_i % width] = raw_data[i]
@@ -91,7 +91,7 @@ const getPixels = (url, width, height, canvas, context) => {
 const LightPlot = ({ file, lightDir, setLightDir }) => {
     const [lightPos, setLightPos] = useState(new Vector3(0,0,0))
     const [colors, setColors] = useState([])
-    
+
     const size = 100
     const aspect_ratio = file.width/file.height
     const width = Math.round(aspect_ratio*size)
@@ -112,7 +112,7 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
 
     var data = [
         {
-            type: "mesh3d",
+            type: 'mesh3d',
             x: sphere.sphere_vertices.map((vertex) => vertex.x),
             y: sphere.sphere_vertices.map((vertex) => vertex.y),
             z: sphere.sphere_vertices.map((vertex) => vertex.z),
@@ -130,7 +130,7 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
             x: plane.map((row, y) => row.map((_, x) => row.length/2-x)),
             y: plane,
             z: plane.map((row, y) => row.map((_, x) => y - plane.length/2)),
-            
+
             surfacecolor: colors,
             showscale: false,
             hoverinfo: 'none',
@@ -153,11 +153,11 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
     ]
 
     var layout = {
-        title: { text: "Pick a light direction." },
-        xaxis: {autorange: 'reversed'},
-        zaxis: {autorange: 'reversed'},
+        title: { text: 'Pick a light direction.' },
+        xaxis: { autorange: 'reversed' },
+        zaxis: { autorange: 'reversed' },
         scene: {
-            aspectmode:"manual",
+            aspectmode:'manual',
             aspectratio: { x:1, y:1, z:1 },
             camera: { eye: { x: 0, y: -2, z: 0 } },
             yaxis: {
@@ -169,15 +169,15 @@ const LightPlot = ({ file, lightDir, setLightDir }) => {
                 title: { text: 'y' },
                 showticklabels: false,
                 range: [radius, -radius]
-               
+
             },
             xaxis: {
-                showticklabels: false, 
+                showticklabels: false,
                 range: [radius, -radius]
             },
         },
         showlegend: false,
-        autosize: false, 
+        autosize: false,
         width: 500,
         height: 500,
         margin: { l: 35, r: 0, b: 25, t: 25 },

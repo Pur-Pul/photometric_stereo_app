@@ -127,6 +127,21 @@ describe('Photometric form is functional', () => {
         expect(source3).toBeInTheDocument()
         expect(source4).toBeInTheDocument()
     })
+    test('When only one image file is uploaded, the submit button is disabled', async () => {
+        const user = userEvent.setup()
+        dimensions.push({width: 200, height: 200})
+        const { rerender } = render(<Provider store={store}><PhotometricForm /></Provider>)
+        const input = screen.getByTestId('photometric-file-upload')
+        const files = [
+            new File(['test0'], 'test0.png', {type: 'image/png'})
+        ]
+        vi.clearAllMocks()
+        await user.upload(input, files)
+        rerender(<Provider store={store}><PhotometricForm /></Provider>)
+        
+        const button = screen.queryByTestId('photometric-submit')
+        expect(button.disabled).toBe(true)
+    })
     test('When multiple image files with different resolutions are uploaded, the submit button is disabled.', async () => {
         const user = userEvent.setup()
         dimensions.push({width: 200, height: 200})

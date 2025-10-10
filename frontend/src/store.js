@@ -5,12 +5,12 @@ import normalMapReducer from './reducers/normalMapReducer.js'
 import { configureStore } from '@reduxjs/toolkit'
 
 const store = configureStore({
-	reducer: {
-		notification: notificationReducer,
-		login: loginReducer,
-		users: userReducer,
-		normalMaps: normalMapReducer
-	},
+    reducer: {
+        notification: notificationReducer,
+        login: loginReducer,
+        users: userReducer,
+        normalMaps: normalMapReducer
+    },
 })
 
 export default store

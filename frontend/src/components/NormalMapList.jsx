@@ -1,7 +1,7 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
+import {
     Button,
     Grid,
     Typography,
@@ -17,11 +17,11 @@ import { fetchPage } from '../reducers/normalMapReducer'
 const NormalMapLink = ({ normalMap }) => {
     const navigate = useNavigate()
     return (
-        <Button 
+        <Button
             onClick={() => navigate(`/normal_map/${normalMap.id}`)}
             data-testid={`normal-map-${normalMap.id}`}
             variant='outlined'
-            >
+        >
             <div>
                 { normalMap.icon ? <img src={normalMap.icon.src}/> : null }
                 <div>{ normalMap.name }</div>
@@ -33,8 +33,8 @@ const NormalMapLink = ({ normalMap }) => {
 const NormalMapCategory = ({ normalMaps, title, placeholder, category, children, ...rest }) => {
     const dispatch = useDispatch()
 
-    if (normalMaps.length === 0) { 
-        return placeholder !== undefined 
+    if (normalMaps.length === 0) {
+        return placeholder !== undefined
             ? (
                 <Card>
                     <CardHeader title={title} />
@@ -71,23 +71,23 @@ const NormalMapList = ({ user }) => {
 
     return (
         <div>
-            <NormalMapCategory 
+            <NormalMapCategory
                 data-testid='user-normal-map-list'
                 normalMaps={userNormalMaps}
                 title={user === undefined || user.id === loggedUser.id ? 'Your normal maps' : `${user.username}'s normal maps`}
                 placeholder={user === undefined || user.id === loggedUser.id ? 'You have not created any normal maps yet.' : `${user.username} has not created any normal maps yet.`}
                 category='private'
-                >
+            >
                 { user === undefined || user.id === loggedUser.id ?  <Button variant='outlined' onClick={() => setOpen(true)} data-testid='create-new-button'>Create new</Button> : null }
             </NormalMapCategory>
-            
+
             <NormalMapCategory
                 data-testid='public-normal-map-list'
                 normalMaps={publicNormalMaps}
                 title={'Public normal maps'}
                 category='public'
-                />
-            
+            />
+
             <NewNormalMapForm open={open} setOpen={setOpen} />
         </div>
     )

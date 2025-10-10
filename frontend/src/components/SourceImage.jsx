@@ -1,6 +1,6 @@
-import LightDirSelector from "./LightDirSelector"
+import LightDirSelector from './LightDirSelector'
 
-const SourceImage = ({ files, file, setFiles}) => {
+const SourceImage = ({ files, file, setFiles }) => {
     const img = {
         width: '100%',
         minWidth: '100%',
@@ -10,7 +10,7 @@ const SourceImage = ({ files, file, setFiles}) => {
     }
 
     return (
-        <div style={{width:'500px', height: '100%'}}>
+        <div style={{ width:'500px', height: '100%' }}>
             <h3>{file.src.name}</h3>
             <img style={img} src={file.image} alt="Uploaded preview" />
             <LightDirSelector
@@ -18,7 +18,7 @@ const SourceImage = ({ files, file, setFiles}) => {
                 file={file}
                 id={file.id}
                 setFiles={setFiles}
-                />
+            />
             <p>Light direction: x={file.light[0]} y={file.light[1]} z={file.light[2]}</p>
             <p>Width: {file.width} Height: {file.height}</p>
         </div>

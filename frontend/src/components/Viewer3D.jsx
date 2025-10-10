@@ -17,7 +17,7 @@ const compileShader = (ctx, code, shaderType) => {
     ctx.compileShader(shader)
 
     if (!ctx.getShaderParameter(shader, ctx.COMPILE_STATUS)) {
-        notificationSet({text: 'Shader failed to compile', type: 'error'})
+        notificationSet({ text: 'Shader failed to compile', type: 'error' })
         console.log(ctx.getShaderInfoLog(shader))
         ctx.deleteShader(shader)
         return null
@@ -46,7 +46,7 @@ const initShaders = (ctx) => {
 const initBuffer = (ctx, data, pointer, length) => {
     const buffer = ctx.createBuffer()
     ctx.bindBuffer(ctx.ARRAY_BUFFER, buffer)
-	ctx.bufferData(ctx.ARRAY_BUFFER, data, ctx.STATIC_DRAW)
+    ctx.bufferData(ctx.ARRAY_BUFFER, data, ctx.STATIC_DRAW)
     ctx.vertexAttribPointer(pointer, length, ctx.FLOAT, false, 0, 0)
     ctx.enableVertexAttribArray(pointer)
 }
@@ -58,7 +58,7 @@ const initTexture = (ctx, canvas) => {
     ctx.texImage2D(ctx.TEXTURE_2D, 0, ctx.RGBA, ctx.RGBA, ctx.UNSIGNED_BYTE, canvas)
     ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MIN_FILTER, ctx.NEAREST)
     ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_MAG_FILTER, ctx.NEAREST)
-    if ((canvas.width && (canvas.width - 1)) == 0 && (canvas.height && (canvas.height - 1)) == 0) {
+    if ((canvas.width && (canvas.width - 1)) === 0 && (canvas.height && (canvas.height - 1)) === 0) {
         ctx.generateMipmap(ctx.TEXTURE_2D)
     } else {
         ctx.texParameteri(ctx.TEXTURE_2D, ctx.TEXTURE_WRAP_S, ctx.CLAMP_TO_EDGE)
@@ -78,7 +78,7 @@ const createProjMat = (fov, zfar, znear) => {
 }
 
 const createViewMat = (camera, target) => {
-    const {pos,right,up} = camera
+    const { pos,right,up } = camera
     const dir = target.sub(pos).normalize()
 
     return new Mat4([
@@ -90,38 +90,36 @@ const createViewMat = (camera, target) => {
 }
 
 const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectRatio: '1/1', maxWidth: 1080 } }) => {
-    const canvas3DRef = useRef(null)
-    const canvasMapRef = useRef(null)
-    const canvasTexRef = useRef(null)
-    const [visible, setVisible] = useState(false)
-
     const FRAMETIME = 33.333333
     const sphere = new Sphere(3, 1)
     const cube = new Cube(1)
 
-    const [camera, setCamera] = useState({
+    const [visible, setVisible] = useState(false)
+    const [shape, setShape] = useState(sphere)
+    const [rotate, setRotate] = useState(null)
+    const [animateStep, setAnimateStep] = useState(Date.now())
+
+    const canvas3DRef = useRef(null)
+    const canvasMapRef = useRef(null)
+    const canvasTexRef = useRef(null)
+
+    const programRef = useRef(null)
+    const renderDataRef = useRef(null)
+    const specularStrengthRef = useRef(50)
+    const cameraRef = useRef({
         pos: new Vector3(0,3,0),
         right: new Vector3(-1,0,0),
         up: new Vector3(0,0,-1)
     })
+    const lightPosRef = useRef(new Vector3(4,0,0))
+    const colorRef = useRef('#ffffff')
 
-    const [lightPos, setLightPos] = useState(new Vector3(4,0,0))
-    const [color, setColor] = useState('#ffffff')
-
-    const [shape, setShape] = useState(sphere)
-    const [program, setProgram] = useState(null)
-
-    const [renderData, setRenderData] = useState(null)
-
-    const [rotate, setRotate] = useState(null)
-    const [specularStrength, setSpecularStrength] = useState(50)
-    const [animateStep, setAnimateStep] = useState(Date.now())
 
     useEffect(() => {
         if (!visible) { return }
         canvasMapRef.current = canvasMapRef.current ? canvasMapRef.current : document.createElement('canvas')
         canvasTexRef.current = canvasTexRef.current ? canvasTexRef.current : document.createElement('canvas')
-        
+
         const aspect = image.width / image.height
         const maxHeight = Math.max(image.width, image.height)
         canvasMapRef.current.width = Math.min(maxHeight, size) * aspect
@@ -131,14 +129,14 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
 
         canvasMapRef.current.getContext('2d', { willReadFrequently: true }).drawImage(image, 0, 0, canvasMapRef.current.width, canvasMapRef.current.height)
         canvasTexRef.current.getContext('2d', { willReadFrequently: true }).drawImage(texture ? texture : image, 0, 0, canvasTexRef.current.width, canvasTexRef.current.height)
-    }, [visible])
+    }, [visible, image, size, texture])
 
     useEffect(() => {
         if (!visible) { return }
         const vertices = shape.getVertexData()
         const [uvs, normals, tangents] = shape.getTextureData()
-        
-        setRenderData({vertices, uvs, normals, tangents})
+
+        renderDataRef.current = { vertices, uvs, normals, tangents }
     }, [shape, visible])
 
     useEffect(() => {
@@ -146,17 +144,17 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
         let updateTimeout
         const canvas = canvas3DRef.current
         const ctx = canvas.getContext('webgl')
-        if (!ctx) { 
+        if (!ctx) {
             notificationSet('webgl is not avaliable.')
-        } else if (!program) {
+        } else if (!programRef.current) {
             ctx.enable(ctx.DEPTH_TEST)
             ctx.depthFunc(ctx.LEQUAL)
             ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, true)
-            setProgram(initShaders(ctx))
-        } else if (renderData) {
+            programRef.current = initShaders(ctx)
+        } else if (renderDataRef.current) {
             ctx.clearColor(0,0,0,1)
             ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT)
-            const viewMat = createViewMat(camera, new Vector3(0,0,0))
+            const viewMat = createViewMat(cameraRef.current, new Vector3(0,0,0))
             const worldMat = new Mat4([
                 1, 0, 0, 0,
                 0, 1, 0, 0,
@@ -165,28 +163,28 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
             ])
             const projMat = createProjMat(45, 10, 0.1)
 
-            const positionPointer = ctx.getAttribLocation(program, 'attPosition')
-            const uvPointer = ctx.getAttribLocation(program, 'attUV')
-            const normalPointer = ctx.getAttribLocation(program, 'attNormal')
-            const tangentPointer = ctx.getAttribLocation(program, 'attTangent')
+            const positionPointer = ctx.getAttribLocation(programRef.current, 'attPosition')
+            const uvPointer = ctx.getAttribLocation(programRef.current, 'attUV')
+            const normalPointer = ctx.getAttribLocation(programRef.current, 'attNormal')
+            const tangentPointer = ctx.getAttribLocation(programRef.current, 'attTangent')
 
-            const worldPointer = ctx.getUniformLocation(program, 'uWorldMatrix')
-            const viewPointer = ctx.getUniformLocation(program, 'uViewMatrix')
-            const projPointer = ctx.getUniformLocation(program, 'uProjectionMatrix')
+            const worldPointer = ctx.getUniformLocation(programRef.current, 'uWorldMatrix')
+            const viewPointer = ctx.getUniformLocation(programRef.current, 'uViewMatrix')
+            const projPointer = ctx.getUniformLocation(programRef.current, 'uProjectionMatrix')
 
-            const nmPointer = ctx.getUniformLocation(program, 'uNormalMap')
-            const texPointer = ctx.getUniformLocation(program, 'uTexture')
-            const colorPointer = ctx.getUniformLocation(program, 'uColor')
-            const lightPosPointer = ctx.getUniformLocation(program, 'uLightPos')
-            const camPosPointer = ctx.getUniformLocation(program, 'uCamPos')
-            const specularStrengthPointer = ctx.getUniformLocation(program, 'uSpecularStrength')
-    
-            initBuffer(ctx, renderData.vertices, positionPointer, 3)
-            initBuffer(ctx, renderData.uvs, uvPointer, 2)
-            initBuffer(ctx, renderData.normals, normalPointer, 3)
-            initBuffer(ctx, renderData.tangents, tangentPointer, 3)
+            const nmPointer = ctx.getUniformLocation(programRef.current, 'uNormalMap')
+            const texPointer = ctx.getUniformLocation(programRef.current, 'uTexture')
+            const colorPointer = ctx.getUniformLocation(programRef.current, 'uColor')
+            const lightPosPointer = ctx.getUniformLocation(programRef.current, 'uLightPos')
+            const camPosPointer = ctx.getUniformLocation(programRef.current, 'uCamPos')
+            const specularStrengthPointer = ctx.getUniformLocation(programRef.current, 'uSpecularStrength')
 
-            ctx.useProgram(program)
+            initBuffer(ctx, renderDataRef.current.vertices, positionPointer, 3)
+            initBuffer(ctx, renderDataRef.current.uvs, uvPointer, 2)
+            initBuffer(ctx, renderDataRef.current.normals, normalPointer, 3)
+            initBuffer(ctx, renderDataRef.current.tangents, tangentPointer, 3)
+
+            ctx.useProgram(programRef.current)
             ctx.uniform1i(nmPointer, 0)
             ctx.uniform1i(texPointer, 1)
 
@@ -195,26 +193,26 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
 
             ctx.activeTexture(ctx.TEXTURE0)
             ctx.bindTexture(ctx.TEXTURE_2D, texture1)
-            
+
             ctx.activeTexture(ctx.TEXTURE1)
             ctx.bindTexture(ctx.TEXTURE_2D, texture2)
 
             ctx.uniformMatrix4fv(worldPointer, false, worldMat.mat)
             ctx.uniformMatrix4fv(viewPointer, false, viewMat.mat)
             ctx.uniformMatrix4fv(projPointer, false, projMat.mat)
-            const [red, green, blue] = hexToRGB(color)
+            const [red, green, blue] = hexToRGB(colorRef.current)
             ctx.uniform4f(colorPointer, red/255, green/255, blue/255, 1)
-            ctx.uniform3f(lightPosPointer, lightPos.x, lightPos.y, lightPos.z) 
-            ctx.uniform3f(camPosPointer, camera.pos.x, camera.pos.y, camera.pos.z)
-            ctx.uniform1f(specularStrengthPointer, specularStrength/100)
-            ctx.drawArrays(ctx.TRIANGLES, 0, renderData.vertices.length/3)
+            ctx.uniform3f(lightPosPointer, lightPosRef.current.x, lightPosRef.current.y, lightPosRef.current.z)
+            ctx.uniform3f(camPosPointer, cameraRef.current.pos.x, cameraRef.current.pos.y, cameraRef.current.pos.z)
+            ctx.uniform1f(specularStrengthPointer, specularStrengthRef.current/100)
+            ctx.drawArrays(ctx.TRIANGLES, 0, renderDataRef.current.vertices.length/3)
         }
         const quat = Quaternion.axisAngle(new Vector3(0,1,0), 2)
-        setLightPos(quat.rotate(lightPos))
+        lightPosRef.current = quat.rotate(lightPosRef.current)
         updateTimeout = setTimeout(() => setAnimateStep(Date.now()), FRAMETIME)
-        return () => { clearTimeout(updateTimeout) }  
+        return () => { clearTimeout(updateTimeout) }
     }, [animateStep, visible])
-    
+
     window.onmouseup = (event) => { if(event.button === 0) {setRotate(null)}}
 
     const handleTextureUpload = (event) => {
@@ -224,7 +222,7 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
             const canvas = canvasTexRef.current
             const aspect = image.width / image.height
             const maxHeight = Math.max(image.width, image.height)
-    
+
             canvas.width = Math.min(maxHeight, size) * aspect
             canvas.height = Math.min(maxHeight, size)
 
@@ -236,8 +234,8 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
     return (
         <div style={style}>
             {
-                visible 
-                ?   <canvas 
+                visible
+                    ?   <canvas
                         ref={canvas3DRef}
                         width={size}
                         height={size}
@@ -251,34 +249,34 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
                             const { offsetX:x, offsetY:y } = e.nativeEvent
                             const deltaTime = Date.now() - animateStep
                             if (rotate && deltaTime > FRAMETIME) {
-                                const quat = Quaternion.axisAngle(camera.up, (x - rotate.lastX)/3).mult(Quaternion.axisAngle(camera.right, (y - rotate.lastY)/3))
-                                setCamera({
-                                    pos: quat.rotate(camera.pos),
-                                    right: quat.rotate(camera.right),
-                                    up: quat.rotate(camera.up)
-                                })
+                                const quat = Quaternion.axisAngle(cameraRef.current.up, (x - rotate.lastX)/3).mult(Quaternion.axisAngle(cameraRef.current.right, (y - rotate.lastY)/3))
+                                cameraRef.current = {
+                                    pos: quat.rotate(cameraRef.current.pos),
+                                    right: quat.rotate(cameraRef.current.right),
+                                    up: quat.rotate(cameraRef.current.up)
+                                }
                                 setRotate({ lastX:x, lastY:y })
                             }
                         }}
                         style={{ border: '1px solid #2196f3', borderRadius: 5, cursor: rotate ? 'grabbing' : 'grab', width:'100%', height: '100%' }}
-                        />
-                :   <Button variant='outlined' sx={{ width:'100%', height: '100%' }} onClick={() => setVisible(true) }>View 3D preview</Button>       
+                    />
+                    :   <Button variant='outlined' sx={{ width:'100%', height: '100%' }} onClick={() => setVisible(true) }>View 3D preview</Button>
             }
             {
                 simple
                     ? null
                     : <Grid container>
-                        <ColorSelector leftColor={color} setLeftColor={setColor} disabled={!visible} />
+                        <ColorSelector leftColor={colorRef.current} setLeftColor={(newColor) => colorRef.current = newColor} disabled={!visible} />
                         <FormControl>
                             <InputLabel htmlFor='strength' shrink>Specular strength (%)</InputLabel>
-                            <TextField 
+                            <TextField
                                 id='strength'
                                 type='number'
-                                value={specularStrength}
-                                InputProps={{ inputProps: { min: 0, max: 100 } }}
-                                onChange={(e) => setSpecularStrength(e.target.value)}
+                                value={specularStrengthRef.current}
+                                slotProps= {{ htmlInput: { min: 0, max: 100 } }}
+                                onChange={(e) => specularStrengthRef.current = e.target.value}
                                 disabled={!visible}
-                                />
+                            />
                         </FormControl>
                         <Button component='label' variant="outlined" disabled={!visible}>
                             Apply texture

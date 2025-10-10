@@ -1,16 +1,16 @@
-import { useState, useCallback, useEffect } from "react"
-import SourceImage from "./SourceImage"
-import NameForm from "./NameForm"
-import { useDispatch } from "react-redux"
-import { generateNormalMap } from "../reducers/normalMapReducer"
-import { notificationSet, notificationRemove } from "../reducers/notificationReducer"
-import Mask from "./Mask"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useState, useCallback, useEffect } from 'react'
+import SourceImage from './SourceImage'
+import NameForm from './NameForm'
+import { useDispatch } from 'react-redux'
+import { generateNormalMap } from '../reducers/normalMapReducer'
+import { notificationSet, notificationRemove } from '../reducers/notificationReducer'
+import Mask from './Mask'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
     Button,
     Grid,
-	Select,
-	MenuItem,
+    Select,
+    MenuItem,
     Alert
 } from '@mui/material'
 
@@ -24,13 +24,12 @@ const PhotometricForm = () => {
     const [mask, setMask] = useState(null)
     const [nameFormOpen, setNameFormOpen] = useState(false)
     const [warning, setWarning] = useState('')
-    const [sortBy, setSortBy] = useState('')
 
     useEffect(() => {
-        let warning = files.length > 0 ? '' : 'No images selected'
+        let warning = files.length > 1 ? '' : 'At least two images are required'
         files.forEach(file => {
-            warning = file.width == files[0].width && file.height == files[0].height ? warning : 'The images must have equal dimensions.'
-            warning = file.src.type == files[0].src.type ? warning : 'The images must be of the same format.'
+            warning = file.width === files[0].width && file.height === files[0].height ? warning : 'The images must have equal dimensions.'
+            warning = file.src.type === files[0].src.type ? warning : 'The images must be of the same format.'
         })
         setWarning(warning)
     }, [location, files])
@@ -38,12 +37,11 @@ const PhotometricForm = () => {
     const handleFileSelect = (event) => {
         const fileArray = Array.from(event.target.files)
         const files = []
-        setSortBy('')
         for (var i = 0; i < fileArray.length; i++) {
             const file = fileArray[i]
             const image = new Image()
             image.onload = function () {
-                files.push({ 
+                files.push({
                     image : this.src,
                     src: file,
                     width : this.width,
@@ -57,8 +55,8 @@ const PhotometricForm = () => {
                     setMaskOverlay(files[0])
                 }
                 if (files.length === fileArray.length) {
-                    setFiles(files)
-                    setSortBy('nameDesc')
+                    setFiles(sortFiles('nameDesc', files))
+                    //sortFiles('nameDesc')
                 }
             }
             image.i = i
@@ -74,13 +72,8 @@ const PhotometricForm = () => {
     const handleSave = (event) => {
         event.preventDefault()
         const name = event.target.name.value
-        
+
         dispatch(generateNormalMap(files, mask, name, navigate))
-            .then(() => { dispatch(notificationSet({ text: `a new image was uploaded`, type: 'success' }, 5)) })
-			.catch((exception) => {
-				console.log(exception)
-				dispatch(notificationSet({ text: exception.response && exception.response.data ? exception.response.data.error : 'An error occured', type: 'error' }, 5))
-			})
         setNameFormOpen(false)
     }
 
@@ -88,23 +81,24 @@ const PhotometricForm = () => {
         setNameFormOpen(false)
     }
 
-    useEffect(() => {
+    const sortFiles = (sortBy, files) => {
+        console.log(files)
         const sortedFiles = files.toSorted((a, b) => {
             switch(sortBy) {
-                case 'dateDesc':
-                    return a.src.lastModified < b.src.lastModified ? 1 : -1
-                case 'dateAsc':
-                    return a.src.lastModified > b.src.lastModified ? 1 : -1
-                case 'nameDesc':
-                    return a.src.name > b.src.name ? 1 : -1
-                case 'nameAsc':
-                    return a.src.name < b.src.name ? 1 : -1
-                default:
-                    return a.src.name > b.src.name ? 1 : -1
+            case 'dateDesc':
+                return a.src.lastModified < b.src.lastModified ? 1 : -1
+            case 'dateAsc':
+                return a.src.lastModified > b.src.lastModified ? 1 : -1
+            case 'nameDesc':
+                return a.src.name > b.src.name ? 1 : -1
+            case 'nameAsc':
+                return a.src.name < b.src.name ? 1 : -1
+            default:
+                return a.src.name > b.src.name ? 1 : -1
             }
         })
-        setFiles(sortedFiles)
-    }, [sortBy])
+        return sortedFiles
+    }
     return (
         <div>
             <h2 data-testid='photometric-title'>Select images:</h2>
@@ -126,33 +120,33 @@ const PhotometricForm = () => {
                 <Button data-testid='photometric-submit' type="submit" color="success" variant="outlined" disabled={warning !== ''}>Submit</Button>
             </form>
             <div>
-                { files.length > 0 
-                    ? <Select 
-                        value={sortBy}
+                { files.length > 0
+                    ? <Select
+                        defaultValue={'nameDesc'}
                         variant='standard'
-                        onChange={(e) => setSortBy(e.target.value)}
-                        >
-                            <MenuItem value='dateAsc'>Sort by date: Oldest first</MenuItem>
-                            <MenuItem value='dateDesc'>Sort by date: Newest first</MenuItem>
-                            <MenuItem value='nameDesc'>Sort by name: A-Z</MenuItem>
-                            <MenuItem value='nameAsc'>Sort by name: Z-A</MenuItem>
-                        </Select> 
-                    : null 
+                        onChange={(e) => setFiles(sortFiles(e.target.value, files))}
+                    >
+                        <MenuItem value='dateAsc'>Sort by date: Oldest first</MenuItem>
+                        <MenuItem value='dateDesc'>Sort by date: Newest first</MenuItem>
+                        <MenuItem value='nameDesc'>Sort by name: A-Z</MenuItem>
+                        <MenuItem value='nameAsc'>Sort by name: Z-A</MenuItem>
+                    </Select>
+                    : null
                 }
-                <Grid 
+                <Grid
                     container
                     spacing={2}
                     direction='columns'
-                    > 
+                >
                     {files.map((file) => {
                         return (
-                        <SourceImage 
-                            key={file.id}
-                            files={files}
-                            setFiles={setFiles}
-                            file={file}
+                            <SourceImage
+                                key={file.id}
+                                files={files}
+                                setFiles={setFiles}
+                                file={file}
                             />
-                    )})}
+                        )})}
                 </Grid>
             </div>
             <Mask setMask={setMask} maskOverlay={maskOverlay}/>
@@ -160,7 +154,7 @@ const PhotometricForm = () => {
                 open={nameFormOpen}
                 handleCancel={handleCancel}
                 handleSave={handleSave}
-                />
+            />
         </div>
     )
 }

@@ -1,4 +1,4 @@
-import { 
+import {
     Button,
     TextField,
     Grid,
@@ -15,7 +15,7 @@ import { useDispatch } from 'react-redux'
 import userService from '../services/users'
 import { Link } from 'react-router-dom'
 
-const EmailVerificationForm = ({open, setOpen, email, handleResend}) => {
+const EmailVerificationForm = ({ open, setOpen, email, handleResend }) => {
     return (
         <Dialog open={open}>
             <DialogTitle>A verfication link has been sent to your email</DialogTitle>
@@ -52,7 +52,7 @@ const CreateUser = () => {
             setOpenVerification(true)
         } catch (exception) {
             if (exception instanceof AxiosError) {
-                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occured.', type: 'error'}), 5)
+                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occured.', type: 'error' }), 5)
             } else {
                 throw exception
             }
@@ -67,7 +67,7 @@ const CreateUser = () => {
             })
         } catch (exception) {
             if (exception instanceof AxiosError) {
-                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occured.', type: 'error'}), 5)
+                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occured.', type: 'error' }), 5)
             } else {
                 throw exception
             }
@@ -95,7 +95,7 @@ const CreateUser = () => {
                     <TextField id='password2' label='Re-enter password' type='password' value={password2} onChange={(e) => setPassword2(e.target.value)}/>
                 </Grid>
             </Grid>
-            
+
             <Button variant='outlined' onClick={handleCreate}>Create user</Button>
             <EmailVerificationForm open={openVerification} setOpen={setOpenVerification} email={email} handleResend={handleResend}/>
         </Grid>

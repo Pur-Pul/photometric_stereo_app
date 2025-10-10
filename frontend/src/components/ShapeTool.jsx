@@ -1,5 +1,5 @@
 import { Dialog, DialogTitle, DialogActions, Button, IconButton, Grid } from '@mui/material'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import ToolButton from './ToolButton'
 import normal_sphere from '../static/normal_sphere.png'
@@ -10,7 +10,7 @@ import { fetchFlatImage, fetchPage } from '../reducers/normalMapReducer'
 const blackToTransparent = async (src, maxHeight) => {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    
+
     const image = new Image()
     image.src = src
     await image.decode()
@@ -37,16 +37,16 @@ const blackToTransparent = async (src, maxHeight) => {
     return canvas.toDataURL()
 }
 
-const Shape = ({shape, selectedShape, setSelectedShape, loading, setLoading, maxHeight}) => {
+const Shape = ({ shape, selectedShape, setSelectedShape, loading, setLoading, maxHeight }) => {
     const [selected, setSelected] = useState(false)
     const dispatch = useDispatch()
 
-    const loadImage = async () => {
+    const loadImage = useCallback(async () => {
         const src = await blackToTransparent(shape.flatImage.src, maxHeight)
-        setSelectedShape({...shape, flatImage: {...shape.flatImage, src }})
+        setSelectedShape({ ...shape, flatImage: { ...shape.flatImage, src } })
         setLoading(false)
         setSelected(false)
-    }
+    }, [maxHeight, setLoading, setSelectedShape, shape])
 
     const handleSelect = async () => {
         setLoading(true)
@@ -63,11 +63,11 @@ const Shape = ({shape, selectedShape, setSelectedShape, loading, setLoading, max
         if (loading && selected && shape.flatImage && shape.flatImage.src) {
             loadImage()
         }
-    }, [loading, selected, shape])
+    }, [loading, selected, shape, loadImage])
     return (
         <div>
-            <IconButton onClick={loading ? null : handleSelect} sx={loading ? {cursor: 'wait' } : {}}>
-                { shape.icon 
+            <IconButton onClick={loading ? null : handleSelect} sx={loading ? { cursor: 'wait' } : {}}>
+                { shape.icon
                     ? <img src={ shape.icon.src }/>
                     : 'no icon'
                 }
@@ -76,10 +76,11 @@ const Shape = ({shape, selectedShape, setSelectedShape, loading, setLoading, max
     )
 }
 
-const ShapeTool = ({currentTool, setTool, maxHeight}) => {
+const defaultShapes = [{ icon: { src: normal_sphere32 }, flatImage: { src: normal_sphere } }]
+
+const ShapeTool = ({ currentTool, setTool, maxHeight }) => {
     const [open, setOpen] = useState(false)
     const [selectedShape, setSelectedShape] = useState(null)
-    const defaultShapes = [{ icon: { src: normal_sphere32 }, flatImage: { src: normal_sphere }}]
     const [shapes, setShapes] = useState([])
     const [loading, setLoading] = useState(true)
     const normalMaps = useSelector((state) => state.normalMaps)
@@ -98,8 +99,8 @@ const ShapeTool = ({currentTool, setTool, maxHeight}) => {
     }, [normalMaps])
 
     const handleSelect = () => {
-        setTool({name: 'shape', shape: selectedShape})
-        setOpen(false)   
+        setTool({ name: 'shape', shape: selectedShape })
+        setOpen(false)
     }
     const handleLoad = () => {
         dispatch(fetchPage(Math.floor(normalMaps.filter(normalMap => normalMap.creator.id === loggedUser.id).length/10) + 1, 'private'))
@@ -108,14 +109,14 @@ const ShapeTool = ({currentTool, setTool, maxHeight}) => {
     return (
         <div>
             <div onClick={() => setOpen(true)}>
-                <ToolButton 
+                <ToolButton
                     toolName='shape'
                     currentTool={currentTool}
                     setTool={setTool}
                     icon={selectedShape && selectedShape.icon ? selectedShape.icon.src : 'none'}
-                    />
+                />
             </div>
-            <Dialog open={open} sx={loading ? {cursor: 'wait' } : {}} closeAfterTransition={false}>
+            <Dialog open={open} sx={loading ? { cursor: 'wait' } : {}} closeAfterTransition={false}>
                 <DialogTitle>Select a shape</DialogTitle>
                 <Grid container>
                     {shapes.map((shape, index) => <Shape
@@ -126,17 +127,17 @@ const ShapeTool = ({currentTool, setTool, maxHeight}) => {
                         loading={loading}
                         setLoading={setLoading}
                         maxHeight={maxHeight}
-                        />
-                        )}
+                    />
+                    )}
                     <Grid size={12}><Button variant='outlined' onClick={handleLoad}>Load more</Button></Grid>
                 </Grid>
                 <DialogActions>
-                    <Button variant='outlined' onClick={() => setOpen(false)} color='error' sx={loading ? {cursor: 'wait' } : {}} disabled={loading}>Cancel</Button>
-                    <Button variant='outlined' onClick={handleSelect} sx={loading ? {cursor: 'wait' } : {}} disabled={loading}>Select</Button>
+                    <Button variant='outlined' onClick={() => setOpen(false)} color='error' sx={loading ? { cursor: 'wait' } : {}} disabled={loading}>Cancel</Button>
+                    <Button variant='outlined' onClick={handleSelect} sx={loading ? { cursor: 'wait' } : {}} disabled={loading}>Select</Button>
                 </DialogActions>
             </Dialog>
         </div>
-        
+
     )
 }
 

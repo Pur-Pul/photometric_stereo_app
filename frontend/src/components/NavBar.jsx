@@ -1,17 +1,17 @@
-import { useNavigate } from "react-router-dom"
-import { useDispatch } from "react-redux"
+import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
 import { performLogout } from '../reducers/loginReducer'
-import { AppBar, Button, Toolbar, Box} from '@mui/material';
+import { AppBar, Button, Toolbar, Box } from '@mui/material'
 
 const NavBar = ({ paths }) => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
     const logoutHandler = (event) => {
-		event.preventDefault()
-		dispatch(performLogout())
+        event.preventDefault()
+        dispatch(performLogout())
         navigate('/')
-	}
+    }
 
     return (
         <AppBar position='static' sx={{ borderRadius: '5px' }}>
@@ -22,7 +22,7 @@ const NavBar = ({ paths }) => {
                         {paths[key]}
                     </Button>
                 })}
-                <Button sx={{ marginLeft: "auto" }} color="error" onClick={logoutHandler} data-testid='logout-button'>Logout</Button>
+                <Button sx={{ marginLeft: 'auto' }} color="error" onClick={logoutHandler} data-testid='logout-button'>Logout</Button>
             </Toolbar>
         </AppBar>
     )
