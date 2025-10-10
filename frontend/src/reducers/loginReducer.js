@@ -27,18 +27,27 @@ export const { loginUser, logoutUser } = loginSlice.actions
 
 export const performLogin = (credentials) => {
     return async (dispatch) => {
-
-        const response = await loginService.login(credentials)
-        window.localStorage.setItem('loggedUser', JSON.stringify(response))
-        dispatch(loginUser(response))
+        try {
+            const response = await loginService.login(credentials)
+            window.localStorage.setItem('loggedUser', JSON.stringify(response))
+            dispatch(loginUser(response))
+        } catch (exception) {
+            console.log(exception) //eslint-disable-line no-console
+            dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
+        }
     }
 }
 
 export const performLogout = () => {
     return async (dispatch) => {
-        const response = await loginService.logout()
-        window.localStorage.removeItem('loggedUser')
-        dispatch(logoutUser())
+        try {
+            await loginService.logout()
+            window.localStorage.removeItem('loggedUser')
+            dispatch(logoutUser())
+        } catch (exception) {
+            console.log(exception) //eslint-disable-line no-console
+            dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
+        }
     }
 }
 
@@ -47,7 +56,7 @@ export const performReLog = (user) => {
         try {
             await loginService.get()
         } catch(exception) {
-            if (exception.response.status === 401) {
+            if (exception?.response?.status === 401) {
                 dispatch(performLogout())
                 dispatch(notificationSet({ text: 'Session expired', type: 'error' }, 5))
             }

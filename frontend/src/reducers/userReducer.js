@@ -7,7 +7,6 @@ const userSlice = createSlice({
     name: 'user',
     initialState: [],
     reducers: {
-        appendUser(state, action) {},
         setUsers(state, action) {
             return action.payload
         },
@@ -31,7 +30,7 @@ const userSlice = createSlice({
     },
 })
 
-export const { appendUSer, setUsers, deleteUser, updateUser } =
+export const { setUsers, deleteUser, updateUser } =
 	userSlice.actions
 
 export const initializeUsers = () => {
@@ -48,8 +47,8 @@ export const performUserDelete = (user, password) => {
             await userService.remove(user.id)
             dispatch(deleteUser(user))
         } catch (exception) {
-            console.log(exception)
-            dispatch(notificationSet({ text: exception.response && exception.response.data.error ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+            console.log(exception) //eslint-disable-line no-console
+            dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
         }
     }
 }
@@ -61,8 +60,8 @@ export const performUserUpdate = (updatedUser, password) => {
             const returnedUser = await userService.update(updatedUser)
             dispatch(updateUser(returnedUser))
         } catch (exception) {
-            console.log(exception)
-            dispatch(notificationSet({ text: exception.response && exception.response.data.error ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+            console.log(exception) //eslint-disable-line no-console
+            dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
         }
     }
 }

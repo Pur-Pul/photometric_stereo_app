@@ -12,11 +12,8 @@ const internalRouter = require('./controllers/internal')
 
 const middleware = require('./utils/middleware')
 
-//expireNormalMaps()
-
 app.use(express.static('dist'))
 app.use(cors((req, callback) => {
-    //console.log(req)
     let options
     if (req.path.startsWith('/internal')) {
         options = { origin: config.PHOTOSTEREO_URI }

@@ -1,9 +1,8 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import SourceImage from './SourceImage'
 import NameForm from './NameForm'
 import { useDispatch } from 'react-redux'
 import { generateNormalMap } from '../reducers/normalMapReducer'
-import { notificationSet, notificationRemove } from '../reducers/notificationReducer'
 import Mask from './Mask'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -49,14 +48,12 @@ const PhotometricForm = () => {
                     light : [0,0,1],
                     id : this.i
                 })
-                console.log(file.name, this.i)
 
                 if (files.length === 1) {
                     setMaskOverlay(files[0])
                 }
                 if (files.length === fileArray.length) {
                     setFiles(sortFiles('nameDesc', files))
-                    //sortFiles('nameDesc')
                 }
             }
             image.i = i
@@ -82,7 +79,6 @@ const PhotometricForm = () => {
     }
 
     const sortFiles = (sortBy, files) => {
-        console.log(files)
         const sortedFiles = files.toSorted((a, b) => {
             switch(sortBy) {
             case 'dateDesc':

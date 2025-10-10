@@ -1,5 +1,4 @@
 import axios from 'axios'
-import notFound from '../static/normal_sphere.png'
 const baseUrl = '/api/normalMaps'
 
 let token = null
@@ -43,11 +42,6 @@ const postPhotostereo = async (data) => {
     return response.data
 }
 
-const update = async (image, id) => {
-    const response = await axios.put(`${baseUrl}/${id}`, image, getConfig())
-    return response.data
-}
-
 const remove = async (id) => {
     const response = await axios.delete(`${baseUrl}/${id}`, getConfig())
     return response.data
@@ -65,7 +59,6 @@ export default {
     post,
     put,
     postPhotostereo,
-    update,
     remove,
     setToken
 }

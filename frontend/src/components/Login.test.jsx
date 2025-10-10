@@ -73,20 +73,4 @@ describe("Login form", () => {
             {username: 'test', password: 'pass'}
         )
     })
-    test('If performLogin throws an error, notificationSet is called.', async () => {
-        render(
-            <Provider store={store}>
-                <Login/>
-            </Provider>
-        )
-        const user = userEvent.setup()
-        const loginButton = screen.getByTestId('login-button')
-        const loginUsername = screen.getByTestId('login-username')
-        const loginPassword = screen.getByTestId('login-password')
-        await user.type(loginUsername, 'incorrect')
-	    await user.type(loginPassword, 'incorrect')
-        await user.click(loginButton)
-        const { notificationSet } = await import('../reducers/notificationReducer')
-        expect(notificationSet).toHaveBeenCalledTimes(1)
-    })
 })

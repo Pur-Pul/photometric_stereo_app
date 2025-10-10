@@ -14,8 +14,8 @@ const VerifyUser = () => {
                 await userService.verify(token)
                 dispatch(notificationSet({ text: 'Verification succeeded', type: 'success' }), 5)
             } catch(exception) {
-                console.log(exception)
-                dispatch(notificationSet({ text: exception.response && exception.response.data ? exception.response.data.error : 'An error occoured', type: 'error' }), 5)
+                console.log(exception) //eslint-disable-line no-console
+                dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occoured', type: 'error' }), 5)
             }
             navigate('/')
         }

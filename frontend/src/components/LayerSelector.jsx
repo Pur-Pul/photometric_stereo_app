@@ -8,23 +8,17 @@ const LayerSelector = ({ layers, selectedLayer, setSelectedLayer, addLayer, remo
     const layerStyle = {
         width: '100%',
         height: '30px',
-        //backgroundColor: '#ffffff',
-        //border: '2px solid #1ae4f1',
         cursor: 'pointer',
 
     }
     const visibleStyle = {
         width: '20%',
         height: '30px',
-        //backgroundColor: '#5da1f6',
-        //border: '2px solid #1e7cf0ff',
         cursor: 'pointer'
     }
     const removeStyle = {
         width: '20%',
         height: '30px',
-        //backgroundColor: '#f76a6a',
-        //border: '2px solid #ff0000',
         cursor: 'pointer'
     }
     return (

@@ -3,9 +3,8 @@ const Image = require('../models/image')
 const NormalMap = require('../models/normalMap')
 const User = require('../models/user')
 const { EXPIRE_DELAY } = require('./config')
-const { info, error } = require('./logger')
+const { info } = require('./logger')
 const fs = require('fs')
-const path = require('path')
 
 const expireSession = async (id, force=false) => {
     const session = await Session.findById(id)
@@ -36,7 +35,7 @@ const expireNormalMap = async (id, force=false) => {
             const images = [...normalMap.layers]
             normalMap.icon ? images.push(normalMap.icon) : null
             normalMap.flatImage ? images.push(normalMap.flatImage) : null
-            
+
             for (var i=0; i < images.length; i++) {
                 const image = await Image.findById(images[i])
                 if (!image) { continue }
@@ -56,7 +55,7 @@ const expireNormalMap = async (id, force=false) => {
             info('Normal map', id, 'will be deleted in', expiration_time/1000, 'seconds.')
             setTimeout(async () => await expireNormalMap(id), expiration_time)
         }
-    } 
+    }
 }
 
 const expireNormalMaps = async () => {

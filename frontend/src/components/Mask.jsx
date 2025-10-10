@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
-import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
 import MaskEditor from './MaskEditor'
 
@@ -21,11 +20,9 @@ const Mask = ({ maskOverlay, setMask }) => {
     const [open, setOpen] = useState(false)
 
     useEffect(() => {
-        console.log(maskOverlay)
         if (maskOverlay) {
             const canvas = canvasRef.current
             const ctx = canvas.getContext('2d', { willReadFrequently: true })
-            const canvasAspect = maskOverlay.width/maskOverlay.height
             canvas.width = maskOverlay.width
             canvas.height = maskOverlay.height
             ctx.fillStyle = '#ffffff'

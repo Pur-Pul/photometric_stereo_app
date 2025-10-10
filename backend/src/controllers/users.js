@@ -40,7 +40,7 @@ usersRouter.get('/verify-email', middleware.tokenExtractor, async (request, resp
         const session = await Session.findOne({ token })
         const user = await User.findById(decodedToken.id)
         if (!session || !user.id) { return response.status(401).json({ error: 'token expired' }) }
-        
+
         session.updatedAt = new Date()
         await session.save()
 
@@ -49,7 +49,7 @@ usersRouter.get('/verify-email', middleware.tokenExtractor, async (request, resp
         await user.save()
 
         await expireSession(session.id, true)
-        
+
         response.status(200).end()
     } catch (exception) {
         next(exception)
@@ -73,20 +73,19 @@ usersRouter.post('/', async (request, response, next) => {
 
         const existing_user = await User.findOne({ username })
         if (existing_user) { throw new ValidationError('username already exists.') }
-        
+
         const savedUser = await user.save()
 
         const userForToken = { username: savedUser.username, id: savedUser.id }
         const token = jwt.sign(userForToken, process.env.SECRET)
-        const session = new Session({ userId: user.id, token})
+        const session = new Session({ userId: user.id, token })
         await session.save()
         expireSession(session.id)
-        
+
         sendEmail(email, 'Verify email', `
             Please click the following link to verify your email at the Normal map app.
             ${new URL(`/verify-user/${token}`, config.FRONTEND_URL)}
         `)
-        console.log(token)
 
         response.status(201).json(savedUser)
     } catch (exception) {
@@ -97,7 +96,7 @@ usersRouter.post('/', async (request, response, next) => {
 usersRouter.post('/resend-verification', async (request, response, next) => {
     const { username, email, password } = request.body
     try {
-        const user = await User.findOne({ $or: [{ username }, { email }]})
+        const user = await User.findOne({ $or: [{ username }, { email }] })
         const passwordCorrect = user === null
             ? false
             : await bcrypt.compare(password, user.passwordHash)
@@ -107,7 +106,6 @@ usersRouter.post('/resend-verification', async (request, response, next) => {
                 error: 'invalid username or password'
             })
         }
-        console.log(user)
         if (user.verified) { return response.status(409).json({ error: 'User is already verified' }) }
 
         let session = await Session.findOne({ userId: user.id })
@@ -116,7 +114,7 @@ usersRouter.post('/resend-verification', async (request, response, next) => {
         } else {
             const userForToken = { username: user.username, id: user.id }
             const token = jwt.sign(userForToken, process.env.SECRET)
-            session = new Session({ userId: user.id, token})
+            session = new Session({ userId: user.id, token })
         }
         await session.save()
 
@@ -137,13 +135,13 @@ usersRouter.put('/:id', middleware.userExtractor, async (request, response, next
         const isAdmin = request.user.role === 'admin'
         if (userToUpdate.id !== request.user.id && !isAdmin) { return response.status(403).end() }
 
-        const { 
+        const {
             username,
             name,
             role,
             normalMaps,
             password
-        } = request.body ? request.body : { 
+        } = request.body ? request.body : {
             username: null,
             name: null,
             role: null,
@@ -183,20 +181,10 @@ usersRouter.delete('/:id', middleware.userExtractor, async (request, response, n
         if (!userToDelete) { return response.status(404).end() }
         if (userToDelete.id !== request.user.id && request.user.role !== 'admin') { return response.status(403).end() }
 
-        //const { password } = request.body ? request.body : { password: null }
-        //if (!password) { return response.status(401).json({ error: 're-authentication required'}) }
-
-        //const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
-        //if (!passwordCorrect) { return response.status(401).json({ error: 'invalid password' }) }
-
-        //Delete all normal maps of the user
         const normalMapsToDelete = await NormalMap.find({ creator: userToDelete.id })
         for (var i = 0; i < normalMapsToDelete.length; i++) { await expireNormalMap(normalMapsToDelete[i].id, true) }
 
-        //Delete all sessions of the user
         await Session.deleteMany({ userId: userToDelete.id })
-        
-        //Delete the user
         await User.findByIdAndDelete(userToDelete.id)
         response.status(204).end()
     } catch (exception) {

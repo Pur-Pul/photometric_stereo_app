@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { performLogout } from '../reducers/loginReducer'
-import { AppBar, Button, Toolbar, Box } from '@mui/material'
+import { AppBar, Button, Toolbar } from '@mui/material'
 
 const NavBar = ({ paths }) => {
     const dispatch = useDispatch()

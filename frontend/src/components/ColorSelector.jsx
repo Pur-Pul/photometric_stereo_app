@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import {
     InputLabel,
     Dialog,
@@ -7,8 +7,6 @@ import {
     DialogContent,
     Typography,
     Button,
-    IconButton,
-    Grid,
     Tooltip
 } from '@mui/material'
 import normal_sphere from '../static/normal_sphere.png'

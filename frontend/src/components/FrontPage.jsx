@@ -1,6 +1,5 @@
 import {
     Typography,
-    IconButton,
     Grid,
     List,
     ListItem,
@@ -23,7 +22,6 @@ import Viewer3D from './Viewer3D'
 import pencil from '../static/pencil32.png'
 import pipette from '../static/pipette32.png'
 import eraser from '../static/eraser32.png'
-import normal_sphere from '../static/normal_sphere.png'
 import normal_sphere32 from '../static/normal_sphere32.png'
 import ColorSelector from './ColorSelector'
 import ShapeTool from './ShapeTool'
@@ -185,7 +183,6 @@ const EditorDescription = () => {
                         <ListItemIcon><img src={eraser}/></ListItemIcon>
                         <ListItemText>Eraser for erasing parts of the normal map.</ListItemText>
                     </ListItem>
-                    
                     <ListItemButton onClick={() => setShapeExpanded(!shapeExpanded)}>
                         <ListItemIcon><img src={''}/></ListItemIcon>
                         <ListItemText>Shape tool for placing other normal maps like stickers on the canvas.</ListItemText>
@@ -206,7 +203,6 @@ const EditorDescription = () => {
                         </ListItem>
 
                     </Collapse>
-                    
                     <ListItemButton onClick={() => setPickerExpanded(!pickerExpanded)}>
                         <ListItemIcon><img src={normal_sphere32}/></ListItemIcon>
                         <ListItemText>A color picker that that allows picking a color from a normal mapped sphere.</ListItemText>

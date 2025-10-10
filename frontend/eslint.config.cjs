@@ -67,10 +67,10 @@ module.exports = defineConfig([{
             after: true,
         }],
 
-        "no-console": 0,
+        "no-console": "error",
         "react/react-in-jsx-scope": "off",
         "react/prop-types": 0,
-        "no-unused-vars": 0,
+        "no-unused-vars": ["error", { "args": "none" }],
     },
 }, globalIgnores(["**/dist", "**/.eslintrc.cjs"]), globalIgnores([
     "**/node_modules",

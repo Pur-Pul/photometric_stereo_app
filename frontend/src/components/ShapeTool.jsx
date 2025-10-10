@@ -1,10 +1,9 @@
 import { Dialog, DialogTitle, DialogActions, Button, IconButton, Grid } from '@mui/material'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import ToolButton from './ToolButton'
 import normal_sphere from '../static/normal_sphere.png'
 import normal_sphere32 from '../static/normal_sphere32.png'
-import imageService from '../services/images'
 import { fetchFlatImage, fetchPage } from '../reducers/normalMapReducer'
 
 const blackToTransparent = async (src, maxHeight) => {
@@ -53,8 +52,6 @@ const Shape = ({ shape, selectedShape, setSelectedShape, loading, setLoading, ma
         setSelected(true)
         if (!shape.flatImage || !shape.flatImage.src) {
             dispatch(fetchFlatImage(shape))
-            //const originalSrc = await getSource(shape)
-            //src = await blackToTransparent(originalSrc, maxHeight)
         } else {
             loadImage()
         }

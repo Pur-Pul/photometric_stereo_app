@@ -189,7 +189,6 @@ describe('Color picker is functional.', () => {
         const picker = screen.getByTestId('pick-left')
         await user.click(picker)
         const canvas = screen.getByTestId('color-wheel-canvas')
-        //await user.click(canvas)
         await user.pointer({target: canvas, coords: {x: 100, y: 100}, keys: '[MouseLeft]'})
         const save = screen.getByTestId('save-color')
         await user.click(save)

@@ -3,7 +3,7 @@ const config = require('./utils/config')
 const logger = require('./utils/logger')
 const mongoose = require('mongoose')
 const { initDatabase } = require('./utils/tools')
-const { expireSessions, expireNormalMaps } = require('./utils/expiration_manager')
+const { expireSessions } = require('./utils/expiration_manager')
 
 logger.info(`connecting to ${config.MONGODB_URI}`)
 

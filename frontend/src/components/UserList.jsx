@@ -1,7 +1,6 @@
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { initializeUsers } from '../reducers/userReducer'
+import { useNavigate } from 'react-router-dom'
 import {
     Button,
     Table,
@@ -12,11 +11,9 @@ import {
     TableRow,
     TablePagination,
     TableSortLabel,
-    Box
 } from '@mui/material'
 
 const UserList = () => {
-    const dispatch = useDispatch()
     const navigate = useNavigate()
     const users = useSelector(state => state.users)
     const [page, setPage] = useState(0)
@@ -28,7 +25,6 @@ const UserList = () => {
     useEffect(() => {
         let sortedUsers = [...users.map(user => ({ ...user, numberOfMaps: user.normalMaps.length }))]
         sortedUsers.sort((a, b) => {
-            console.log(a, b, sort, sortBy)
             return sort === 'asc'
                 ? (a[sortBy] < b[sortBy] ? -1 : 1)
                 : (a[sortBy] < b[sortBy] ? 1 : -1)
@@ -53,7 +49,6 @@ const UserList = () => {
         }
         setSortBy(e.target.id)
     }
-    console.log(sortBy, sort)
     const headers = {
         username: 'Username',
         role: 'Role',

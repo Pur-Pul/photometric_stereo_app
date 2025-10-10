@@ -72,8 +72,6 @@ afterEach(async () => {
 after(async () => {
     await mongoose.connection.close()
     process.exit(0)
-    //await mongoose.connection.close()
-    //process.exit()
 })
 
 describe('user get', () => {
@@ -374,8 +372,6 @@ describe('user put', () => {
     test('successful put request updates username', async () => {
         let newUser = {
             username: 'updateduser',
-            //name: 'updated user',
-            //password: '',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
@@ -392,9 +388,7 @@ describe('user put', () => {
     })
     test('successful put request updates name', async () => {
         let newUser = {
-            //username: 'updateduser',
             name: 'updated user',
-            //password: '',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
@@ -411,10 +405,7 @@ describe('user put', () => {
     })
     test('successful put request updates role if requester is admin.', async () => {
         let newUser = {
-            //username: 'updateduser',
-            //name: 'updated user',
             role: 'admin',
-            //password: '',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
@@ -431,10 +422,7 @@ describe('user put', () => {
     })
     test('successful put request does not update role if requester is not admin.', async () => {
         let newUser = {
-            //username: 'updateduser',
-            //name: 'updated user',
             role: 'admin',
-            //password: '',
         }
         await api
             .put(`/api/users/${initialUsers[0].id}`)
@@ -451,9 +439,6 @@ describe('user put', () => {
     })
     test('successful put request updates password', async () => {
         let newUser = {
-            //username: 'updateduser',
-            //name: 'updated user',
-            //role: 'admin',
             password: 'newpass',
         }
         await api

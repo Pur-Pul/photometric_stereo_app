@@ -1,7 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit'
 import imageService from '../services/images'
 import { notificationSet } from './notificationReducer'
-import { useNavigate } from 'react-router-dom'
 import notFound from '../static/normal_sphere.png'
 import { AxiosError } from 'axios'
 
@@ -82,9 +81,7 @@ export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap,
 export const reFetchNormalMap = (normalMap) => {
     return async (dispatch) => {
         const rawNormalMap = await imageService.get(normalMap.id)
-        console.log(rawNormalMap)
         if (normalMap.updatedAt && normalMap.updatedAt === rawNormalMap.updatedAt) { return }
-        console.log('here')
         const [updatedNormalMap] = await reformatNormalMaps([rawNormalMap])
         dispatch(updateNormalMap(updatedNormalMap))
     }
@@ -105,7 +102,8 @@ export const fetchFlatImage = (normalMap) => {
             blob = await imageService.getFile(normalMap.id, normalMap.flatImage.id)
         } catch (exception) {
             if (exception instanceof AxiosError && exception.response.status === 404) {
-                console.log(exception)
+                console.log(exception) //eslint-disable-line no-console
+                dispatch(notificationSet({ text: 'Normal map image not found', type: 'error' }, 5))
                 const response = await fetch(notFound)
                 blob = await response.blob()
             } else {
@@ -125,7 +123,8 @@ export const fetchLayers = (normalMap) => {
                 blob = await imageService.getFile(normalMap.id, normalMap.layers[i].id)
             } catch (exception) {
                 if (exception instanceof AxiosError && exception.response.status === 404) {
-                    console.log(exception)
+                    console.log(exception) //eslint-disable-line no-console
+                    dispatch(notificationSet({ text: `Normal map layer ${i+1} not found`, type: 'error' }, 5))
                     const response = await fetch(notFound)
                     blob = await response.blob()
                 } else {
@@ -146,8 +145,8 @@ export const fetchPage = (page, category) => {
             dispatch(appendNormalMap(normalMaps))
         } catch (exception) {
             if (exception instanceof AxiosError) {
-                console.log(exception)
-                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+                console.log(exception) //eslint-disable-line no-console
+                dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
             } else {
                 throw exception
             }
@@ -174,8 +173,8 @@ export const generateNormalMap = (sourceFiles, mask, name, navigate) => {
             navigate(`/normal_map/${normalMaps[0].id}`)
         } catch (exception) {
             if (exception instanceof AxiosError) {
-                console.log(exception)
-                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+                console.log(exception) //eslint-disable-line no-console
+                dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
             } else {
                 throw exception
             }
@@ -203,8 +202,8 @@ export const performCreate = (blobs, name, navigate) => {
             navigate(`/normal_map/${newNormalMap.id}`)
         } catch (exception) {
             if (exception instanceof AxiosError) {
-                console.log(exception)
-                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+                console.log(exception) //eslint-disable-line no-console
+                dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
             } else {
                 throw exception
             }
@@ -215,18 +214,16 @@ export const performCreate = (blobs, name, navigate) => {
 export const performUpdate = (normalMap) => {
     return async (dispatch) => {
         try {
-            console.log(normalMap.layers)
             const data = new FormData()
             data.set('name', normalMap.name)
             data.set('visibility', normalMap.visibility)
             const newNormalMap = await imageService.put(data, normalMap.id)
             const normalMaps = await reformatNormalMaps([newNormalMap])
-            console.log(normalMaps[0].layers)
             dispatch(updateNormalMap(normalMaps[0]))
         } catch (exception) {
-            console.log(exception)
             if (exception instanceof AxiosError) {
-                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+                console.log(exception) //eslint-disable-line no-console
+                dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
             } else {
                 throw exception
             }
@@ -237,23 +234,20 @@ export const performUpdate = (normalMap) => {
 export const performLayerUpdate = (blobs, layers, id) => {
     return async (dispatch) => {
         try {
-            console.log(layers)
             const data = new FormData()
             blobs.forEach((blob, index) => {
                 const file = new File([blob], `layer-${index}.png`, { type: 'image/png' })
                 data.append('files', file, `layer-${index}.png`)
             })
             const newNormalMap = await imageService.put(data, id)
-            console.log(newNormalMap.layers)
-
             const normalMaps = await reformatNormalMaps([newNormalMap])
 
             dispatch(fetchLayers(normalMaps[0]))
             dispatch(notificationSet({ text: 'Normal map saved.', type: 'success' }, 5))
         } catch (exception) {
-            console.log(exception)
             if (exception instanceof AxiosError) {
-                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+                console.log(exception) //eslint-disable-line no-console
+                dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
             } else {
                 throw exception
             }
@@ -267,9 +261,9 @@ export const performRemove = (id) => {
             await imageService.remove(id)
             dispatch(deleteNormalMap(id))
         } catch (exception) {
-            console.log(exception)
             if (exception instanceof AxiosError) {
-                dispatch(notificationSet({ text: exception.response.data ? exception.response.data.error : 'An error occurred', type:'error' }, 5))
+                console.log(exception) //eslint-disable-line no-console
+                dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
             } else {
                 throw exception
             }

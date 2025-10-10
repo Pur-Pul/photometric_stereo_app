@@ -1,14 +1,13 @@
 const internalRouter = require('express').Router()
 const Image = require('../models/image')
 const NormalMap = require('../models/normalMap')
-const { expireNormalMap } = require('../utils/expiration_manager')
 const fs = require('fs')
 const path = require('path')
 const { createCanvas, loadImage } = require('canvas')
 
 internalRouter.put('/images/:id', async (request, response, next) => {
     try {
-        
+
         const normalMap = await NormalMap.findById(request.params.id)
         const imageFile = path.join(process.cwd(), `../output/${normalMap.id}-flat.png`)
         const iconFile = path.join(process.cwd(), `../output/${normalMap.id}-icon.png`)
@@ -49,7 +48,6 @@ internalRouter.put('/images/:id', async (request, response, next) => {
 
         normalMap.status = 'done'
         await normalMap.save()
-        //expireNormalMap(normalMap.id)
         response.status(201).end()
     } catch(exception) {
         next(exception)

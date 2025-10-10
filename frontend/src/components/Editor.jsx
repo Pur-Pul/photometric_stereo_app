@@ -23,7 +23,6 @@ const Editor = ({
     const [drawing, setDrawing] = useState(false)
     const [firstLoad, setFirstLoad] = useState(true)
     const [size, setSize] = useState(null)
-    const [canvasSize, setCanvasSize] = useState(null)
     const [scale, setScale] = useState([1,1])
 
     const ctxRef = useRef(null)
@@ -47,10 +46,6 @@ const Editor = ({
         const canvasSize = canvasAspect >= editorAspect
             ? [editorSize[0], editorSize[0] / canvasAspect]
             : [editorSize[1] * canvasAspect, editorSize[1]]
-
-
-        setCanvasSize(canvasSize)
-
 
         const canvas = canvasRef.current
         const cursorCanvas = cursorCanvasRef.current
@@ -114,9 +109,6 @@ const Editor = ({
 
         ctx.cursor.fillStyle = color
         ctx.cursor.strokeStyle = color
-
-
-        //ctx.cursor.moveTo(x,y)
         ctx.cursor.beginPath()
         switch(tool.name) {
         case 'eraser':
@@ -159,8 +151,6 @@ const Editor = ({
             }
 
             break
-        default:
-            console.log(`invalid tool: ${tool.name}`)
         }
         ctx.cursor.closePath()
     }
@@ -207,8 +197,6 @@ const Editor = ({
         case 'shape':
             setDrawing([x,y])
             break
-        default:
-            console.log(`Invalid tool: ${tool}`)
         }
     }
 

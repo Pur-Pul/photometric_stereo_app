@@ -37,7 +37,7 @@ Tests and linting can be run in the development environment
 ```
 #### Lint frontend
 ```bash
-    docker exec -it photostereo-front-dev npm run test
+    docker exec -it photostereo-front-dev npm run lint
 ```
 
 ## Production

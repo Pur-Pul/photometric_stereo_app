@@ -41,9 +41,8 @@ const LightDirSelector = ({ file, files, setFiles }) => {
             tempLight.z = Number(event.target.value)
             break
         default:
-            console.log(`invalid input component ${event.target.id}`)
+            return
         }
-        //tempLight = tempLight.normalize()
         setLightDir(tempLight)
 
     }

@@ -45,7 +45,6 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
         } else if (layerIndex < newState.length) {
             layer ? newState.splice(layerIndex, 1, layer) : newState.splice(layerIndex, 1)
         } else {
-            console.log('Editor state error')
             return
         }
 

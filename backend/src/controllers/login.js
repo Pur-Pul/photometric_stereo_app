@@ -4,7 +4,6 @@ const loginRouter = require('express').Router()
 const User = require('../models/user')
 const Session = require('../models/session')
 const middleware = require('../utils/middleware')
-const { EXPIRE_DELAY } = require('../utils/config')
 const { expireSession } = require('../utils/expiration_manager')
 
 loginRouter.post('/', async (request, response, next) => {
@@ -37,19 +36,21 @@ loginRouter.post('/', async (request, response, next) => {
 })
 
 loginRouter.post('/relog', middleware.userExtractor, async (request, response, next) => {
-    const { password } = request.body ? request.body : { password: null }
-    if (!password) { return response.status(401).json({ error: 'Password is required to re-authenticate.'}) }
+    try {
+        const { password } = request.body ? request.body : { password: null }
+        if (!password) { return response.status(401).json({ error: 'Password is required to re-authenticate.' }) }
 
-    const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
-    if (!passwordCorrect) { return response.status(401).json({ error: 'Re-authentication failed.' }) }
+        const passwordCorrect = await bcrypt.compare(password, request.user.passwordHash)
+        if (!passwordCorrect) { return response.status(401).json({ error: 'Re-authentication failed.' }) }
 
-    response.status(200).end()
+        response.status(200).end()
+    } catch (exception) {
+        next(exception)
+    }
 })
 
-loginRouter.get('/', middleware.userExtractor, async (request, response, next) => {
-    if (request.user) {
-        response.status(200).end()
-    }
+loginRouter.get('/', middleware.userExtractor, async (request, response) => {
+    response.status(200).end()
 })
 
 module.exports = loginRouter

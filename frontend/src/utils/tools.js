@@ -29,13 +29,8 @@ const hexToDecimal = (hex) => {
 
 export const hexToRGB = (hexColor) => {
     if (hexColor.length !== 7 || hexColor[0] !== '#') {throw Error(`Invalid hexadecimal color: ${hexColor}`)}
-    try {
-        const red = hexToDecimal(hexColor.substring(1, 3))
-        const green = hexToDecimal(hexColor.substring(3, 5))
-        const blue = hexToDecimal(hexColor.substring(5, 7))
-        return [red, green, blue]
-    } catch (e) {
-        console.log(e)
-        throw Error(`Invalid hexadecimal color: ${hexColor}`)
-    }
+    const red = hexToDecimal(hexColor.substring(1, 3))
+    const green = hexToDecimal(hexColor.substring(3, 5))
+    const blue = hexToDecimal(hexColor.substring(5, 7))
+    return [red, green, blue]
 }

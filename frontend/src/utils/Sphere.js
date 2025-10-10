@@ -21,9 +21,6 @@ class Sphere {
             new Vector3(-aspect,		0,                      -1).normalize(radius),
             new Vector3(-aspect,		0,			            1).normalize(radius)
         ]
-        //let sphere_i = [5,  1,  7,  10, 11, 9,  4,  2,  6,  8,  4,  2,  6,  8,  9,  5,  11, 10, 7,  1]
-        //let sphere_j = [11, 5,  1,  7,  10, 5,  11, 10, 7,  1,  9,  4,  2,  6,  8,  9,  4,  2,  6,  8]
-        //let sphere_k = [0,  0,  0,  0,  0,  1,  5,  11, 10, 7,  3,  3,  3,  3,  3,  4,  2,  6,  8,  9]
         let sphere_polygons = [
             new Polygon(base_vertices[5],base_vertices[11],base_vertices[0]),
             new Polygon(base_vertices[1],base_vertices[5],base_vertices[0]),
@@ -46,7 +43,6 @@ class Sphere {
             new Polygon(base_vertices[7],base_vertices[6],base_vertices[8]),
             new Polygon(base_vertices[1],base_vertices[8],base_vertices[9])
         ]
-        //console.log(sphere_polygons)
         for (var i = 0; i < depth; i++) {
             var _temp = []
             sphere_polygons.forEach((pol) => {
@@ -54,7 +50,6 @@ class Sphere {
             })
             sphere_polygons = _temp
         }
-        //console.log(sphere_polygons)
         let vertex_map = new Map()
         let vertices = []
         let sphere_i = []

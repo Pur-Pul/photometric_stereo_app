@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { Link } from 'react-router-dom'
 import NormalMapList from './NormalMapList'
 import {
     Button,

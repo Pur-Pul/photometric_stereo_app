@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
-import { performRemove, updateNormalMap, performUpdate, reFetchNormalMap, fetchFlatImage } from '../reducers/normalMapReducer'
+import { useEffect, useState } from 'react'
+import { performRemove, performUpdate, reFetchNormalMap, fetchFlatImage } from '../reducers/normalMapReducer'
 import {
     Button,
     Dialog,
@@ -33,7 +33,6 @@ const NormalMap = () => {
     useEffect(() => {
         let updateInterval
         const fetchUpdates = async () => {
-            console.log('fetching updates')
             dispatch(reFetchNormalMap(normalMap))
         }
         if (!normalMap) {

@@ -24,7 +24,6 @@ import eraser from '../static/eraser32.png'
 import ToolButton from './ToolButton'
 import ShapeTool from './ShapeTool'
 import NameForm from './NameForm'
-import imageService from '../services/images'
 
 const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const [pencilSize, setPencilSize] = useState(10)
@@ -52,7 +51,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
 
     const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
 
-    useEffect(() => { //Fetch the layers from the backend.
+    useEffect(() => {
         if (normalMap) { dispatch(fetchLayers(normalMap)) }
     }, [])
 
@@ -64,7 +63,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         }
     }, [normalMap])
 
-    useEffect(() => { //initialize editor state
+    useEffect(() => {
         if (initialLayers === null) { return }
         const editorState = [initialLayers.map(layer => { return { ...layer, visible: true }})]
         setEditorState(editorState)
@@ -131,7 +130,6 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         } else if (layerIndex < newState.length) {
             layer ? newState.splice(layerIndex, 1, layer) : newState.splice(layerIndex, 1)
         } else {
-            console.log('Editor state error')
             return
         }
 

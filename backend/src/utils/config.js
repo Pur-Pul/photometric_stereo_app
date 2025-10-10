@@ -1,23 +1,23 @@
 require('dotenv').config()
-const {error, info} = require('./logger')
+const { error } = require('./logger')
 const path = require('path')
 
 const getMongoURI = (node_env, uri) => {
     const parts = uri.split('?')
     const tail = parts.length > 1 ? `?${parts[1]}` : ''
     switch(node_env) {
-        case 'production':
-            return `${parts[0]}production${tail}`
-        case 'developement':
-            return `${parts[0]}dev${tail}`
-        case 'test':
-            return `${parts[0]}test${tail}`
-        default:
-            throw new Error(`Invalid NODE_ENV: ${node_env}. NODE_ENV needs to be 'production', 'developement' or 'test']`)
+    case 'production':
+        return `${parts[0]}production${tail}`
+    case 'developement':
+        return `${parts[0]}dev${tail}`
+    case 'test':
+        return `${parts[0]}test${tail}`
+    default:
+        throw new Error(`Invalid NODE_ENV: ${node_env}. NODE_ENV needs to be 'production', 'developement' or 'test']`)
     }
 }
 
-const { 
+const {
     BACK_PORT: PORT,
     PHOTOSTEREO_URI,
     EXPIRE_DELAY,

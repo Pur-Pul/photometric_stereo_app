@@ -18,7 +18,7 @@ const compileShader = (ctx, code, shaderType) => {
 
     if (!ctx.getShaderParameter(shader, ctx.COMPILE_STATUS)) {
         notificationSet({ text: 'Shader failed to compile', type: 'error' })
-        console.log(ctx.getShaderInfoLog(shader))
+        console.log(ctx.getShaderInfoLog(shader)) //eslint-disable-line no-console
         ctx.deleteShader(shader)
         return null
     }
@@ -36,7 +36,7 @@ const initShaders = (ctx) => {
 
     if(!ctx.getProgramParameter(program, ctx.LINK_STATUS)) {
         notificationSet('Shader failed to initialize.')
-        console.log(ctx.getProgramInfoLog(program))
+        console.log(ctx.getProgramInfoLog(program)) //eslint-disable-line no-console
         return null
     }
 

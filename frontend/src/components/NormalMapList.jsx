@@ -1,10 +1,9 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
     Button,
     Grid,
-    Typography,
     Card,
     CardHeader,
     CardContent

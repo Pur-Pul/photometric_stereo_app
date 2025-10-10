@@ -29,21 +29,21 @@ const sendEmail = async (address, subject, text) => {
     if (config.NODE_ENV === 'test' || config.EMAIL === undefined || config.EMAIL_PASS === undefined) {
         const testAccount = nodemailer.createTestAccount()
         const transporter = nodemailer.createTransport({
-            host: "smtp.ethereal.email",
+            host: 'smtp.ethereal.email',
             port: 587,
             secure: false,
             auth: {
-                user: testAccount.user, 
+                user: testAccount.user,
                 pass: testAccount.pass,
             },
         })
         const info = await transporter.sendMail({
-            from: "Normal map app <no-reply@example.com>",
+            from: 'Normal map app <no-reply@example.com>',
             to: address,
             subject,
             text,
         })
-        return info  
+        return info
     } else {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -66,4 +66,4 @@ const sendEmail = async (address, subject, text) => {
 module.exports = {
     initDatabase,
     sendEmail
-} 
+}

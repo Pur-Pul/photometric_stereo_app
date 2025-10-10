@@ -31,8 +31,6 @@ class PersistPlot extends React.Component {
                         if (dir.norm() !== 0) {
                             this.props.setLightDir(dir)
                         }
-                        //this.props.setPoint(new Vector3(e.points[0].x, e.points[0].y, e.points[0].z))
-                        //this.props.setSelection(-1)
                     }
                 }}
 

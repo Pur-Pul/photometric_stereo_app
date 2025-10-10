@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { performLogin } from '../reducers/loginReducer'
-import { notificationSet } from '../reducers/notificationReducer.js'
 import { useDispatch } from 'react-redux'
 import {
     Button,
@@ -18,19 +17,8 @@ const LoginForm = () => {
     const loginHandler = (event) => {
         event.preventDefault()
         dispatch(performLogin({ username: username, password: password }))
-            .then(() => {
-                setUsername('')
-                setPassword('')
-            })
-            .catch((exception) => {
-                console.log(exception)
-                dispatch(
-                    notificationSet(
-                        { text: exception.response ? exception.response.data.error : 'Unkown error', type: 'error' },
-                        5
-                    )
-                )
-            })
+        setUsername('')
+        setPassword('')
     }
 
     return (
