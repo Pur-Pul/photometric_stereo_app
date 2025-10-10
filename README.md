@@ -45,7 +45,7 @@ Tests and linting can be run in the development environment
 ### Cloudflare
 By default the production is set to use a cloudflare tunnel. 
 - A cloudflare tunnel needs to be created.
-- cloudflare-config.yml can be created using the [cloudflare-config.yml.template](cloudflare-config.yml.template). 
+- cloudflare-config.yml can be created using the [cloudflared-config.yml.template](cloudflared-config.yml.template). 
     - The tunnel id needs to be set.
     - Host name needs to be set
     - The cloudflare-config.yml.template is set to use credentials from cloudflare-credentials.json, which needs to be created.
