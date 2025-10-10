@@ -1,8 +1,12 @@
 import {
     Typography,
+    IconButton,
     Grid,
     List,
     ListItem,
+    ListItemIcon,
+    ListItemButton,
+    ListItemText,
     Card,
     CardContent,
     CardHeader,
@@ -16,6 +20,13 @@ import { Link } from 'react-router-dom'
 import normalLeaves from '../static/normal_leaves_1500x1000.png'
 import leaves from '../static/leaves_black_bg_1500x1000.png'
 import Viewer3D from './Viewer3D'
+import pencil from '../static/pencil32.png'
+import pipette from '../static/pipette32.png'
+import eraser from '../static/eraser32.png'
+import normal_sphere from '../static/normal_sphere.png'
+import normal_sphere32 from '../static/normal_sphere32.png'
+import ColorSelector from './ColorSelector'
+import ShapeTool from './ShapeTool'
 
 const PhotometricStereoDescription = () => {
     const [expanded, setExpanded] = useState(false)
@@ -148,6 +159,11 @@ const NormalMapDescription = () => {
 
 const EditorDescription = () => {
     const [expanded, setExpanded] = useState(false)
+    const [shapeExpanded, setShapeExpanded] = useState(false)
+    const [pickerExpanded, setPickerExpanded] = useState(false)
+    const [layerExpanded, setLayerExpanded] = useState(false)
+    const [leftColor, setLeftColor] = useState('#8080ff')
+    const [rightColor, setRightColor] = useState('#000000')
     return (
         <Card sx={{ maxWidth: 1080 }}>
             <CardHeader
@@ -155,9 +171,77 @@ const EditorDescription = () => {
                 subheader='Designed for easy creation of new normal maps'
             />
             <CardContent>
-                <Typography>
+                <Typography>The normal map editor features the following tools:</Typography>
+                <List component="nav">
+                    <ListItem>
+                        <ListItemIcon><img src={pencil}/></ListItemIcon>
+                        <ListItemText>Pencil with adjustable width.</ListItemText>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemIcon><img src={pipette}/></ListItemIcon>
+                        <ListItemText>Pipette which can be used to select a color from the normal map being edited.</ListItemText>
+                    </ListItem>
+                    <ListItem>
+                        <ListItemIcon><img src={eraser}/></ListItemIcon>
+                        <ListItemText>Eraser for erasing parts of the normal map.</ListItemText>
+                    </ListItem>
+                    
+                    <ListItemButton onClick={() => setShapeExpanded(!shapeExpanded)}>
+                        <ListItemIcon><img src={''}/></ListItemIcon>
+                        <ListItemText>Shape tool for placing other normal maps like stickers on the canvas.</ListItemText>
+                        { pickerExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
+                    </ListItemButton>
+                    <Collapse in={shapeExpanded} timeout="auto" unmountOnExit>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <ListItemText>The button below opens the shape picker</ListItemText>
+                        </ListItem>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <ShapeTool currentTool={{}} setTool={() => {}} maxHeight={Math.max(500, 500)}/>
+                        </ListItem>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <ListItemText>To use the shape tool in the editor draw a rectangle: First click and hold to select the first corner. Then drag and release to select the opposite corner of the shape. The normal map will be drawn to the canvas with the aspect ratio of the rectangle that was drawn.</ListItemText>
+                        </ListItem>
 
-                </Typography>
+                    </Collapse>
+                    
+                    <ListItemButton onClick={() => setPickerExpanded(!pickerExpanded)}>
+                        <ListItemIcon><img src={normal_sphere32}/></ListItemIcon>
+                        <ListItemText>A color picker that that allows picking a color from a normal mapped sphere.</ListItemText>
+                        { pickerExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
+                    </ListItemButton>
+
+                    <Collapse in={pickerExpanded} timeout="auto" unmountOnExit>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <ListItemText>The colored squares below can be clicked to select a color</ListItemText>
+                        </ListItem>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <ColorSelector
+                                leftColor={leftColor}
+                                rightColor={rightColor}
+                                setLeftColor={setLeftColor}
+                                setRightColor={setRightColor}
+                            />
+                        </ListItem>
+                    </Collapse>
+
+                    <ListItemButton onClick={() => setLayerExpanded(!layerExpanded)}>
+                        <ListItemIcon>{''}</ListItemIcon>
+                        <ListItemText>A layer selector</ListItemText>
+                        { pickerExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
+                    </ListItemButton>
+
+                    <Collapse in={layerExpanded} timeout="auto" unmountOnExit>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            Up to five layers can be used. Layers can be hidden by clicking the 👁 button. Or deleted by clicking the red X button.
+                        </ListItem>
+                    </Collapse>
+                </List>
             </CardContent>
             <CardActions>
                 <Button onClick={() => setExpanded(!expanded)}>

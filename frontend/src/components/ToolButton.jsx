@@ -31,7 +31,7 @@ const ToolButton = ({ toolName, currentTool, setTool, icon } ) => {
                         }
                     }}
                 >
-                    <img data-testid='tool-icon' src={icon} style={selected ? { filter: 'invert(100%)', width: '100%', height: '100%' } : {}}/>
+                    <img data-testid='tool-icon' src={icon} width='32px' height='32px' style={selected ? { filter: 'invert(100%)' } : {}}/>
                 </IconButton>
             </Tooltip>
         </div>

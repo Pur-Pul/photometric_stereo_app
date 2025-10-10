@@ -4,6 +4,8 @@ import {
     Dialog,
     DialogTitle,
     DialogActions,
+    DialogContent,
+    Typography,
     Button,
     IconButton,
     Grid,
@@ -131,6 +133,9 @@ const ColorSelector = ({ leftColor, rightColor, setLeftColor, setRightColor, ena
             </div>
             <Dialog open={enableColorWheel && (open==='left' || open==='right')} onClose={() => setOpen('')} closeAfterTransition={false} fullWidth maxWidth = 'xs'>
                 <DialogTitle>Pick a color</DialogTitle>
+                <DialogContent>
+                    <Typography>By clicking on the part of the sphere which matches the angle of the surface to be mapped, the appropriate normal encoded as a color is selected for the pencil.</Typography>
+                </DialogContent>
                 <ColorWheel
                     currentColor={ open==='left' ? leftColor : rightColor }
                     saveColor={ open==='left' ? setLeftColor : setRightColor }
