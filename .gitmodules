@@ -1,0 +1,3 @@
+[submodule "photostereo_server/photometric_stereo"]
+	path = photostereo_server/photometric_stereo
+	url = https://github.com/Pur-Pul/photometric_stereo.git

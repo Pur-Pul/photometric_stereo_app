@@ -1,4 +1,4 @@
-from photostereo import photometry
+from photometric_stereo.photostereo_py.script.photostereo import photometry
 import cv2 as cv
 import numpy as np
 import time, sys, os, re, requests
