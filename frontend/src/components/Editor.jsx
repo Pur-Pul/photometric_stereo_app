@@ -18,7 +18,8 @@ const Editor = ({
     layerIndex,
     updateEditorState,
     tool,
-    setTool
+    setTool,
+    editorSize
 }) => {
     const [drawing, setDrawing] = useState(false)
     const [firstLoad, setFirstLoad] = useState(true)
@@ -80,25 +81,17 @@ const Editor = ({
                 cursor: cursorCanvas.getContext('2d', { willReadFrequently: true }),
             }
 
-            calculateCanvasSize(size, [window.innerWidth, window.innerHeight * 0.8])
+            calculateCanvasSize(size, editorSize)
 
             ctxRef.current.picture.drawImage(image, 0, 0, canvasRef.current.width, canvasRef.current.height)
         }
     }
     image.src = src
     useEffect(() => {
-        if (size) {
-            const handleResize = () => {
-                calculateCanvasSize(size, [window.innerWidth, window.innerHeight * 0.8])
-            }
-            window.addEventListener('resize', handleResize)
-
-            return () => {
-                window.removeEventListener('resize', handleResize)
-            }
+        if (size && editorSize) {
+            calculateCanvasSize(size, editorSize)
         }
-
-    }, [size])
+    }, [size, editorSize])
 
     const draw = async (event) => {
         const x = event.nativeEvent.offsetX*scale[0]

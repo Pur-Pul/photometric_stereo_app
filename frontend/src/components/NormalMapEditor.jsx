@@ -45,6 +45,7 @@ const NormalMapEditor = ({ id, size, handleDiscard }) => {
     const [initialLayers,setInitialLayers] = useState(null)
 
     const [editorState, setEditorState] = useState(null)
+    const [editorSize, setEditorSize] = useState([window.innerWidth, window.innerHeight])
     const [editorCursor, setEditorCursor] = useState(0)
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -81,6 +82,17 @@ const NormalMapEditor = ({ id, size, handleDiscard }) => {
         setEditorState([initialLayers.map(layer => { return { ...layer, visible: true }})])
         setEditorCursor(0)
     }, [initialLayers, size])
+
+    useEffect(() => {
+        const handleResize = () => {
+            setEditorSize([window.innerWidth, window.innerHeight])
+        }
+        window.addEventListener('resize', handleResize)
+
+        return () => {
+            window.removeEventListener('resize', handleResize)
+        }
+    }, [])
 
     const editorToBlobs = async () => {
         const blobs = []
@@ -159,6 +171,7 @@ const NormalMapEditor = ({ id, size, handleDiscard }) => {
                             canvasRef={canvasRefs[index]}
                             layerIndex={index}
                             updateEditorState={updateEditorState}
+                            editorSize={editorSize}
                         />
                         : null
                 }

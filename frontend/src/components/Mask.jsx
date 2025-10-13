@@ -1,10 +1,5 @@
-import { useRef, useEffect, useState } from 'react'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import Button from '@mui/material/Button'
+import { useRef, useEffect } from 'react'
 import MaskEditor from './MaskEditor'
-
-
 
 const Mask = ({ maskOverlay, setMask }) => {
     const img = {
@@ -17,7 +12,6 @@ const Mask = ({ maskOverlay, setMask }) => {
 
     const canvasRef = useRef(null)
     const ctxRef = useRef(null)
-    const [open, setOpen] = useState(false)
 
     useEffect(() => {
         if (maskOverlay) {
@@ -47,11 +41,6 @@ const Mask = ({ maskOverlay, setMask }) => {
             { type: maskOverlay.src.type },
             maskOverlay.src.type
         )) })
-        setOpen(false)
-    }
-
-    const handleDiscard = () => {
-        setOpen(false)
     }
 
     return (
@@ -59,29 +48,11 @@ const Mask = ({ maskOverlay, setMask }) => {
             ? <div style={{ width:'500px', height: '100%' }}>
                 <h3>Mask</h3>
                 <canvas style={img} ref={canvasRef} />
-                {
-                    canvasRef.current
-                        ? <div>
-                            <Button onClick={ () => { setOpen(true) } } variant="outlined">Edit mask</Button>
-                            <Dialog
-                                id='maskEditor'
-                                open={ open }
-                                closeAfterTransition={false}
-                                fullWidth
-                                maxWidth = 'lg'
-                                slotProps={{ paper: { sx: { height: '80%' } } }}
-                            >
-                                <DialogTitle>Edit the mask</DialogTitle>
-                                <MaskEditor
-                                    size = { [canvasRef.current.width, canvasRef.current.height] }
-                                    maskCanvas = { canvasRef.current }
-                                    image= { maskOverlay.image }
-                                    handleSave={ handleSave }
-                                    handleDiscard={ handleDiscard }/>
-                            </Dialog>
-                        </div>
-                        : 'loading'
-                }
+                <MaskEditor
+                    maskCanvas = { canvasRef.current }
+                    image= { maskOverlay.image }
+                    handleSave={ handleSave }
+                />
             </div>
             : null
     )

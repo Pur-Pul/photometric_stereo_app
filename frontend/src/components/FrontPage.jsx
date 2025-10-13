@@ -187,7 +187,7 @@ const EditorDescription = () => {
                     <ListItemButton onClick={() => setShapeExpanded(!shapeExpanded)}>
                         <ListItemIcon><img src={shape}/></ListItemIcon>
                         <ListItemText>Shape tool for placing other normal maps like stickers on the canvas.</ListItemText>
-                        { pickerExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
+                        { shapeExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
                     </ListItemButton>
                     <Collapse in={shapeExpanded} timeout="auto" unmountOnExit>
                         <ListItem sx={{ pl: 6 }}>
