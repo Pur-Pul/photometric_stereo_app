@@ -38,7 +38,7 @@ const App = () => {
         if (user) {
             dispatch(performReLog())
         }
-    }, [user, location])
+    }, [user, location, dispatch])
 
     return (
         <div>

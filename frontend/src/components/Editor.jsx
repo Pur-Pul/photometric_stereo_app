@@ -192,7 +192,7 @@ const Editor = ({
             const hex = `#${red.length===1?`0${red}`:red}${green.length===1?`0${green}`:green}${blue.length===1?`0${blue}`:blue}`
             button === 0 ? setLeftColor(hex) : setRightColor(hex)
             setTool({ name:'pencil' })
-            return
+            break
         }
         case 'shape':
             setDrawing([x,y])
@@ -216,7 +216,7 @@ const Editor = ({
             image.src = tool.shape.flatImage.src
             await image.decode()
             ctx.picture.drawImage(image, drawing[0], drawing[1], x-drawing[0], y-drawing[1])
-            return
+            break
         }
         }
 

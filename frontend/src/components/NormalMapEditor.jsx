@@ -25,7 +25,7 @@ import ToolButton from './ToolButton'
 import ShapeTool from './ShapeTool'
 import NameForm from './NameForm'
 
-const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
+const NormalMapEditor = ({ id, size, handleDiscard }) => {
     const [pencilSize, setPencilSize] = useState(10)
     const [leftColor, setLeftColor] = useState('#8080ff')
     const [rightColor, setRightColor] = useState('#000000')
@@ -52,8 +52,8 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
     const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
 
     useEffect(() => {
-        if (normalMap) { dispatch(fetchLayers(normalMap)) }
-    }, [])
+        if (normalMap?.layers.every((layer) => layer.src === undefined)) { dispatch(fetchLayers(normalMap)) }
+    }, [normalMap, dispatch])
 
     useEffect(() => {
         if (normalMap && normalMap.layers && normalMap.layers.length > 0 && normalMap.layers[0].src) {
@@ -80,7 +80,7 @@ const NormalMapEditor = ({ id, size, layers, handleDiscard }) => {
         }
         setEditorState([initialLayers.map(layer => { return { ...layer, visible: true }})])
         setEditorCursor(0)
-    }, [initialLayers])
+    }, [initialLayers, size])
 
     const editorToBlobs = async () => {
         const blobs = []

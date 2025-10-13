@@ -45,10 +45,10 @@ Tests and linting can be run in the development environment
 ### Cloudflare
 By default the production is set to use a cloudflare tunnel. 
 - A cloudflare tunnel needs to be created.
-- cloudflare-config.yml can be created using the [cloudflared-config.yml.template](cloudflared-config.yml.template). 
+- cloudflared-config.yml can be created using the [cloudflared-config.yml.template](cloudflared-config.yml.template). 
     - The tunnel id needs to be set.
     - Host name needs to be set
-    - The cloudflare-config.yml.template is set to use credentials from cloudflare-credentials.json, which needs to be created.
+    - The cloudflared-config.yml.template is set to use credentials from cloudflared-credentials.json, which needs to be created.
 
 Instructions on how to create the tunnel, config and the credentials file can be found in [this guide](https://www.sambobb.com/posts/cloudflared-in-docker-compose/)
 

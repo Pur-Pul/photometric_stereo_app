@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react'
-import Dialog from '@mui/material/Dialog'
-import DialogTitle from '@mui/material/DialogTitle'
-import DialogActions from '@mui/material/DialogActions'
-import Button from '@mui/material/Button'
 import LightPlot from './LightPlot'
 import Vector3 from '../utils/Vector3'
+import {
+    TextField,
+    Alert,
+    Grid,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    Typography
+} from '@mui/material'
 
 const LightDirSelector = ({ file, files, setFiles }) => {
     const [open, setOpen] = useState(false)
@@ -53,36 +60,65 @@ const LightDirSelector = ({ file, files, setFiles }) => {
         if (document.getElementById('lightZ')) { document.getElementById('lightZ').value = lightDir.z }
 
     }, [lightDir])
-
     return (
         <div>
             <Button variant="outlined" onClick={() => { setOpen(true) }}>Edit light direction</Button>
             <Dialog open={ open } onClose={() => { setOpen(false) }} closeAfterTransition={false}>
                 <DialogTitle>Select light direction</DialogTitle>
                 <form onSubmit={handleSubmit}>
-                    <input id="lightX" type="number" max={1} min={-1} step={'any'}
-                        onBlur={handleLightChange}
-                        defaultValue={lightDir.x}
-                    />
-                    <input id="lightY" type="number" max={1} min={-1} step={'any'}
-                        onBlur={handleLightChange}
-                        defaultValue={lightDir.y}
-                    />
-                    <input id="lightZ" type="number" max={1} min={-1} step={'any'}
-                        onBlur={handleLightChange}
-                        defaultValue={lightDir.z}
-                    />
-
+                    <DialogContent>
+                        <Grid container columns={3} spacing={2}>
+                            <Grid size={3}>{ lightDir.norm() > 1.00001 || lightDir.norm() < 0.99999 ? <Alert severity='warning'>Vector is not normalized</Alert> : null }</Grid>
+                            <Grid size={1}>
+                                <TextField
+                                    id='lightX'
+                                    type="number"
+                                    label='X'
+                                    error={ lightDir.norm() > 1.00001 || lightDir.norm() < 0.99999 }
+                                    defaultValue={ lightDir.x }
+                                    slotProps={{ htmlInput : { min:-1, max:1, step: 'any' } }}
+                                    onBlur={ handleLightChange }
+                                />
+                            </Grid>
+                            <Grid size={1}>
+                                <TextField
+                                    id='lightY'
+                                    type="number"
+                                    label='Y'
+                                    error={ lightDir.norm() > 1.00001 || lightDir.norm() < 0.99999 }
+                                    defaultValue={ lightDir.y }
+                                    slotProps={{ htmlInput : { min:-1, max:1, step: 'any' } }}
+                                    onBlur={ handleLightChange }
+                                />
+                            </Grid>
+                            <Grid size={1}>
+                                <TextField
+                                    id='lightZ'
+                                    type="number"
+                                    label='Z'
+                                    error={ lightDir.norm() > 1.00001 || lightDir.norm() < 0.99999 }
+                                    defaultValue={ lightDir.z }
+                                    slotProps={{ htmlInput : { min:-1, max:1, step: 'any' } }}
+                                    onBlur={ handleLightChange }
+                                />
+                            </Grid>
+                            <Grid size={3}>
+                                <Typography>To pick a light direction write the components manually above or click on the blue sphere below.</Typography>
+                            </Grid>
+                            <Grid size={3}>
+                                <LightPlot
+                                    file = { file }
+                                    lightDir = { lightDir }
+                                    setLightDir = { setLightDir }
+                                />
+                            </Grid>
+                        </Grid>
+                    </DialogContent>
                     <DialogActions>
                         <Button onClick={ () => { setOpen(false) } }>Cancel</Button>
                         <Button type="submit">Save</Button>
                     </DialogActions>
                 </form>
-                <LightPlot
-                    file = { file }
-                    lightDir = { lightDir }
-                    setLightDir = { setLightDir }
-                />
             </Dialog>
         </div>
     )

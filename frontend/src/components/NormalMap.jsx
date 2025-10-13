@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux'
 import { useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { performRemove, performUpdate, reFetchNormalMap, fetchFlatImage } from '../reducers/normalMapReducer'
 import {
     Button,
@@ -19,16 +19,17 @@ import Viewer3D from './Viewer3D'
 
 const NormalMap = () => {
     const dispatch = useDispatch()
+    const navigate = useNavigate()
     const id = useParams().id
     const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
     const [open, setOpen ] = useState(false)
     const [edit, setEdit] = useState(false)
     const [size, setSize] = useState(null)
-    const navigate = useNavigate()
-    const [flatImage, setFlatImage] = useState(null)
+
     const [visibiliy, setVisibility] = useState(normalMap ? normalMap.visibility : 'private')
     const [visAlertOpen, setVisAlertOpen] = useState(false)
 
+    const flatImageRef = useRef(null)
 
     useEffect(() => {
         let updateInterval
@@ -40,7 +41,7 @@ const NormalMap = () => {
             clearInterval(updateInterval)
 
         } else {
-            if (!flatImage) { updateInterval = setInterval(() => fetchUpdates(), 3000) }
+            if (!flatImageRef.current) { updateInterval = setInterval(() => fetchUpdates(), 3000) }
             if (normalMap.status === 'done' && !normalMap.flatImage.src) { dispatch(fetchFlatImage(normalMap)) }
             if (normalMap.flatImage && normalMap.flatImage.src) {
                 const flatImage = new Image()
@@ -54,16 +55,14 @@ const NormalMap = () => {
 
                     const ctx = canvas.getContext('2d', { willReadFrequently: true })
                     ctx.drawImage(this, 0, 0, this.width, this.height)
-                    setFlatImage(this)
+                    flatImageRef.current = this
                     clearInterval(updateInterval)
                 }
                 flatImage.src = normalMap.flatImage.src
             }
             setVisibility(normalMap.visibility)
         }
-
-        return () => { clearInterval(updateInterval) }
-    }, [normalMap])
+    }, [normalMap, id, dispatch])
 
     const deleteHandler = async (event) => {
         dispatch(performRemove(id))
@@ -78,10 +77,10 @@ const NormalMap = () => {
     if (size && edit) {
         return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/> }
     if (!normalMap) { return 'Oops! Normal map does not exist.' }
-    if (!flatImage) { return 'Loading' }
+    if (!flatImageRef.current) { return 'Loading' }
     return <div>
         <div>
-            <img src={flatImage.src} style={{
+            <img src={flatImageRef.current.src} style={{
                 width: '100%',
                 maxWidth: '720px',
                 height: '100%',
@@ -93,7 +92,7 @@ const NormalMap = () => {
         <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
         <Button type='label' variant='outlined' onClick={() => {
             const link = document.createElement('a')
-            link.href = flatImage.src
+            link.href = flatImageRef.current.src
             link.download = 'normalmap.png'
             link.click()
         }}>Download</Button>
@@ -110,7 +109,7 @@ const NormalMap = () => {
                 <MenuItem value='public'>Public</MenuItem>
             </Select>
         </FormControl>
-        { flatImage ? <Viewer3D image={flatImage} /> : null }
+        { flatImageRef.current ? <Viewer3D image={flatImageRef.current} /> : null }
         <Dialog open={open} onClose={ () => setOpen(false) } closeAfterTransition={false}>
             <DialogTitle>Are you sure you want to delete the normal map?</DialogTitle>
             <DialogActions>

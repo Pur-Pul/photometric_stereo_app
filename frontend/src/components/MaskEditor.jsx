@@ -35,7 +35,7 @@ const MaskEditor = ({ size, image, maskCanvas, handleSave, handleDiscard }) => {
     useEffect(() => {
         setEditorState([[{ visible: true, src: maskCanvas.toDataURL() }]])
         setEditorCursor(0)
-    }, [])
+    }, [maskCanvas])
 
     const updateEditorState = (layerIndex, layer) => {
         const currentState = editorState.slice(0, editorCursor+1)

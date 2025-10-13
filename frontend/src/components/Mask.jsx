@@ -37,7 +37,7 @@ const Mask = ({ maskOverlay, setMask }) => {
         } else {
             setMask(null)
         }
-    }, [maskOverlay])
+    }, [maskOverlay, setMask])
 
     const handleSave = (editorCanvas) => {
         ctxRef.current.drawImage(editorCanvas, 0, 0, canvasRef.current.width, canvasRef.current.height)

@@ -11,6 +11,7 @@ import {
 import NewNormalMapForm from './NewNormalMapForm'
 import { Alert } from '@mui/material'
 import { fetchPage } from '../reducers/normalMapReducer'
+import shape from '../static/shape32.png'
 
 
 const NormalMapLink = ({ normalMap }) => {
@@ -21,8 +22,22 @@ const NormalMapLink = ({ normalMap }) => {
             data-testid={`normal-map-${normalMap.id}`}
             variant='outlined'
         >
-            <div>
-                { normalMap.icon ? <img src={normalMap.icon.src}/> : null }
+            <div style={{ display: 'grid' }}>
+                <img src={ normalMap?.icon?.src ?? shape } width='64px' style={{ gridColumnStart: 1, gridRowStart: 1 }}/>
+                { normalMap?.icon?.src
+                    ? null
+                    : <div style={{
+                        gridColumnStart: 1,
+                        gridRowStart: 1,
+                        textAlign: 'center',
+                        verticalAlign: 'middle',
+                        lineHeight: '64px',
+                        fontSize: '9px',
+                        color: '#ffffff'
+                    }}>
+                        No icon
+                    </div>
+                }
                 <div>{ normalMap.name }</div>
             </div>
         </Button>

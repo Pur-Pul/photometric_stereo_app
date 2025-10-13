@@ -14,7 +14,7 @@ const ManualOptions = ({ width, height, setWidth, setHeight, setReady }) => {
         } else {
             setReady(false)
         }
-    }, [width, height])
+    }, [width, height, setReady])
 
     return (
         <Grid container spacing={1}>

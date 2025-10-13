@@ -1,10 +1,11 @@
-import { Dialog, DialogTitle, DialogActions, Button, IconButton, Grid } from '@mui/material'
-import { useState, useEffect, useCallback } from 'react'
+import { Dialog, DialogTitle, DialogActions, Button, Grid } from '@mui/material'
+import { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import ToolButton from './ToolButton'
 import normal_sphere from '../static/normal_sphere.png'
 import normal_sphere32 from '../static/normal_sphere32.png'
 import { fetchFlatImage, fetchPage } from '../reducers/normalMapReducer'
+import shape32 from '../static/shape32.png'
 
 const blackToTransparent = async (src, maxHeight) => {
     const canvas = document.createElement('canvas')
@@ -37,38 +38,50 @@ const blackToTransparent = async (src, maxHeight) => {
 }
 
 const Shape = ({ shape, selectedShape, setSelectedShape, loading, setLoading, maxHeight }) => {
-    const [selected, setSelected] = useState(false)
     const dispatch = useDispatch()
-
-    const loadImage = useCallback(async () => {
-        const src = await blackToTransparent(shape.flatImage.src, maxHeight)
-        setSelectedShape({ ...shape, flatImage: { ...shape.flatImage, src } })
-        setLoading(false)
-        setSelected(false)
-    }, [maxHeight, setLoading, setSelectedShape, shape])
-
     const handleSelect = async () => {
+        if (shape.flatImage === undefined) {
+            return
+        }
+
         setLoading(true)
-        setSelected(true)
-        if (!shape.flatImage || !shape.flatImage.src) {
+        setSelectedShape(shape)
+
+        if (!shape?.flatImage?.src) {
             dispatch(fetchFlatImage(shape))
-        } else {
-            loadImage()
         }
     }
+
     useEffect(() => {
-        if (loading && selected && shape.flatImage && shape.flatImage.src) {
-            loadImage()
+        if (loading && selectedShape.id === shape.id && shape?.flatImage?.src) {
+            setSelectedShape(shape)
         }
-    }, [loading, selected, shape, loadImage])
+    }, [loading, shape, selectedShape, setSelectedShape])
+
     return (
         <div>
-            <IconButton onClick={loading ? null : handleSelect} sx={loading ? { cursor: 'wait' } : {}}>
-                { shape.icon
-                    ? <img src={ shape.icon.src }/>
-                    : 'no icon'
-                }
-            </IconButton>
+            <Button
+                onClick={loading ? null : handleSelect}
+                sx={{ cursor: loading ? 'wait' : 'pointer', border: selectedShape.id === shape.id ? 'solid black 1px' : '' }}>
+                <div style={{ display: 'grid' }}>
+                    <img src={ shape?.icon?.src ?? shape32 } width='64px' style={{ gridColumnStart: 1, gridRowStart: 1 }}/>
+                    {
+                        shape?.icon?.src
+                            ? null
+                            : <div style={{
+                                gridColumnStart: 1,
+                                gridRowStart: 1,
+                                textAlign: 'center',
+                                verticalAlign: 'middle',
+                                lineHeight: '64px',
+                                fontSize: '9px',
+                                color: '#ffffff'
+                            }}>
+                                No icon
+                            </div>
+                    }
+                </div>
+            </Button>
         </div>
     )
 }
@@ -103,6 +116,18 @@ const ShapeTool = ({ currentTool, setTool, maxHeight }) => {
         dispatch(fetchPage(Math.floor(normalMaps.filter(normalMap => normalMap.creator.id === loggedUser.id).length/10) + 1, 'private'))
         dispatch(fetchPage(Math.floor(normalMaps.filter(normalMap => normalMap.creator.id !== loggedUser.id).length/10) + 1, 'public'))
     }
+
+    useEffect(() => {
+        const loadImage = async () => {
+            const src = await blackToTransparent(selectedShape.flatImage.src, maxHeight)
+            setSelectedShape({ ...selectedShape, flatImage: { ...selectedShape.flatImage, src } })
+            setLoading(false)
+        }
+        if (loading && selectedShape?.flatImage?.src) {
+            loadImage()
+        }
+    }, [selectedShape, maxHeight, loading, setLoading])
+
     return (
         <div>
             <div onClick={() => setOpen(true)}>
@@ -110,7 +135,7 @@ const ShapeTool = ({ currentTool, setTool, maxHeight }) => {
                     toolName='shape'
                     currentTool={currentTool}
                     setTool={setTool}
-                    icon={selectedShape && selectedShape.icon ? selectedShape.icon.src : 'none'}
+                    icon={selectedShape && selectedShape.icon ? selectedShape.icon.src : shape32}
                 />
             </div>
             <Dialog open={open} sx={loading ? { cursor: 'wait' } : {}} closeAfterTransition={false}>

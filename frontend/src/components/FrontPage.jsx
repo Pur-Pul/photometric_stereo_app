@@ -22,6 +22,7 @@ import Viewer3D from './Viewer3D'
 import pencil from '../static/pencil32.png'
 import pipette from '../static/pipette32.png'
 import eraser from '../static/eraser32.png'
+import shape from '../static/shape32.png'
 import normal_sphere32 from '../static/normal_sphere32.png'
 import ColorSelector from './ColorSelector'
 import ShapeTool from './ShapeTool'
@@ -184,7 +185,7 @@ const EditorDescription = () => {
                         <ListItemText>Eraser for erasing parts of the normal map.</ListItemText>
                     </ListItem>
                     <ListItemButton onClick={() => setShapeExpanded(!shapeExpanded)}>
-                        <ListItemIcon><img src={''}/></ListItemIcon>
+                        <ListItemIcon><img src={shape}/></ListItemIcon>
                         <ListItemText>Shape tool for placing other normal maps like stickers on the canvas.</ListItemText>
                         { pickerExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
                     </ListItemButton>
@@ -199,7 +200,11 @@ const EditorDescription = () => {
                         </ListItem>
                         <ListItem sx={{ pl: 6 }}>
                             <ListItemIcon>{'>'}</ListItemIcon>
-                            <ListItemText>To use the shape tool in the editor draw a rectangle: First click and hold to select the first corner. Then drag and release to select the opposite corner of the shape. The normal map will be drawn to the canvas with the aspect ratio of the rectangle that was drawn.</ListItemText>
+                            <ListItemText>
+                                To use the shape tool in the editor draw a rectangle: First click and hold to select the first corner.
+                                Then drag and release to select the opposite corner of the shape.
+                                The normal map will be drawn to the canvas with the aspect ratio of the rectangle that was drawn.
+                            </ListItemText>
                         </ListItem>
 
                     </Collapse>
@@ -234,7 +239,10 @@ const EditorDescription = () => {
                     <Collapse in={layerExpanded} timeout="auto" unmountOnExit>
                         <ListItem sx={{ pl: 6 }}>
                             <ListItemIcon>{'>'}</ListItemIcon>
-                            Up to five layers can be used. Layers can be hidden by clicking the 👁 button. Or deleted by clicking the red X button.
+                            <ListItemText>
+                                Up to five layers can be used.
+                                Layers can be hidden by clicking the 👁 button or deleted by clicking the red X button.
+                            </ListItemText>
                         </ListItem>
                     </Collapse>
                 </List>
