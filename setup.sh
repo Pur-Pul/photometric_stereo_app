@@ -5,7 +5,7 @@ PROJECT_NAME="photometric_stereo_app"
 
 echo "Starting rebuild for project: $PROJECT_NAME"
 
-SERVICES=$(docker compose -p "$PROJECT_NAME" ps --services 2>/dev/null || true)
+SERVICES=$(docker compose -p "$PROJECT_NAME" config --services)
 
 if [[ -n "$SERVICES" ]]; then
     echo "Removing all service containers (and their anonymous volumes)..."

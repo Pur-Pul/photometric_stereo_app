@@ -3,6 +3,7 @@ import loginService from '../services/login'
 import imageService from '../services/images'
 import userService from '../services/users'
 import { notificationSet } from './notificationReducer'
+import { AxiosError } from 'axios'
 
 const loginSlice = createSlice({
     name: 'login',
