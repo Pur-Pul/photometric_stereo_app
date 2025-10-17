@@ -32,6 +32,9 @@ export const performLogin = (credentials) => {
             window.localStorage.setItem('loggedUser', JSON.stringify(response))
             dispatch(loginUser(response))
         } catch (exception) {
+            if (exception instanceof AxiosError && exception.response.status === 401) {
+                window.localStorage.removeItem('loggedUser')
+            }
             console.log(exception) //eslint-disable-line no-console
             dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
         }
@@ -45,6 +48,9 @@ export const performLogout = () => {
             window.localStorage.removeItem('loggedUser')
             dispatch(logoutUser())
         } catch (exception) {
+            if (exception instanceof AxiosError && exception.response.status === 401) {
+                window.localStorage.removeItem('loggedUser')
+            }
             console.log(exception) //eslint-disable-line no-console
             dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
         }
@@ -56,7 +62,7 @@ export const performReLog = (user) => {
         try {
             await loginService.get()
         } catch(exception) {
-            if (exception?.response?.status === 401) {
+            if (exception instanceof AxiosError && exception.response.status === 401) {
                 dispatch(performLogout())
                 dispatch(notificationSet({ text: 'Session expired', type: 'error' }, 5))
             }
