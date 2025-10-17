@@ -12,6 +12,7 @@ import {
     MenuItem,
     Alert
 } from '@mui/material'
+import { PhotometricStereoDescription } from './FrontPage'
 
 const PhotometricForm = () => {
     const location = useLocation()
@@ -146,6 +147,7 @@ const PhotometricForm = () => {
                 </Grid>
             </div>
             <Mask setMask={setMask} maskOverlay={maskOverlay}/>
+            <PhotometricStereoDescription />
             <NameForm
                 open={nameFormOpen}
                 handleCancel={handleCancel}

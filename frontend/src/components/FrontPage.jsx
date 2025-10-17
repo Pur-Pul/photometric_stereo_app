@@ -23,11 +23,13 @@ import pencil from '../static/pencil32.png'
 import pipette from '../static/pipette32.png'
 import eraser from '../static/eraser32.png'
 import shape from '../static/shape32.png'
+import layers32 from '../static/layers32.png'
 import normal_sphere32 from '../static/normal_sphere32.png'
 import ColorSelector from './ColorSelector'
 import ShapeTool from './ShapeTool'
+import LayerSelector from './LayerSelector'
 
-const PhotometricStereoDescription = () => {
+export const PhotometricStereoDescription = () => {
     const [expanded, setExpanded] = useState(false)
     return (
         <Card sx={{ maxWidth: 1080 }}>
@@ -42,7 +44,7 @@ const PhotometricStereoDescription = () => {
                     By specifying the direction of the light in each image the alogrithm calculates the surface normals for each pixel in the resulting image.
                 </Typography>
                 <Typography>
-                    The photometric stereo script used in this application was created by visiont3lab and taken from: <Link to='https://github.com/visiont3lab/photometric_stereo'>https://github.com/visiont3lab/photometric_stereo</Link>
+                    The photometric stereo script used in this application was created by visiont3lab and taken from: <a href='https://github.com/visiont3lab/photometric_stereo'>https://github.com/visiont3lab/photometric_stereo</a>
                 </Typography>
             </CardContent>
             <CardActions>
@@ -139,15 +141,21 @@ const NormalMapDescription = () => {
                     <Typography>
                         Below is a normalmap of a branch of leaves.
                     </Typography>
+                </CardContent>
+                <CardContent>
                     <CardMedia
                         component='img'
                         image={normalLeaves}
                     />
+                </CardContent>
+                <CardContent>
                     <Typography>
                         The black part of the normal map is what has been masked out and will be transparent when rendered.
-                        By clicking the button below you can preview how this normal maps is rendered.
+                        By clicking the button below you can preview how this normal map is rendered when mapped to a sphere.
                         The preview can be rotated with a mouse.
                     </Typography>
+                </CardContent>
+                <CardContent>
                     { normalMap && texture ? <Viewer3D image={normalMap} texture={texture} simple/> : null }
                 </CardContent>
             </Collapse>
@@ -157,12 +165,13 @@ const NormalMapDescription = () => {
 }
 
 const EditorDescription = () => {
-    const [expanded, setExpanded] = useState(false)
     const [shapeExpanded, setShapeExpanded] = useState(false)
     const [pickerExpanded, setPickerExpanded] = useState(false)
     const [layerExpanded, setLayerExpanded] = useState(false)
     const [leftColor, setLeftColor] = useState('#8080ff')
     const [rightColor, setRightColor] = useState('#000000')
+    const [layers, setLayers] = useState([{ visible: true }])
+    const [selectedLayer, setSelectedLayer] = useState(0)
     return (
         <Card sx={{ maxWidth: 1080 }}>
             <CardHeader
@@ -186,10 +195,14 @@ const EditorDescription = () => {
                     </ListItem>
                     <ListItemButton onClick={() => setShapeExpanded(!shapeExpanded)}>
                         <ListItemIcon><img src={shape}/></ListItemIcon>
-                        <ListItemText>Shape tool for placing other normal maps like stickers on the canvas.</ListItemText>
+                        <ListItemText sx={{ width: '100%' }}>Shape tool for placing other normal maps like stickers on the canvas.</ListItemText>
                         { shapeExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
                     </ListItemButton>
                     <Collapse in={shapeExpanded} timeout="auto" unmountOnExit>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <ListItemText>Black parts of the selected shape is made transparent when using the shape tool.</ListItemText>
+                        </ListItem>
                         <ListItem sx={{ pl: 6 }}>
                             <ListItemIcon>{'>'}</ListItemIcon>
                             <ListItemText>The button below opens the shape picker</ListItemText>
@@ -210,11 +223,17 @@ const EditorDescription = () => {
                     </Collapse>
                     <ListItemButton onClick={() => setPickerExpanded(!pickerExpanded)}>
                         <ListItemIcon><img src={normal_sphere32}/></ListItemIcon>
-                        <ListItemText>A color picker that that allows picking a color from a normal mapped sphere.</ListItemText>
+                        <ListItemText sx={{ width: '100%' }}>A color picker that that allows picking a color from a normal mapped sphere.</ListItemText>
                         { pickerExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
                     </ListItemButton>
 
                     <Collapse in={pickerExpanded} timeout="auto" unmountOnExit>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <ListItemText>
+                                By clicking on the part of the sphere which matches the angle of the surface to be mapped, the appropriate normal encoded as a color is selected for the pencil.
+                            </ListItemText>
+                        </ListItem>
                         <ListItem sx={{ pl: 6 }}>
                             <ListItemIcon>{'>'}</ListItemIcon>
                             <ListItemText>The colored squares below can be clicked to select a color</ListItemText>
@@ -231,9 +250,9 @@ const EditorDescription = () => {
                     </Collapse>
 
                     <ListItemButton onClick={() => setLayerExpanded(!layerExpanded)}>
-                        <ListItemIcon>{''}</ListItemIcon>
-                        <ListItemText>A layer selector</ListItemText>
-                        { pickerExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
+                        <ListItemIcon><img src={layers32}/></ListItemIcon>
+                        <ListItemText sx={{ width: '100%' }}>A layer selector</ListItemText>
+                        { layerExpanded ? <ListItemText>Λ</ListItemText> : <ListItemText>V</ListItemText> }
                     </ListItemButton>
 
                     <Collapse in={layerExpanded} timeout="auto" unmountOnExit>
@@ -244,22 +263,34 @@ const EditorDescription = () => {
                                 Layers can be hidden by clicking the 👁 button or deleted by clicking the red X button.
                             </ListItemText>
                         </ListItem>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <ListItemText>
+                                You can try the layerselector below.
+                            </ListItemText>
+                        </ListItem>
+                        <ListItem sx={{ pl: 6 }}>
+                            <ListItemIcon>{'>'}</ListItemIcon>
+                            <LayerSelector
+                                layers={layers}
+                                addLayer={() => {
+                                    setLayers([...layers, { visible: true }])
+                                }}
+                                removeLayer={index => {
+                                    layers.splice(index, 1)
+                                    setLayers([...layers])
+                                }}
+                                toggleLayer={index => {
+                                    layers[index].visible = !layers[index].visible
+                                    setLayers([...layers])
+                                }}
+                                selectedLayer={selectedLayer}
+                                setSelectedLayer={setSelectedLayer}
+                            />
+                        </ListItem>
                     </Collapse>
                 </List>
             </CardContent>
-            <CardActions>
-                <Button onClick={() => setExpanded(!expanded)}>
-                    {expanded ? 'Hide instructions' : 'View instructions'}
-                </Button>
-            </CardActions>
-            <Collapse in={expanded}>
-                <CardContent>
-                    <Typography>
-                        TODO
-                    </Typography>
-                </CardContent>
-            </Collapse>
-
         </Card>
     )
 }
@@ -289,6 +320,9 @@ const FrontPage = () => {
                             <Typography>- Browsing and sharing normal maps with other users.</Typography>
                         </ListItem>
                     </List>
+                    <Typography>
+                        After reading the instructions below, you can begin creating normal maps by visiting the <Link to='/normal_map'>normal maps page</Link>.
+                    </Typography>
                     <Typography>
                         Want to build this application yourself? The source code can be found at: <Link to='https://github.com/pur-pul/photometric_stereo_app'>https://github.com/pur-pul/photometric_stereo_app</Link>
                     </Typography>

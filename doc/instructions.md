@@ -68,11 +68,11 @@ The normal map editor features the following tools:
 ![shape tool](../frontend/src/static/shape32.png) **Shape tool for placing other normal maps like stickers on the canvas. This can be used to combine normal maps.**
 - To use the shape tool draw a rectangle: First click and hold to select the first corner. Then drag and release to select the opposite corner of the shape. The normal map will be drawn to the canvas with the aspect ratio of the rectangle that was drawn.
 
-**A color picker that that allows picking a color from a normal mapped sphere.**
+![color picker tool](../frontend/src/static/normal_sphere32.png) **A color picker that that allows picking a color from a normal mapped sphere.**
 
-![Normal mapped sphere](../frontend/src/static/normal_sphere.png)
+
 
 - By clicking on the part of the sphere which matches the angle of the surface to be mapped, the appropriate normal encoded as a color is selected for the pencil.
 
-**A layer selector**
+![layers icon](../frontend/src/static/layers32.png) **A layer selector**
 - Up to five layers can be used. Layers can be hidden by clicking the 👁 button. Or deleted by clicking the red X button.

@@ -57,12 +57,11 @@ const Shape = ({ shape, selectedShape, setSelectedShape, loading, setLoading, ma
             setSelectedShape(shape)
         }
     }, [loading, shape, selectedShape, setSelectedShape])
-
     return (
         <div>
             <Button
                 onClick={loading ? null : handleSelect}
-                sx={{ cursor: loading ? 'wait' : 'pointer', border: selectedShape.id === shape.id ? 'solid black 1px' : '' }}>
+                sx={{ cursor: loading ? 'wait' : 'pointer', border: selectedShape && shape && selectedShape.id === shape.id ? 'solid black 1px' : '' }}>
                 <div style={{ display: 'grid' }}>
                     <img src={ shape?.icon?.src ?? shape32 } width='64px' style={{ gridColumnStart: 1, gridRowStart: 1 }}/>
                     {
@@ -86,7 +85,7 @@ const Shape = ({ shape, selectedShape, setSelectedShape, loading, setLoading, ma
     )
 }
 
-const defaultShapes = [{ icon: { src: normal_sphere32 }, flatImage: { src: normal_sphere } }]
+const defaultShapes = [{ icon: { src: normal_sphere32 }, flatImage: { src: normal_sphere }, id: 'normal_sphere' }]
 
 const ShapeTool = ({ currentTool, setTool, maxHeight }) => {
     const [open, setOpen] = useState(false)

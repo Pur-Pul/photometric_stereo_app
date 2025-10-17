@@ -66,7 +66,9 @@ const NewNormalMapForm = ({ open, setOpen }) => {
         <DialogContent>
             <Grid container spacing={2}>
                 <DialogContentText style={{ paddingBottom: '10px' }} data-testid='form-description'>
-                            Normal maps can be generated using a photometric stereo algorithm or it can be drawn manually. Generated normal maps can also be edited manually afterwards.
+                    Normal maps can be generated using a photometric stereo algorithm or drawn manually.
+                    Generated normal maps can also be edited manually afterwards.
+                    If you already have a normal map you can select upload to edit and/or share it
                 </DialogContentText>
                 <ButtonGroup data-testid='form-option-buttons'>
                     <Button
