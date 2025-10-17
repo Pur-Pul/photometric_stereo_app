@@ -62,5 +62,5 @@
 |3.10.2025|   2.5h|Error handling for single image in photometric form. Frontend linting.|
 |10.10.2025|  5.5h|photostereo.py script is now imported from the source, which is included as a git submodule. Merge and some linitng. Removed ssl environment. Added instructions for installation, setup and how to use the editor. Linting. Fixed typo.|
 |13.10.2025|    5h|Optimizations, frontend linting and styling. Mask editor now fits properly into its dialog. Changed overlay checkbox into an opacity slider.|
-|17.10.2025|    3h|Health check action. Health check endpoint. setup script. Fixed a bug which caused invalid tokens to persist. Invalid token fix 2 and setup script adjustments. Instructions, styling and linting. Created a descriptive hour list.|
+|17.10.2025|    3h|Health check action. Health check endpoint. setup script. Fixed a bug which caused invalid tokens to persist. Invalid token fix 2 and setup script adjustments. Instructions, styling and linting. Created a descriptive hour list. Added setup script to readme|
 |     Total|204.5h||

@@ -56,3 +56,7 @@ Instructions on how to create the tunnel, config and the credentials file can be
 ```bash
     docker compose up 
 ```
+#### or alternatively start with the setup script
+```bash
+    ./setup.sh
+```
