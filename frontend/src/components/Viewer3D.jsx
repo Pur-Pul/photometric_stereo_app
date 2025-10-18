@@ -97,11 +97,12 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
     const [visible, setVisible] = useState(false)
     const [shape, setShape] = useState(sphere)
     const [rotate, setRotate] = useState(null)
-    const [animateStep, setAnimateStep] = useState(Date.now())
 
     const canvas3DRef = useRef(null)
     const canvasMapRef = useRef(null)
     const canvasTexRef = useRef(null)
+    const texture1Ref = useRef(null)
+    const texture2Ref = useRef(null)
 
     const programRef = useRef(null)
     const renderDataRef = useRef(null)
@@ -141,77 +142,86 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
 
     useEffect(() => {
         if (!visible) { return }
-        let updateTimeout
+        let frame
         const canvas = canvas3DRef.current
         const ctx = canvas.getContext('webgl')
-        if (!ctx) {
-            notificationSet('webgl is not avaliable.')
-        } else if (!programRef.current) {
-            ctx.enable(ctx.DEPTH_TEST)
-            ctx.depthFunc(ctx.LEQUAL)
-            ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, true)
-            programRef.current = initShaders(ctx)
-        } else if (renderDataRef.current) {
-            ctx.clearColor(0,0,0,1)
-            ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT)
-            const viewMat = createViewMat(cameraRef.current, new Vector3(0,0,0))
-            const worldMat = new Mat4([
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            ])
-            const projMat = createProjMat(45, 10, 0.1)
+        const draw = () => {
+            if (!ctx) {
+                notificationSet('webgl is not avaliable.')
+            } else if (!programRef.current) {
+                ctx.enable(ctx.DEPTH_TEST)
+                ctx.depthFunc(ctx.LEQUAL)
+                ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, true)
+                programRef.current = initShaders(ctx)
+            } else if (renderDataRef.current) {
+                ctx.clearColor(0,0,0,1)
+                ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT)
+                const viewMat = createViewMat(cameraRef.current, new Vector3(0,0,0))
+                const worldMat = new Mat4([
+                    1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    0, 0, 0, 1
+                ])
+                const projMat = createProjMat(45, 10, 0.1)
 
-            const positionPointer = ctx.getAttribLocation(programRef.current, 'attPosition')
-            const uvPointer = ctx.getAttribLocation(programRef.current, 'attUV')
-            const normalPointer = ctx.getAttribLocation(programRef.current, 'attNormal')
-            const tangentPointer = ctx.getAttribLocation(programRef.current, 'attTangent')
+                const positionPointer = ctx.getAttribLocation(programRef.current, 'attPosition')
+                const uvPointer = ctx.getAttribLocation(programRef.current, 'attUV')
+                const normalPointer = ctx.getAttribLocation(programRef.current, 'attNormal')
+                const tangentPointer = ctx.getAttribLocation(programRef.current, 'attTangent')
 
-            const worldPointer = ctx.getUniformLocation(programRef.current, 'uWorldMatrix')
-            const viewPointer = ctx.getUniformLocation(programRef.current, 'uViewMatrix')
-            const projPointer = ctx.getUniformLocation(programRef.current, 'uProjectionMatrix')
+                const worldPointer = ctx.getUniformLocation(programRef.current, 'uWorldMatrix')
+                const viewPointer = ctx.getUniformLocation(programRef.current, 'uViewMatrix')
+                const projPointer = ctx.getUniformLocation(programRef.current, 'uProjectionMatrix')
 
-            const nmPointer = ctx.getUniformLocation(programRef.current, 'uNormalMap')
-            const texPointer = ctx.getUniformLocation(programRef.current, 'uTexture')
-            const colorPointer = ctx.getUniformLocation(programRef.current, 'uColor')
-            const lightPosPointer = ctx.getUniformLocation(programRef.current, 'uLightPos')
-            const camPosPointer = ctx.getUniformLocation(programRef.current, 'uCamPos')
-            const specularStrengthPointer = ctx.getUniformLocation(programRef.current, 'uSpecularStrength')
+                const nmPointer = ctx.getUniformLocation(programRef.current, 'uNormalMap')
+                const texPointer = ctx.getUniformLocation(programRef.current, 'uTexture')
+                const colorPointer = ctx.getUniformLocation(programRef.current, 'uColor')
+                const lightPosPointer = ctx.getUniformLocation(programRef.current, 'uLightPos')
+                const camPosPointer = ctx.getUniformLocation(programRef.current, 'uCamPos')
+                const specularStrengthPointer = ctx.getUniformLocation(programRef.current, 'uSpecularStrength')
 
-            initBuffer(ctx, renderDataRef.current.vertices, positionPointer, 3)
-            initBuffer(ctx, renderDataRef.current.uvs, uvPointer, 2)
-            initBuffer(ctx, renderDataRef.current.normals, normalPointer, 3)
-            initBuffer(ctx, renderDataRef.current.tangents, tangentPointer, 3)
+                initBuffer(ctx, renderDataRef.current.vertices, positionPointer, 3)
+                initBuffer(ctx, renderDataRef.current.uvs, uvPointer, 2)
+                initBuffer(ctx, renderDataRef.current.normals, normalPointer, 3)
+                initBuffer(ctx, renderDataRef.current.tangents, tangentPointer, 3)
 
-            ctx.useProgram(programRef.current)
-            ctx.uniform1i(nmPointer, 0)
-            ctx.uniform1i(texPointer, 1)
+                ctx.useProgram(programRef.current)
+                ctx.uniform1i(nmPointer, 0)
+                ctx.uniform1i(texPointer, 1)
 
-            const texture1 = initTexture(ctx, canvasMapRef.current)
-            const texture2 = initTexture(ctx, canvasTexRef.current)
+                texture1Ref.current = texture1Ref.current ?? initTexture(ctx, canvasMapRef.current)
+                texture2Ref.current = texture2Ref.current ?? initTexture(ctx, canvasTexRef.current)
 
-            ctx.activeTexture(ctx.TEXTURE0)
-            ctx.bindTexture(ctx.TEXTURE_2D, texture1)
+                ctx.activeTexture(ctx.TEXTURE0)
+                ctx.bindTexture(ctx.TEXTURE_2D, texture1Ref.current)
 
-            ctx.activeTexture(ctx.TEXTURE1)
-            ctx.bindTexture(ctx.TEXTURE_2D, texture2)
+                ctx.activeTexture(ctx.TEXTURE1)
+                ctx.bindTexture(ctx.TEXTURE_2D, texture2Ref.current)
 
-            ctx.uniformMatrix4fv(worldPointer, false, worldMat.mat)
-            ctx.uniformMatrix4fv(viewPointer, false, viewMat.mat)
-            ctx.uniformMatrix4fv(projPointer, false, projMat.mat)
-            const [red, green, blue] = hexToRGB(colorRef.current)
-            ctx.uniform4f(colorPointer, red/255, green/255, blue/255, 1)
-            ctx.uniform3f(lightPosPointer, lightPosRef.current.x, lightPosRef.current.y, lightPosRef.current.z)
-            ctx.uniform3f(camPosPointer, cameraRef.current.pos.x, cameraRef.current.pos.y, cameraRef.current.pos.z)
-            ctx.uniform1f(specularStrengthPointer, specularStrengthRef.current/100)
-            ctx.drawArrays(ctx.TRIANGLES, 0, renderDataRef.current.vertices.length/3)
+                ctx.uniformMatrix4fv(worldPointer, false, worldMat.mat)
+                ctx.uniformMatrix4fv(viewPointer, false, viewMat.mat)
+                ctx.uniformMatrix4fv(projPointer, false, projMat.mat)
+                const [red, green, blue] = hexToRGB(colorRef.current)
+                ctx.uniform4f(colorPointer, red/255, green/255, blue/255, 1)
+                ctx.uniform3f(lightPosPointer, lightPosRef.current.x, lightPosRef.current.y, lightPosRef.current.z)
+                ctx.uniform3f(camPosPointer, cameraRef.current.pos.x, cameraRef.current.pos.y, cameraRef.current.pos.z)
+                ctx.uniform1f(specularStrengthPointer, specularStrengthRef.current/100)
+                ctx.drawArrays(ctx.TRIANGLES, 0, renderDataRef.current.vertices.length/3)
+            }
+            const quat = Quaternion.axisAngle(new Vector3(0,1,0), 0.5)
+            lightPosRef.current = quat.rotate(lightPosRef.current)
         }
-        const quat = Quaternion.axisAngle(new Vector3(0,1,0), 2)
-        lightPosRef.current = quat.rotate(lightPosRef.current)
-        updateTimeout = setTimeout(() => setAnimateStep(Date.now()), FRAMETIME)
-        return () => { clearTimeout(updateTimeout) }
-    }, [animateStep, visible])
+
+        const animate = () => {
+            draw()
+            frame = requestAnimationFrame(animate)
+        }
+
+        frame = requestAnimationFrame(animate)
+
+        return () => cancelAnimationFrame(frame)
+    }, [visible])
 
     window.onmouseup = (event) => { if(event.button === 0) {setRotate(null)}}
 
@@ -240,22 +250,28 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
                         width={size}
                         height={size}
                         onMouseDown={(e) => {
+                            const { offsetX:x, offsetY:y } = e.nativeEvent
+                            const relX = x/canvas3DRef.current.scrollWidth
+                            const relY = y/canvas3DRef.current.scrollHeight
                             if (e.nativeEvent.buttons === 1) {
-                                setRotate({ lastX: e.nativeEvent.offsetX, lastY: e.nativeEvent.offsetY })
+                                setRotate({ lastRelX: relX, lastRelY: relY })
                             }
                         }}
                         onMouseUp={(e) => setRotate(null)}
                         onMouseMove={(e) => {
                             const { offsetX:x, offsetY:y } = e.nativeEvent
-                            const deltaTime = Date.now() - animateStep
-                            if (rotate && deltaTime > FRAMETIME) {
-                                const quat = Quaternion.axisAngle(cameraRef.current.up, (x - rotate.lastX)/3).mult(Quaternion.axisAngle(cameraRef.current.right, (y - rotate.lastY)/3))
+                            if (rotate) {
+                                const relX = x/canvas3DRef.current.scrollWidth
+                                const relY = y/canvas3DRef.current.scrollHeight
+                                const quatX = Quaternion.axisAngle(cameraRef.current.up, (relX - rotate.lastRelX)*100)
+                                const quatY = Quaternion.axisAngle(cameraRef.current.right, (relY - rotate.lastRelY)*100)
+                                const quat = quatX.mult(quatY)
                                 cameraRef.current = {
                                     pos: quat.rotate(cameraRef.current.pos),
                                     right: quat.rotate(cameraRef.current.right),
                                     up: quat.rotate(cameraRef.current.up)
                                 }
-                                setRotate({ lastX:x, lastY:y })
+                                setRotate({ lastRelX:relX, lastRelY:relY })
                             }
                         }}
                         style={{ border: '1px solid #2196f3', borderRadius: 5, cursor: rotate ? 'grabbing' : 'grab', width:'100%', height: '100%' }}
