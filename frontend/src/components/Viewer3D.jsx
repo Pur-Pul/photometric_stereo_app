@@ -90,13 +90,11 @@ const createViewMat = (camera, target) => {
 }
 
 const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectRatio: '1/1', maxWidth: 1080 } }) => {
-    const FRAMETIME = 33.333333
     const sphere = new Sphere(3, 1)
     const cube = new Cube(1)
 
     const [visible, setVisible] = useState(false)
     const [shape, setShape] = useState(sphere)
-    const [rotate, setRotate] = useState(null)
 
     const canvas3DRef = useRef(null)
     const canvasMapRef = useRef(null)
@@ -104,6 +102,7 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
     const texture1Ref = useRef(null)
     const texture2Ref = useRef(null)
 
+    const rotationRef = useRef(null)
     const programRef = useRef(null)
     const renderDataRef = useRef(null)
     const specularStrengthRef = useRef(50)
@@ -190,8 +189,8 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
                 ctx.uniform1i(nmPointer, 0)
                 ctx.uniform1i(texPointer, 1)
 
-                texture1Ref.current = texture1Ref.current ?? initTexture(ctx, canvasMapRef.current)
-                texture2Ref.current = texture2Ref.current ?? initTexture(ctx, canvasTexRef.current)
+                texture1Ref.current = initTexture(ctx, canvasMapRef.current)
+                texture2Ref.current = initTexture(ctx, canvasTexRef.current)
 
                 ctx.activeTexture(ctx.TEXTURE0)
                 ctx.bindTexture(ctx.TEXTURE_2D, texture1Ref.current)
@@ -223,7 +222,7 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
         return () => cancelAnimationFrame(frame)
     }, [visible])
 
-    window.onmouseup = (event) => { if(event.button === 0) {setRotate(null)}}
+    window.onmouseup = (event) => { if(event.button === 0) { rotationRef.current = null}}
 
     const handleTextureUpload = (event) => {
         const file = event.target.files[0]
@@ -254,27 +253,27 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
                             const relX = x/canvas3DRef.current.scrollWidth
                             const relY = y/canvas3DRef.current.scrollHeight
                             if (e.nativeEvent.buttons === 1) {
-                                setRotate({ lastRelX: relX, lastRelY: relY })
+                                rotationRef.current = { lastRelX: relX, lastRelY: relY }
                             }
                         }}
-                        onMouseUp={(e) => setRotate(null)}
+                        onMouseUp={(e) => rotationRef.current = null }
                         onMouseMove={(e) => {
                             const { offsetX:x, offsetY:y } = e.nativeEvent
-                            if (rotate) {
+                            if (rotationRef.current) {
                                 const relX = x/canvas3DRef.current.scrollWidth
                                 const relY = y/canvas3DRef.current.scrollHeight
-                                const quatX = Quaternion.axisAngle(cameraRef.current.up, (relX - rotate.lastRelX)*100)
-                                const quatY = Quaternion.axisAngle(cameraRef.current.right, (relY - rotate.lastRelY)*100)
+                                const quatX = Quaternion.axisAngle(cameraRef.current.up, (relX - rotationRef.current.lastRelX)*100)
+                                const quatY = Quaternion.axisAngle(cameraRef.current.right, (relY - rotationRef.current.lastRelY)*100)
                                 const quat = quatX.mult(quatY)
                                 cameraRef.current = {
                                     pos: quat.rotate(cameraRef.current.pos),
                                     right: quat.rotate(cameraRef.current.right),
                                     up: quat.rotate(cameraRef.current.up)
                                 }
-                                setRotate({ lastRelX:relX, lastRelY:relY })
+                                rotationRef.current = { lastRelX:relX, lastRelY:relY }
                             }
                         }}
-                        style={{ border: '1px solid #2196f3', borderRadius: 5, cursor: rotate ? 'grabbing' : 'grab', width:'100%', height: '100%' }}
+                        style={{ border: '1px solid #2196f3', borderRadius: 5, cursor: rotationRef.current ? 'grabbing' : 'grab', width:'100%', height: '100%' }}
                     />
                     :   <Button variant='outlined' sx={{ width:'100%', height: '100%' }} onClick={() => setVisible(true) }>View 3D preview</Button>
             }
