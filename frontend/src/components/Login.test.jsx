@@ -13,9 +13,10 @@ vi.mock(import("../reducers/loginReducer.js"), async (importOriginal) => {
     } ))}
 })
 
+const mockedNavigate = vi.fn()
 vi.mock(import("react-router-dom"), async (importOriginal) => {
     const actual = await importOriginal()
-    return {...actual, Link: () => <mockedLink></mockedLink>}
+    return {...actual, Link: () => <mockedLink></mockedLink>, useNavigate: () => mockedNavigate}
 })
 
 import Login from './Login'
@@ -55,7 +56,7 @@ describe("Login form", () => {
         const { performLogin } = await import('../reducers/loginReducer')
         expect(performLogin).toHaveBeenCalledTimes(1)
     })
-    test('Clicking login calls performLogin with provided username and password.', async () => {
+    test('Clicking login calls performLogin with provided username, password and navigate function.', async () => {
         render(
             <Provider store={store}>
                 <Login/>
@@ -70,7 +71,7 @@ describe("Login form", () => {
         await user.click(loginButton)
         const { performLogin } = await import('../reducers/loginReducer')
         expect(performLogin).toHaveBeenCalledWith(
-            {username: 'test', password: 'pass'}
+            {username: 'test', password: 'pass'}, mockedNavigate
         )
     })
 })

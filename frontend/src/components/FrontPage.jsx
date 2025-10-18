@@ -156,7 +156,7 @@ const NormalMapDescription = () => {
                     </Typography>
                 </CardContent>
                 <CardContent>
-                    { normalMap && texture ? <Viewer3D image={normalMap} texture={texture} simple/> : null }
+                    { normalMap && texture ? <Viewer3D image={normalMap} defaultTexture={texture} simple/> : null }
                 </CardContent>
             </Collapse>
 

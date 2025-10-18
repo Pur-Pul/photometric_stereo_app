@@ -89,30 +89,33 @@ const createViewMat = (camera, target) => {
     ])
 }
 
-const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectRatio: '1/1', maxWidth: 1080 } }) => {
-    const sphere = new Sphere(3, 1)
-    const cube = new Cube(1)
+const SPHERE = new Sphere(3, 1)
+const CUBE = new Cube(1)
 
+const Viewer3D = ({ image, simple=false, size=500, defaultTexture=null, style={ aspectRatio: '1/1', maxWidth: 1080 } }) => {
     const [visible, setVisible] = useState(false)
-    const [shape, setShape] = useState(sphere)
+    const [shape, setShape] = useState(SPHERE)
+    const [texture, setTexture] = useState(defaultTexture)
 
     const canvas3DRef = useRef(null)
     const canvasMapRef = useRef(null)
     const canvasTexRef = useRef(null)
     const texture1Ref = useRef(null)
     const texture2Ref = useRef(null)
+    const webglRef = useRef(null)
 
     const rotationRef = useRef(null)
     const programRef = useRef(null)
     const renderDataRef = useRef(null)
-    const specularStrengthRef = useRef(50)
+
     const cameraRef = useRef({
         pos: new Vector3(0,3,0),
         right: new Vector3(-1,0,0),
         up: new Vector3(0,0,-1)
     })
     const lightPosRef = useRef(new Vector3(4,0,0))
-    const colorRef = useRef('#ffffff')
+    const [color, setColor] = useState('#ffffff')
+    const [specularStrength, setSpecularStrength] = useState(50)
 
 
     useEffect(() => {
@@ -136,7 +139,7 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
         const vertices = shape.getVertexData()
         const [uvs, normals, tangents] = shape.getTextureData()
 
-        renderDataRef.current = { vertices, uvs, normals, tangents }
+        renderDataRef.current = { vertices, uvs, normals, tangents, vertexNumber: vertices.length }
     }, [shape, visible])
 
     useEffect(() => {
@@ -146,67 +149,83 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
         const ctx = canvas.getContext('webgl')
         const draw = () => {
             if (!ctx) {
-                notificationSet('webgl is not avaliable.')
+                notificationSet('webgl is not available.')
             } else if (!programRef.current) {
                 ctx.enable(ctx.DEPTH_TEST)
                 ctx.depthFunc(ctx.LEQUAL)
                 ctx.pixelStorei(ctx.UNPACK_FLIP_Y_WEBGL, true)
                 programRef.current = initShaders(ctx)
-            } else if (renderDataRef.current) {
+            } else if (!webglRef.current) {
+                webglRef.current = {
+                    worldMat: new Mat4([
+                        1, 0, 0, 0,
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1
+                    ]),
+                    projMat: createProjMat(45, 10, 0.1),
+                    positionPointer: ctx.getAttribLocation(programRef.current, 'attPosition'),
+                    uvPointer: ctx.getAttribLocation(programRef.current, 'attUV'),
+                    normalPointer: ctx.getAttribLocation(programRef.current, 'attNormal'),
+                    tangentPointer: ctx.getAttribLocation(programRef.current, 'attTangent'),
+
+                    worldPointer: ctx.getUniformLocation(programRef.current, 'uWorldMatrix'),
+                    viewPointer: ctx.getUniformLocation(programRef.current, 'uViewMatrix'),
+                    projPointer: ctx.getUniformLocation(programRef.current, 'uProjectionMatrix'),
+
+                    nmPointer: ctx.getUniformLocation(programRef.current, 'uNormalMap'),
+                    texPointer: ctx.getUniformLocation(programRef.current, 'uTexture'),
+                    colorPointer: ctx.getUniformLocation(programRef.current, 'uColor'),
+                    lightPosPointer: ctx.getUniformLocation(programRef.current, 'uLightPos'),
+                    camPosPointer: ctx.getUniformLocation(programRef.current, 'uCamPos'),
+                    specularStrengthPointer: ctx.getUniformLocation(programRef.current, 'uSpecularStrength')
+                }
+            } else {
+                if (renderDataRef.current.vertices) {
+                    initBuffer(ctx, renderDataRef.current.vertices, webglRef.current.positionPointer, 3)
+                }
+                if (renderDataRef.current.uvs) {
+                    initBuffer(ctx, renderDataRef.current.uvs, webglRef.current.uvPointer, 2)
+                }
+                if (renderDataRef.current.normals) {
+                    initBuffer(ctx, renderDataRef.current.normals, webglRef.current.normalPointer, 3)
+                }
+                if (renderDataRef.current.tangents) {
+                    initBuffer(ctx, renderDataRef.current.tangents, webglRef.current.tangentPointer, 3)
+                }
+                renderDataRef.current = { vertexNumber: renderDataRef.current.vertexNumber }
+
                 ctx.clearColor(0,0,0,1)
                 ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT)
+
                 const viewMat = createViewMat(cameraRef.current, new Vector3(0,0,0))
-                const worldMat = new Mat4([
-                    1, 0, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 1, 0,
-                    0, 0, 0, 1
-                ])
-                const projMat = createProjMat(45, 10, 0.1)
 
-                const positionPointer = ctx.getAttribLocation(programRef.current, 'attPosition')
-                const uvPointer = ctx.getAttribLocation(programRef.current, 'attUV')
-                const normalPointer = ctx.getAttribLocation(programRef.current, 'attNormal')
-                const tangentPointer = ctx.getAttribLocation(programRef.current, 'attTangent')
+                if (canvasMapRef.current && canvasTexRef.current) {
+                    texture1Ref.current = initTexture(ctx, canvasMapRef.current)
+                    texture2Ref.current = initTexture(ctx, canvasTexRef.current)
 
-                const worldPointer = ctx.getUniformLocation(programRef.current, 'uWorldMatrix')
-                const viewPointer = ctx.getUniformLocation(programRef.current, 'uViewMatrix')
-                const projPointer = ctx.getUniformLocation(programRef.current, 'uProjectionMatrix')
+                    ctx.activeTexture(ctx.TEXTURE0)
+                    ctx.bindTexture(ctx.TEXTURE_2D, texture1Ref.current)
 
-                const nmPointer = ctx.getUniformLocation(programRef.current, 'uNormalMap')
-                const texPointer = ctx.getUniformLocation(programRef.current, 'uTexture')
-                const colorPointer = ctx.getUniformLocation(programRef.current, 'uColor')
-                const lightPosPointer = ctx.getUniformLocation(programRef.current, 'uLightPos')
-                const camPosPointer = ctx.getUniformLocation(programRef.current, 'uCamPos')
-                const specularStrengthPointer = ctx.getUniformLocation(programRef.current, 'uSpecularStrength')
-
-                initBuffer(ctx, renderDataRef.current.vertices, positionPointer, 3)
-                initBuffer(ctx, renderDataRef.current.uvs, uvPointer, 2)
-                initBuffer(ctx, renderDataRef.current.normals, normalPointer, 3)
-                initBuffer(ctx, renderDataRef.current.tangents, tangentPointer, 3)
+                    ctx.activeTexture(ctx.TEXTURE1)
+                    ctx.bindTexture(ctx.TEXTURE_2D, texture2Ref.current)
+                    canvasMapRef.current = null
+                    canvasTexRef.current = null
+                }
 
                 ctx.useProgram(programRef.current)
-                ctx.uniform1i(nmPointer, 0)
-                ctx.uniform1i(texPointer, 1)
+                ctx.uniform1i(webglRef.current.nmPointer, 0)
+                ctx.uniform1i(webglRef.current.texPointer, 1)
 
-                texture1Ref.current = initTexture(ctx, canvasMapRef.current)
-                texture2Ref.current = initTexture(ctx, canvasTexRef.current)
-
-                ctx.activeTexture(ctx.TEXTURE0)
-                ctx.bindTexture(ctx.TEXTURE_2D, texture1Ref.current)
-
-                ctx.activeTexture(ctx.TEXTURE1)
-                ctx.bindTexture(ctx.TEXTURE_2D, texture2Ref.current)
-
-                ctx.uniformMatrix4fv(worldPointer, false, worldMat.mat)
-                ctx.uniformMatrix4fv(viewPointer, false, viewMat.mat)
-                ctx.uniformMatrix4fv(projPointer, false, projMat.mat)
-                const [red, green, blue] = hexToRGB(colorRef.current)
-                ctx.uniform4f(colorPointer, red/255, green/255, blue/255, 1)
-                ctx.uniform3f(lightPosPointer, lightPosRef.current.x, lightPosRef.current.y, lightPosRef.current.z)
-                ctx.uniform3f(camPosPointer, cameraRef.current.pos.x, cameraRef.current.pos.y, cameraRef.current.pos.z)
-                ctx.uniform1f(specularStrengthPointer, specularStrengthRef.current/100)
-                ctx.drawArrays(ctx.TRIANGLES, 0, renderDataRef.current.vertices.length/3)
+                ctx.uniformMatrix4fv(webglRef.current.worldPointer, false, webglRef.current.worldMat.mat)
+                ctx.uniformMatrix4fv(webglRef.current.viewPointer, false, viewMat.mat)
+                ctx.uniformMatrix4fv(webglRef.current.projPointer, false, webglRef.current.projMat.mat)
+                const [red, green, blue] = hexToRGB(color)
+                ctx.uniform4f(webglRef.current.colorPointer, red/255, green/255, blue/255, 1)
+                ctx.uniform3f(webglRef.current.lightPosPointer, lightPosRef.current.x, lightPosRef.current.y, lightPosRef.current.z)
+                ctx.uniform3f(webglRef.current.camPosPointer, cameraRef.current.pos.x, cameraRef.current.pos.y, cameraRef.current.pos.z)
+                ctx.uniform1f(webglRef.current.specularStrengthPointer, specularStrength/100)
+                ctx.drawArrays(ctx.TRIANGLES, 0, renderDataRef.current.vertexNumber/3)
             }
             const quat = Quaternion.axisAngle(new Vector3(0,1,0), 0.5)
             lightPosRef.current = quat.rotate(lightPosRef.current)
@@ -220,7 +239,7 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
         frame = requestAnimationFrame(animate)
 
         return () => cancelAnimationFrame(frame)
-    }, [visible])
+    }, [visible, color, specularStrength])
 
     window.onmouseup = (event) => { if(event.button === 0) { rotationRef.current = null}}
 
@@ -228,15 +247,7 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
         const file = event.target.files[0]
         const image = new Image()
         image.onload = () => {
-            const canvas = canvasTexRef.current
-            const aspect = image.width / image.height
-            const maxHeight = Math.max(image.width, image.height)
-
-            canvas.width = Math.min(maxHeight, size) * aspect
-            canvas.height = Math.min(maxHeight, size)
-
-            const ctx = canvas.getContext('2d', { willReadFrequently: true })
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height)
+            setTexture(image)
         }
         image.src = URL.createObjectURL(file)
     }
@@ -281,15 +292,15 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
                 simple
                     ? null
                     : <Grid container>
-                        <ColorSelector leftColor={colorRef.current} setLeftColor={(newColor) => colorRef.current = newColor} disabled={!visible} />
+                        <ColorSelector leftColor={color} setLeftColor={setColor} disabled={!visible} />
                         <FormControl>
                             <InputLabel htmlFor='strength' shrink>Specular strength (%)</InputLabel>
                             <TextField
                                 id='strength'
                                 type='number'
-                                value={specularStrengthRef.current}
+                                value={specularStrength}
                                 slotProps= {{ htmlInput: { min: 0, max: 100 } }}
-                                onChange={(e) => specularStrengthRef.current = e.target.value}
+                                onChange={(e) => setSpecularStrength(e.target.value)}
                                 disabled={!visible}
                             />
                         </FormControl>
@@ -303,8 +314,8 @@ const Viewer3D = ({ image, simple=false, size=500, texture=null, style={ aspectR
                             />
                         </Button>
                         <ButtonGroup>
-                            <Button variant={shape.type === sphere.type ? 'contained' : 'outlined'} onClick={() => setShape(sphere)} disabled={!visible}>Sphere</Button>
-                            <Button variant={shape.type === cube.type ? 'contained' : 'outlined'} onClick={() => setShape(cube)} disabled={!visible}>Cube</Button>
+                            <Button variant={shape.type === SPHERE.type ? 'contained' : 'outlined'} onClick={() => setShape(SPHERE)} disabled={!visible}>Sphere</Button>
+                            <Button variant={shape.type === CUBE.type ? 'contained' : 'outlined'} onClick={() => setShape(CUBE)} disabled={!visible}>Cube</Button>
                         </ButtonGroup>
                     </Grid>
             }
