@@ -50,25 +50,30 @@ const tokenExtractor = (request, response, next) => {
     next()
 }
 
+const requireLogin = async (request, response, next) => {
+    if (!request.token) { return response.status(401).json({ error: 'token missing' }) }
+    next()
+}
+
 const userExtractor = async (request, response, next) => {
     try {
-        if (!request.token) { return response.status(401).json({ error: 'token missing' }) }
-        const decodedToken = jwt.verify(request.token, process.env.SECRET)
-        if (!decodedToken.id) { return response.status(401).json({ error: 'token invalid' }) }
+        if (request.token) {
+            const decodedToken = jwt.verify(request.token, process.env.SECRET)
+            if (!decodedToken.id) { return response.status(401).json({ error: 'token invalid' }) }
+            const session = await Session.findOne({ token: request.token })
+            const user = await User.findById(decodedToken.id)
+            if (session && user.id) {
+                if (!user.verified) { return response.status(403).json({ error: 'User is not verified' }) }
+                session.updatedAt = new Date()
+                await session.save()
 
-        const session = await Session.findOne({ token: request.token })
-        const user = await User.findById(decodedToken.id)
-        if (session && user.id) {
-            if (!user.verified) { return response.status(403).json({ error: 'User is not verified' }) }
-            session.updatedAt = new Date()
-            await session.save()
+                user.updatedAt = new Date()
+                await user.save()
 
-            user.updatedAt = new Date()
-            await user.save()
-
-            request.user = user
-        } else {
-            return response.status(401).json({ error: 'token expired' })
+                request.user = user
+            } else {
+                return response.status(401).json({ error: 'token expired' })
+            }
         }
     } catch (exception) {
         next(exception)
@@ -105,6 +110,7 @@ module.exports = {
     unknownEndpoint,
     errorHandler,
     tokenExtractor,
+    requireLogin,
     userExtractor,
     imageUpload
 }

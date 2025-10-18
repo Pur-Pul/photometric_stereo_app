@@ -23,8 +23,8 @@ const App = () => {
     const location = useLocation()
 
     useEffect(() => { if (user) { dispatch(initializeUsers()) }}, [dispatch, user])
-    useEffect(() => { if (user) { dispatch(fetchPage(1, 'private')) }}, [dispatch, user])
-    useEffect(() => { if (user) { dispatch(fetchPage(1, 'public')) }}, [dispatch, user])
+    useEffect(() => { dispatch(fetchPage(1, 'private')) }, [dispatch, user])
+    useEffect(() => { dispatch(fetchPage(1, 'public')) }, [dispatch, user])
     useEffect(() => {
         const loggedUserJSON = window.localStorage.getItem('loggedUser')
         if (loggedUserJSON) {
@@ -47,12 +47,15 @@ const App = () => {
                     <NavBar user={user} paths={{
                         '/' : 'Login',
                         'create-user': 'Register',
+                        '/normal_map' : 'Normal Maps'
                     }}/>
                     <Notification />
                     <Routes>
                         <Route path="/" element={ <LoginForm /> } />
                         <Route path="/create-user" element={<CreateUser />} />
                         <Route path="/verify-user/:token" element={<VerifyUser />} />
+                        <Route path="/normal_map" element={<NormalMapList />} />
+                        <Route path="/normal_map/:id" element={<NormalMap />} />
                     </Routes>
 
                 </div>

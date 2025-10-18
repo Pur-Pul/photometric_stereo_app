@@ -144,10 +144,10 @@ describe('normalmap get all', () => {
             .expect(200)
     })
 
-    test('normalmap get all request is rejected with missing authorization', async () => {
+    test('normalmap get all request is not rejected with missing authorization', async () => {
         await api
             .get('/api/normalMaps')
-            .expect(401)
+            .expect(200)
     })
 
     test('normalmap get all request is rejected with invalid authorization', async () => {
@@ -245,7 +245,7 @@ describe('normal map get one', () => {
     test('normal map request is rejected with missing authorization', async () => {
         await api
             .get(`/api/normalMaps/${initialNormalMaps[0].id}`)
-            .expect(401)
+            .expect(403)
     })
 
     test('normal map request is rejected with invalid authorization', async () => {
@@ -513,10 +513,10 @@ describe('layer get one', () => {
             .expect(200)
     })
 
-    test('layer request is rejected with missing authorization', async () => {
+    test('layer request is not rejected with missing authorization', async () => {
         await api
             .get(`/api/normalMaps/${initialNormalMaps[1].id}/layers/${initialLayers[0].id}`)
-            .expect(401)
+            .expect(403)
     })
 
     test('layer request is rejected with invalid authorization', async () => {

@@ -4,6 +4,8 @@ import imageService from '../services/images'
 import userService from '../services/users'
 import { notificationSet } from './notificationReducer'
 import { AxiosError } from 'axios'
+import { resetNormalMaps } from './normalMapReducer'
+import { resetUsers } from './userReducer'
 
 const loginSlice = createSlice({
     name: 'login',
@@ -35,6 +37,7 @@ export const performLogin = (credentials) => {
         } catch (exception) {
             if (exception instanceof AxiosError && exception.response.status === 401) {
                 window.localStorage.removeItem('loggedUser')
+                dispatch(logoutUser())
             }
             console.log(exception) //eslint-disable-line no-console
             dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))
@@ -48,9 +51,12 @@ export const performLogout = () => {
             await loginService.logout()
             window.localStorage.removeItem('loggedUser')
             dispatch(logoutUser())
+            dispatch(resetNormalMaps())
+            dispatch(resetUsers())
         } catch (exception) {
             if (exception instanceof AxiosError && exception.response.status === 401) {
                 window.localStorage.removeItem('loggedUser')
+                dispatch(logoutUser())
             }
             console.log(exception) //eslint-disable-line no-console
             dispatch(notificationSet({ text: exception?.response?.data?.error ?? 'An error occurred', type:'error' }, 5))

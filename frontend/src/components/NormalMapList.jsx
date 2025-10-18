@@ -80,21 +80,24 @@ const NormalMapCategory = ({ normalMaps, title, placeholder, category, children,
 const NormalMapList = ({ user }) => {
     const [open, setOpen] = useState(false)
     const loggedUser = useSelector((state) => state.login)
-    const userNormalMaps = useSelector((state) => state.normalMaps).filter(normalMap => user ? normalMap.creator.id === user.id : normalMap.creator.id === loggedUser.id)
-    const publicNormalMaps = useSelector((state) => state.normalMaps).filter(normalMap => user ? false : normalMap.creator.id !== loggedUser.id)
+    const userNormalMaps = useSelector((state) => state.normalMaps).filter(normalMap => user ? normalMap.creator.id === user.id : normalMap.creator.id === loggedUser?.id)
+    const publicNormalMaps = useSelector((state) => state.normalMaps).filter(normalMap => user ? false : normalMap.creator.id !== loggedUser?.id)
 
     return (
         <div>
-            <NormalMapCategory
-                data-testid='user-normal-map-list'
-                normalMaps={userNormalMaps}
-                title={user === undefined || user.id === loggedUser.id ? 'Your normal maps' : `${user.username}'s normal maps`}
-                placeholder={user === undefined || user.id === loggedUser.id ? 'You have not created any normal maps yet.' : `${user.username} has not created any normal maps yet.`}
-                category='private'
-            >
-                { user === undefined || user.id === loggedUser.id ?  <Button variant='outlined' onClick={() => setOpen(true)} data-testid='create-new-button'>Create new</Button> : null }
-            </NormalMapCategory>
-
+            {
+                user || loggedUser
+                    ? <NormalMapCategory
+                        data-testid='user-normal-map-list'
+                        normalMaps={userNormalMaps}
+                        title={user === undefined || user.id === loggedUser.id ? 'Your normal maps' : `${user.username}'s normal maps`}
+                        placeholder={user === undefined || user.id === loggedUser.id ? 'You have not created any normal maps yet.' : `${user.username} has not created any normal maps yet.`}
+                        category='private'
+                    >
+                        { user === undefined || user.id === loggedUser.id ?  <Button variant='outlined' onClick={() => setOpen(true)} data-testid='create-new-button'>Create new</Button> : null }
+                    </NormalMapCategory>
+                    : null
+            }
             <NormalMapCategory
                 data-testid='public-normal-map-list'
                 normalMaps={publicNormalMaps}

@@ -11,11 +11,40 @@ import {
     Select,
     MenuItem,
     InputLabel,
-    FormControl
+    FormControl,
+    CircularProgress,
+    Typography,
+    Alert
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import NormalMapEditor from './NormalMapEditor'
 import Viewer3D from './Viewer3D'
+
+const NormalMapCanvas = ({ flatImage }) => {
+    if (!flatImage) {
+        return (
+            <div>
+                <Typography>Loading normal map</Typography>
+                <CircularProgress />
+            </div>
+        )
+    }
+    return (
+        <div>
+            <img
+                src={flatImage.src}
+                style={{
+                    width: '100%',
+                    maxWidth: '720px',
+                    height: '100%',
+                    objectFit: 'cover',
+                    border: '1px solid rgba(0,0,0,1)',
+                    imageRendering: 'pixelated',
+                }}
+            />
+        </div>
+    )
+}
 
 const NormalMap = () => {
     const dispatch = useDispatch()
@@ -39,7 +68,6 @@ const NormalMap = () => {
         if (!normalMap) {
             dispatch(reFetchNormalMap({ id }))
             clearInterval(updateInterval)
-
         } else {
             if (!flatImageRef.current) { updateInterval = setInterval(() => fetchUpdates(), 3000) }
             if (normalMap.status === 'done' && !normalMap.flatImage.src) { dispatch(fetchFlatImage(normalMap)) }
@@ -62,6 +90,9 @@ const NormalMap = () => {
             }
             setVisibility(normalMap.visibility)
         }
+        return () => {
+            clearInterval(updateInterval)
+        }
     }, [normalMap, id, dispatch])
 
     const deleteHandler = async (event) => {
@@ -75,26 +106,19 @@ const NormalMap = () => {
     }
 
     if (size && edit) {
-        return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/> }
-    if (!normalMap) { return 'Oops! Normal map does not exist.' }
-    if (!flatImageRef.current) { return 'Loading' }
+        return <NormalMapEditor id={id} size={size} layers={normalMap.layers} handleDiscard={() => setEdit(false)}/>
+    }
+    if (!normalMap) { return <Alert severity='error'>Oops! Normal map does not exist.</Alert> }
     return <div>
-        <div>
-            <img src={flatImageRef.current.src} style={{
-                width: '100%',
-                maxWidth: '720px',
-                height: '100%',
-                objectFit: 'cover',
-                border: '1px solid rgba(0,0,0,1)',
-                imageRendering: 'pixelated',
-            }}/>
-        </div>
+        <NormalMapCanvas flatImage={flatImageRef.current} />
         <Button onClick={() => { setOpen(true) }} variant='outlined' color='error'>Delete</Button>
         <Button type='label' variant='outlined' onClick={() => {
-            const link = document.createElement('a')
-            link.href = flatImageRef.current.src
-            link.download = 'normalmap.png'
-            link.click()
+            if (flatImageRef.current) {
+                const link = document.createElement('a')
+                link.href = flatImageRef.current.src
+                link.download = 'normalmap.png'
+                link.click()
+            }
         }}>Download</Button>
         <Button onClick={() => setEdit(true)} variant='outlined'>Edit</Button>
         <FormControl>

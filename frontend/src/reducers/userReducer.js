@@ -27,10 +27,13 @@ const userSlice = createSlice({
             newState[user_index] = action.payload
             return newState
         },
+        resetUsers(state, action) {
+            return []
+        }
     },
 })
 
-export const { setUsers, deleteUser, updateUser } =
+export const { setUsers, deleteUser, updateUser, resetUsers } =
 	userSlice.actions
 
 export const initializeUsers = () => {

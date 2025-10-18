@@ -15,6 +15,18 @@ vi.mock(import('../reducers/loginReducer'), async (importOriginal) => {
     return {...actual, performLogout: () => mockedPerformLogout }
 })
 
+vi.mock(import('react-redux'), async (importOriginal) => {
+    const actual = await importOriginal()
+    return {...actual, useSelector: (selector) => {
+        switch (selector({login: 'login'})) {
+            case 'login':
+                return { username: 'testuser', id:'testuserid' }
+            default:
+                return undefined
+        } 
+    }}
+})
+
 import NavBar from './NavBar'
 
 const userObject = {

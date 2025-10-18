@@ -4,7 +4,7 @@ const baseUrl = '/api/normalMaps'
 let token = null
 
 const getConfig = () => {
-    return { headers: { Authorization: token } }
+    return token ? { headers: { Authorization: token } } : undefined
 }
 
 const get = async (id) => {

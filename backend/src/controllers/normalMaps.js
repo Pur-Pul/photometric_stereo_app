@@ -71,6 +71,9 @@ normalMapsRouter.get('/', middleware.userExtractor, async (request, response) =>
     let filter = {}
     switch (category) {
     case 'private':
+        if (!user) {
+            return response.status(200).end()
+        }
         filter = { creator: user }
         break
     case 'public':
@@ -79,11 +82,8 @@ normalMapsRouter.get('/', middleware.userExtractor, async (request, response) =>
     default:
     }
 
-
-    if (user) {
-        const normalMaps = await NormalMap.find(filter).sort({ createdAt: 1 }).skip(offset).limit(10).populate('creator')
-        response.json(normalMaps)
-    }
+    const normalMaps = await NormalMap.find(filter).sort({ createdAt: 1 }).skip(offset).limit(10).populate('creator')
+    response.json(normalMaps)
 })
 
 normalMapsRouter.get('/:id', middleware.userExtractor, async (request, response) => {
@@ -91,7 +91,7 @@ normalMapsRouter.get('/:id', middleware.userExtractor, async (request, response)
     const user = request.user
     const normalMap = await NormalMap.findById(id).populate('creator')
     if (!normalMap) { return response.status(404).json({ message: 'Normal map not found.' }) }
-    if (user.id !== normalMap.creator.id && normalMap.visibility !== 'public') { return response.status(403).json({ error: 'incorrect user' }) }
+    if ((!user || user.id !== normalMap.creator.id) && normalMap.visibility !== 'public') { return response.status(403).json({ error: 'incorrect user' }) }
 
     response.json(normalMap)
 })
@@ -104,7 +104,7 @@ normalMapsRouter.get('/:normalId/layers/:id', middleware.userExtractor, async (r
         const normalMap = await NormalMap.findById(normalId)
         const image = await Image.findById(id).populate('creator')
         if (normalMap && image) {
-            if (user.id !== image.creator.id && normalMap.visibility !== 'public') {
+            if ((!user || user.id !== image.creator.id) && normalMap.visibility !== 'public') {
                 return response.status(403).json({ error: 'incorrect user' })
             }
             if (fs.existsSync(image.file)) {
@@ -118,7 +118,7 @@ normalMapsRouter.get('/:normalId/layers/:id', middleware.userExtractor, async (r
 
 })
 
-normalMapsRouter.post('/', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.post('/', middleware.requireLogin, middleware.userExtractor, async (request, response, next) => {
     middleware.imageUpload(request, response, async (exception) => {
         if (exception) { next(exception) }
         else {
@@ -165,7 +165,7 @@ normalMapsRouter.post('/', middleware.userExtractor, async (request, response, n
     })
 })
 
-normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.put('/:id', middleware.requireLogin, middleware.userExtractor, async (request, response, next) => {
     middleware.imageUpload(request, response, async (exception) => {
         if (exception) { next(exception) }
         else {
@@ -226,7 +226,7 @@ normalMapsRouter.put('/:id', middleware.userExtractor, async (request, response,
 
 
 
-normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.post('/photostereo/', middleware.requireLogin, middleware.userExtractor, async (request, response, next) => {
     middleware.imageUpload(request, response, async (exception) => {
         if (exception) { next(exception) }
         else {
@@ -282,7 +282,7 @@ normalMapsRouter.post('/photostereo/', middleware.userExtractor, async (request,
     })
 })
 
-normalMapsRouter.delete('/:id', middleware.userExtractor, async (request, response, next) => {
+normalMapsRouter.delete('/:id', middleware.requireLogin, middleware.userExtractor, async (request, response, next) => {
     const id = request.params.id
     const user = request.user
     try {

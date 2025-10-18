@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { performLogout } from '../reducers/loginReducer'
 import { AppBar, Button, Toolbar } from '@mui/material'
 
 const NavBar = ({ paths }) => {
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    const user = useSelector((state) => state.login)
 
     const logoutHandler = (event) => {
         event.preventDefault()
@@ -22,7 +23,7 @@ const NavBar = ({ paths }) => {
                         {paths[key]}
                     </Button>
                 })}
-                <Button sx={{ marginLeft: 'auto' }} color="error" onClick={logoutHandler} data-testid='logout-button'>Logout</Button>
+                { user ? <Button sx={{ marginLeft: 'auto' }} color="error" onClick={logoutHandler} data-testid='logout-button'>Logout</Button> : null }
             </Toolbar>
         </AppBar>
     )

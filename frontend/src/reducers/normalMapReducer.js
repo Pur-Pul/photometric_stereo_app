@@ -71,11 +71,14 @@ const normalMapSlice = createSlice({
 
             const normalMap = state[normalMap_index]
             state[normalMap_index] = { ...normalMap, layers: action.payload.layers, icon: action.payload.icon }
+        },
+        resetNormalMaps(state, action) {
+            return []
         }
     },
 })
 
-export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap, updateLayers } =
+export const { appendNormalMap, setNormalMaps, deleteNormalMap, updateNormalMap, updateLayers, resetNormalMaps } =
 	normalMapSlice.actions
 
 export const reFetchNormalMap = (normalMap) => {

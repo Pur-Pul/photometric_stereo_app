@@ -35,7 +35,7 @@ loginRouter.post('/', async (request, response, next) => {
     }
 })
 
-loginRouter.post('/relog', middleware.userExtractor, async (request, response, next) => {
+loginRouter.post('/relog', middleware.requireLogin, middleware.userExtractor, async (request, response, next) => {
     try {
         const { password } = request.body ? request.body : { password: null }
         if (!password) { return response.status(401).json({ error: 'Password is required to re-authenticate.' }) }
@@ -49,7 +49,7 @@ loginRouter.post('/relog', middleware.userExtractor, async (request, response, n
     }
 })
 
-loginRouter.get('/', middleware.userExtractor, async (request, response) => {
+loginRouter.get('/', middleware.requireLogin, middleware.userExtractor, async (request, response) => {
     response.status(200).end()
 })
 

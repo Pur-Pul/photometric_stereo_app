@@ -45,12 +45,13 @@ const NormalMapEditor = ({ id, size, handleDiscard }) => {
     const [initialLayers,setInitialLayers] = useState(null)
 
     const [editorState, setEditorState] = useState(null)
-    const [editorSize, setEditorSize] = useState([window.innerWidth, window.innerHeight])
+    const [editorSize, setEditorSize] = useState([window.innerWidth, window.innerHeight-200])
     const [editorCursor, setEditorCursor] = useState(0)
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
     const normalMap = useSelector((state) => state.normalMaps).find((normalMap) => normalMap.id === id)
+    const loggedUser = useSelector((state) => state.login)
 
     useEffect(() => {
         if (normalMap?.layers.every((layer) => layer.src === undefined)) { dispatch(fetchLayers(normalMap)) }
@@ -85,7 +86,7 @@ const NormalMapEditor = ({ id, size, handleDiscard }) => {
 
     useEffect(() => {
         const handleResize = () => {
-            setEditorSize([window.innerWidth, window.innerHeight])
+            setEditorSize([window.innerWidth, window.innerHeight - 200])
         }
         window.addEventListener('resize', handleResize)
 
@@ -177,63 +178,61 @@ const NormalMapEditor = ({ id, size, handleDiscard }) => {
                 }
                 )}
             </div>
-            <div>
-                <Grid
-                    container
-                    sx={{
-                        justifyContent: 'space-evenly',
-                        alignItems: 'flex-start',
-                        border: '2px solid',
-                        padding: '10px',
-                        borderRadius: '5px'
-                    }}
-                >
-                    <LayerSelector
-                        layers={editorState[editorCursor]}
-                        selectedLayer={selectedLayer}
-                        setSelectedLayer={setSelectedLayer}
-                        addLayer={addLayer}
-                        removeLayer={removeLayer}
-                        toggleLayer={toggleLayer}
+            <Grid
+                container
+                sx={{
+                    justifyContent: 'space-evenly',
+                    alignItems: 'flex-start',
+                    border: '2px solid',
+                    padding: '10px',
+                    borderRadius: '5px'
+                }}
+            >
+                <LayerSelector
+                    layers={editorState[editorCursor]}
+                    selectedLayer={selectedLayer}
+                    setSelectedLayer={setSelectedLayer}
+                    addLayer={addLayer}
+                    removeLayer={removeLayer}
+                    toggleLayer={toggleLayer}
+                />
+                <ColorSelector
+                    leftColor={leftColor}
+                    rightColor={rightColor}
+                    setLeftColor={setLeftColor}
+                    setRightColor={setRightColor}
+                />
+                <ToolButton toolName='pencil' currentTool={tool} setTool={setTool} icon={pencil}/>
+                <ToolButton toolName='pipette' currentTool={tool} setTool={setTool} icon={pipette}/>
+                <ToolButton toolName='eraser' currentTool={tool} setTool={setTool} icon={eraser}/>
+                <ShapeTool currentTool={tool} setTool={setTool} maxHeight={Math.max(size[0], size[1])}/>
+                <FormControl>
+                    <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
+                    <TextField
+                        id="pencil-size"
+                        type="number"
+                        slotProps={{ htmlInput : { min:1, max:300 } }}
+                        value={pencilSize}
+                        onChange={(e) => setPencilSize(e.target.value)}
                     />
-                    <ColorSelector
-                        leftColor={leftColor}
-                        rightColor={rightColor}
-                        setLeftColor={setLeftColor}
-                        setRightColor={setRightColor}
-                    />
-                    <ToolButton toolName='pencil' currentTool={tool} setTool={setTool} icon={pencil}/>
-                    <ToolButton toolName='pipette' currentTool={tool} setTool={setTool} icon={pipette}/>
-                    <ToolButton toolName='eraser' currentTool={tool} setTool={setTool} icon={eraser}/>
-                    <ShapeTool currentTool={tool} setTool={setTool} maxHeight={Math.max(size[0], size[1])}/>
-                    <FormControl>
-                        <InputLabel htmlFor="pencil-size" shrink>Pencil size:</InputLabel>
-                        <TextField
-                            id="pencil-size"
-                            type="number"
-                            slotProps={{ htmlInput : { min:1, max:300 } }}
-                            value={pencilSize}
-                            onChange={(e) => setPencilSize(e.target.value)}
-                        />
-                    </FormControl>
-                    <div style={{ width:'120px' }}>
-                        <Tooltip title={ 'Undo' } placement='top'>
-                            <span>
-                                <IconButton sx={{ border: '2px solid', width: '40%', marginRight: '5px' }} disabled={editorCursor === 0} onClick={ () => setEditorCursor(editorCursor ? editorCursor-1 : 0)}> ↶ </IconButton>
-                            </span>
-                        </Tooltip>
-                        <Tooltip title={ 'Redo' } placement='top'>
-                            <span>
-                                <IconButton  sx={{ border: '2px solid', width: '40%', marginLeft: '5px' }} disabled={editorCursor >= editorState.length-1} onClick={ () => setEditorCursor(editorCursor < editorState.length-1 ? editorCursor+1 : editorCursor)}>↷</IconButton>
-                            </span>
-                        </Tooltip>
-                    </div>
-                </Grid>
+                </FormControl>
+                <div style={{ width:'120px' }}>
+                    <Tooltip title={ 'Undo' } placement='top'>
+                        <span>
+                            <IconButton sx={{ border: '2px solid', width: '40%', marginRight: '5px' }} disabled={editorCursor === 0} onClick={ () => setEditorCursor(editorCursor ? editorCursor-1 : 0)}> ↶ </IconButton>
+                        </span>
+                    </Tooltip>
+                    <Tooltip title={ 'Redo' } placement='top'>
+                        <span>
+                            <IconButton  sx={{ border: '2px solid', width: '40%', marginLeft: '5px' }} disabled={editorCursor >= editorState.length-1} onClick={ () => setEditorCursor(editorCursor < editorState.length-1 ? editorCursor+1 : editorCursor)}>↷</IconButton>
+                        </span>
+                    </Tooltip>
+                </div>
                 <Grid container sx={{ justifyContent: 'flex-end' }}>
-                    <Button variant="outlined" color="error" onClick={ () => { setAlertOpen(true) }}  >Cancel</Button>
-                    <Button variant="outlined" color="success" onClick={ () => id ? handleSave() : setNameFormOpen(true) }>{id ? 'Save' : 'Create'}</Button>
+                    <Button variant="outlined" color="error" onClick={ () => { setAlertOpen(true) }} >Cancel</Button>
+                    <Button disabled={!loggedUser} variant="outlined" color="success" onClick={ () => id ? handleSave() : setNameFormOpen(true) }>{id ? 'Save' : 'Create'}</Button>
                 </Grid>
-            </div>
+            </Grid>`
             <NameForm open={nameFormOpen} handleCancel={() => setNameFormOpen(false)} handleSave={handleCreate}/>
 
             <Dialog open={ alertOpen } onClose={() => { setAlertOpen(false) }} closeAfterTransition={false}>
