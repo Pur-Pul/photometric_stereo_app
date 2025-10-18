@@ -7,16 +7,17 @@ import {
     Grid,
     Typography
 } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const LoginForm = () => {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const dispatch = useDispatch()
+    const navigate = useNavigate()
 
     const loginHandler = (event) => {
         event.preventDefault()
-        dispatch(performLogin({ username: username, password: password }))
+        dispatch(performLogin({ username: username, password: password }, navigate))
         setUsername('')
         setPassword('')
     }

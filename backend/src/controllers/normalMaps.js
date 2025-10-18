@@ -241,7 +241,7 @@ normalMapsRouter.post('/photostereo/', middleware.requireLogin, middleware.userE
                 const format = request.body.format
                 if (!request.originalFilenames.find(file => file.split('.')[0] === 'mask')) { throw new ValidationError('Mask is required.') }
                 if (request.originalFilenames.length-1 < 2) { throw new ValidationError('At least two images are required.') }
-                if (!request.body instanceof Array || request.originalFilenames.length-1 !== request.body.lights) { throw new ValidationError('Number of images and light directions need to be the same.') }
+                if (!request.body instanceof Array || request.originalFilenames.length-1 !== request.body.lights.length) { throw new ValidationError('Number of images and light directions need to be the same.') }
 
                 let lights = []
                 request.body.lights.forEach(light => {

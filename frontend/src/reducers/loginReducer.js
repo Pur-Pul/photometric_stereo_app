@@ -28,12 +28,13 @@ const loginSlice = createSlice({
 
 export const { loginUser, logoutUser } = loginSlice.actions
 
-export const performLogin = (credentials) => {
+export const performLogin = (credentials, navigate) => {
     return async (dispatch) => {
         try {
             const response = await loginService.login(credentials)
             window.localStorage.setItem('loggedUser', JSON.stringify(response))
             dispatch(loginUser(response))
+            navigate('/')
         } catch (exception) {
             if (exception instanceof AxiosError && exception.response.status === 401) {
                 window.localStorage.removeItem('loggedUser')
