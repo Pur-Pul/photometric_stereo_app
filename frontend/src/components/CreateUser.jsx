@@ -79,7 +79,7 @@ const CreateUser = () => {
             <Grid>
                 <Typography variant='h2'>Create an account</Typography>
                 <Typography variant='subtitle1'>An account is required in order to use the application. Your email address will only be visible to yourself.</Typography>
-                <Typography>Do you already have an account? <Link to='/'>Please login</Link></Typography>
+                <Typography>Do you already have an account? <Link to='/login'>Please login</Link></Typography>
             </Grid>
             <Grid size={12}>
                 <Grid>

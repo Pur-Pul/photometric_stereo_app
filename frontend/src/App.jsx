@@ -45,13 +45,15 @@ const App = () => {
             {user === null ? (
                 <div>
                     <NavBar user={user} paths={{
-                        '/' : 'Login',
-                        'create-user': 'Register',
+                        '/' : 'Home',
+                        '/login': 'Login',
+                        '/create-user': 'Register',
                         '/normal_map' : 'Normal Maps'
                     }}/>
                     <Notification />
                     <Routes>
-                        <Route path="/" element={ <LoginForm /> } />
+                        <Route path="/" element={ <FrontPage /> } />
+                        <Route path="/login" element={ <LoginForm /> } />
                         <Route path="/create-user" element={<CreateUser />} />
                         <Route path="/verify-user/:token" element={<VerifyUser />} />
                         <Route path="/normal_map" element={<NormalMapList />} />

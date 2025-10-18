@@ -321,7 +321,7 @@ const FrontPage = () => {
                         </ListItem>
                     </List>
                     <Typography>
-                        After reading the instructions below, you can begin creating normal maps by visiting the <Link to='/normal_map'>normal maps page</Link>.
+                        After reading the instructions below, you can begin creating normal maps by <Link to='/login'>logging in</Link> and then visiting the <Link to='/normal_map'>normal maps page</Link>.
                     </Typography>
                     <Typography>
                         Want to build this application yourself? The source code can be found at: <Link to='https://github.com/pur-pul/photometric_stereo_app'>https://github.com/pur-pul/photometric_stereo_app</Link>
