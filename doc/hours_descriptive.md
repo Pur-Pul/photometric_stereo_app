@@ -64,4 +64,5 @@
 |13.10.2025|    5h|Optimizations, frontend linting and styling. Mask editor now fits properly into its dialog. Changed overlay checkbox into an opacity slider.|
 |17.10.2025|    3h|Health check action. Health check endpoint. setup script. Fixed a bug which caused invalid tokens to persist. Invalid token fix 2 and setup script adjustments. Instructions, styling and linting. Created a descriptive hour list. Added setup script to readme|
 |18.20.2025|    2h|Fixed a bug which cause the editor to be to large. Opened up the normal map list to non logged in users. Opened up front page to non logged users. Optimized the Viewer3D component. Fixed a bug which prevented textures from applying on Viewer3D component. Fixed a bug which prevented login from redirecting to front page. Fixed a bug which prevented photometric stereo function from starting. Added title and icon to browser tab. More optimizations of Viewer3D component.|
-|     Total|207.5h||
+|20.10.2025|    1h|Added a plane option to the 3DViewer component|
+|     Total|208.5h||

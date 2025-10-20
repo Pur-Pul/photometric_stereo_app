@@ -1,43 +1,28 @@
 import Vector3 from './Vector3'
 import Polygon from './Polygon'
 
-class Cube {
-    constructor(width=2) {
-        this.type = 'cube'
+class Plane {
+    constructor(size=2, aspect=1) {
+        this.type = 'plane'
+        const width = aspect*size
         this.vertices = [
-            new Vector3(-width/2,   -width/2,   -width/2),
-            new Vector3(width/2,    -width/2,   -width/2),
-            new Vector3(width/2,    width/2,    -width/2),
-            new Vector3(-width/2,   width/2,    -width/2),
-            new Vector3(-width/2,   -width/2,   width/2),
-            new Vector3(width/2,    -width/2,   width/2),
-            new Vector3(width/2,    width/2,    width/2),
-            new Vector3(-width/2,   width/2,    width/2),
+            new Vector3(width/2,   0.01,  size/2),
+            new Vector3(-width/2,    0.01,  size/2),
+            new Vector3(-width/2,    0.01,  -size/2),
+            new Vector3(width/2,   0.01,  -size/2),
+
+            new Vector3(width/2,   -0.01,  size/2),
+            new Vector3(-width/2,    -0.01,  size/2),
+            new Vector3(-width/2,    -0.01,  -size/2),
+            new Vector3(width/2,   -0.01,  -size/2),
         ]
         this.polygons = [
-            //top
+            //front
             new Polygon(this.vertices[0], this.vertices[1], this.vertices[2]),
             new Polygon(this.vertices[0], this.vertices[2], this.vertices[3]),
-
             //back
-            new Polygon(this.vertices[0], this.vertices[1], this.vertices[5]),
-            new Polygon(this.vertices[0], this.vertices[5], this.vertices[4]),
-
-            //front
-            new Polygon(this.vertices[3], this.vertices[2], this.vertices[6]),
-            new Polygon(this.vertices[3], this.vertices[6], this.vertices[7]),
-
-            //left
-            new Polygon(this.vertices[0], this.vertices[3], this.vertices[7]),
-            new Polygon(this.vertices[0], this.vertices[7], this.vertices[4]),
-
-            //right
-            new Polygon(this.vertices[2], this.vertices[1], this.vertices[5]),
-            new Polygon(this.vertices[2], this.vertices[5], this.vertices[6]),
-
-            //bottom
-            new Polygon(this.vertices[7], this.vertices[6], this.vertices[5]),
-            new Polygon(this.vertices[7], this.vertices[5], this.vertices[4]),
+            new Polygon(this.vertices[4], this.vertices[5], this.vertices[6]),
+            new Polygon(this.vertices[4], this.vertices[6], this.vertices[7]),
         ]
     }
 
@@ -63,8 +48,9 @@ class Cube {
                     { x: 0, y:1 }
                 ]
         })
-        const normalArr = this.polygons.map((polygon) => {
-            const polNormal = polygon.calculateNormal()
+        const normalArr = this.polygons.map((polygon, index) => {
+            let polNormal = polygon.calculateNormal()
+            polNormal = (index > 1) ? polNormal.normalize(-1) : polNormal
             return [
                 polNormal,
                 polNormal,
@@ -73,10 +59,8 @@ class Cube {
         })
         const tangentArr = this.polygons.map((polygon, index) => {
             const normal = polygon.calculateNormal()
-            let tangent = (index < 2 || index > 9)
-                ? normal.cross(new Vector3(0, -1, 0))
-                : normal.cross(new Vector3(0, 0, -1)).normalize()
-            tangent = (index > 9) ? tangent.normalize(-1) : tangent
+            let tangent = normal.cross(new Vector3(0, 0, 1)).normalize()
+
             return [
                 tangent,
                 tangent,
@@ -117,4 +101,4 @@ class Cube {
     }
 }
 
-export default Cube
+export default Plane

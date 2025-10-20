@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import fragCode from '../shaders/lightingShaderFragment'
 import vertCode from '../shaders/lightingShaderVertex'
 import { notificationSet } from '../reducers/notificationReducer'
 import Sphere from '../utils/Sphere'
 import Cube from '../utils/Cube'
+import Plane from '../utils/Plane'
 import Mat4 from '../utils/Matrix'
 import Vector3 from '../utils/Vector3'
 import Quaternion from '../utils/Quaternion'
@@ -90,11 +91,13 @@ const createViewMat = (camera, target) => {
 }
 
 const SPHERE = new Sphere(3, 1)
-const CUBE = new Cube(1)
+const CUBE = new Cube(1.5)
 
-const Viewer3D = ({ image, simple=false, size=500, defaultTexture=null, style={ aspectRatio: '1/1', maxWidth: 1080 } }) => {
+const Viewer3D = ({ image, simple=false, size=500, defaultTexture=null, defaultShape='sphere', style={ aspectRatio: '1/1', maxWidth: 1080 } }) => {
+    const PLANE = useMemo(() => image ? new Plane(2, image.width / image.height) : null, [image])
+
     const [visible, setVisible] = useState(false)
-    const [shape, setShape] = useState(SPHERE)
+    const [shape, setShape] = useState({ sphere: SPHERE, cube: CUBE, plane: PLANE }[defaultShape])
     const [texture, setTexture] = useState(defaultTexture)
 
     const canvas3DRef = useRef(null)
@@ -227,7 +230,7 @@ const Viewer3D = ({ image, simple=false, size=500, defaultTexture=null, style={ 
                 ctx.uniform1f(webglRef.current.specularStrengthPointer, specularStrength/100)
                 ctx.drawArrays(ctx.TRIANGLES, 0, renderDataRef.current.vertexNumber/3)
             }
-            const quat = Quaternion.axisAngle(new Vector3(0,1,0), 0.5)
+            const quat = Quaternion.axisAngle(new Vector3(0,0,1), 0.5)
             lightPosRef.current = quat.rotate(lightPosRef.current)
         }
 
@@ -316,6 +319,7 @@ const Viewer3D = ({ image, simple=false, size=500, defaultTexture=null, style={ 
                         <ButtonGroup>
                             <Button variant={shape.type === SPHERE.type ? 'contained' : 'outlined'} onClick={() => setShape(SPHERE)} disabled={!visible}>Sphere</Button>
                             <Button variant={shape.type === CUBE.type ? 'contained' : 'outlined'} onClick={() => setShape(CUBE)} disabled={!visible}>Cube</Button>
+                            <Button variant={shape.type === PLANE.type ? 'contained' : 'outlined'} onClick={() => setShape(PLANE)} disabled={!visible}>Plane</Button>
                         </ButtonGroup>
                     </Grid>
             }

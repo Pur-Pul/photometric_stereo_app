@@ -151,12 +151,12 @@ const NormalMapDescription = () => {
                 <CardContent>
                     <Typography>
                         The black part of the normal map is what has been masked out and will be transparent when rendered.
-                        By clicking the button below you can preview how this normal map is rendered when mapped to a sphere.
+                        By clicking the button below you can preview how this normal map is rendered in 3D with lighting.
                         The preview can be rotated with a mouse.
                     </Typography>
                 </CardContent>
                 <CardContent>
-                    { normalMap && texture ? <Viewer3D image={normalMap} defaultTexture={texture} simple/> : null }
+                    { normalMap && texture ? <Viewer3D image={normalMap} defaultTexture={texture} defaultShape='plane' simple/> : null }
                 </CardContent>
             </Collapse>
 
