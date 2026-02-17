@@ -9,6 +9,8 @@ Deployed at: [https://normalmap.pur-pul.net/](https://normalmap.pur-pul.net/)
 
 The backend uses a photometric stereo script, which was taken from [https://github.com/visiont3lab/photometric_stereo](https://github.com/visiont3lab/photometric_stereo)
 
+[Technologies used](doc/technologies.md)
+
 ## Installation
 The application is built to be run inside docker. Two docker compose files are included [docker-compose.yml](docker-compose.yml) for production and [docker-compose.dev.yml](docker-compose.yml) for development. 
 
